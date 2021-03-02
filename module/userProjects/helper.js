@@ -891,25 +891,9 @@ module.exports = class UserProjectsHelper {
                 const projectsModel = Object.keys(schemas["projects"].schema);
 
                 let updateProject = {};
-
-                if ( data.categories && data.categories.length > 0 ) {
-                    
-                    let categories =
-                    await _projectCategories(data.categories);
-
-                    if( !categories.success ) {
-                        return resolve(categories);
-                    } 
-
-                    updateProject.categories = categories.data;
-                }
-
-                if ( data.startDate ) {
-                    updateProject["startDate"] = data.startDate;
-                }
-
-                if ( data.endDate ) {
-                    updateProject["endDate"] = data.endDate;
+                let projectData = await _projectData(data);
+                if(projectData && projectData.success ==  true){
+                    updateProject = _.merge(updateProject, projectData.data);
                 }
 
                 let createNewProgramAndSolution = false;
@@ -1078,12 +1062,6 @@ module.exports = class UserProjectsHelper {
 
                 updateProject.updatedBy = userId;
                 updateProject.updatedAt = new Date();
-
-                if (data.learningResources) {
-                    updateProject.learningResources = data.learningResources;
-                }
-
-                updateProject.syncedAt = new Date();
 
                 if( !userProject[0].appInformation ) {
                     updateProject["appInformation"] = {};
@@ -2298,6 +2276,175 @@ module.exports = class UserProjectsHelper {
     });
    }
 
+   /**
+      * Add project.
+      * @method
+      * @name add 
+      * @param {Object} data - body data.
+      * @param {String} userId - Logged in user id.
+      * @param {String} userToken - User token.
+      * @param {String} [appName = ""] - App Name.
+      * @param {String} [appVersion = ""] - App Version.
+      * @returns {Object} Project created information.
+    */
+
+    static add(data, userId, userToken,appName = "",appVersion = "") {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const projectsModel = Object.keys(schemas["projects"].schema);
+                let createProject = {};
+
+                createProject["userId"] = createProject["createdBy"] = createProject["updatedBy"] = userId;
+
+                let userOrganisations =
+                await kendraService.getUserOrganisationsAndRootOrganisations(
+                    userToken
+                );
+
+                if( !userOrganisations.success ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
+
+                if (userOrganisations.data) {
+                    createProject.createdFor = userOrganisations.data.createdFor;
+                    createProject.rootOrganisations = userOrganisations.data.rootOrganisations;
+                }
+
+                let projectData = await _projectData(data);
+                if(projectData && projectData.success ==  true){
+                    createProject = _.merge(createProject, projectData.data);
+                }
+                
+                let createNewProgramAndSolution = false;
+
+                if( data.programId && data.programId !== "" ) {
+                    createNewProgramAndSolution = true;
+                } 
+                else if( data.programName ) {
+                    createNewProgramAndSolution = true;
+                }
+
+                if( data.entityId ) {
+                    let entityInformation = 
+                    await _entitiesInformation([data.entityId]);
+
+                    if( !entityInformation.success ) {
+                        return resolve(entityInformation);
+                    }
+
+                    createProject["entityInformation"] = entityInformation.data[0];
+                    createProject.entityId = entityInformation.data[0]._id;
+                }
+
+                if( createNewProgramAndSolution ) {
+                    
+                    let programAndSolutionInformation = 
+                    await this.createProgramAndSolution(
+                        data.programId,
+                        data.programName,
+                        userToken,
+                        ""
+                    );
+
+                    if (!programAndSolutionInformation.success) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    createProject =
+                    _.merge(createProject, programAndSolutionInformation.data);
+                }
+
+                if (data.tasks) {
+
+                    let taskReport = {};
+
+                    createProject.tasks = await _projectTask(
+                        data.tasks
+                    );
+
+                    taskReport.total = createProject.tasks.length;
+
+                    createProject.tasks.forEach(task => {
+                        if (!taskReport[task.status]) {
+                            taskReport[task.status] = 1;
+                        } else {
+                            taskReport[task.status] += 1;
+                        }
+                    });
+
+                    createProject["taskReport"] = taskReport;
+                }
+
+                let booleanData = this.booleanData(schemas["projects"].schema);
+                let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
+
+                
+
+                Object.keys(data).forEach(updateData => {
+                    if (
+                        !createProject[updateData] &&
+                        projectsModel.includes(updateData)
+                    ) {
+
+                        if (booleanData.includes(updateData)) {
+
+                            createProject[updateData] =
+                            UTILS.convertStringToBoolean(data[updateData]);
+
+                        } else if (mongooseIdData.includes(updateData)) {
+                            createProject[updateData] = ObjectId(data[updateData]);
+                        } else {
+                            createProject[updateData] = data[updateData];
+                        }
+                    }
+                });
+
+                if( appName !== "" ) {
+                    createProject["appInformation"]["appName"] = appName;
+                }
+
+                if( appVersion !== "" ) {
+                    createProject["appInformation"]["appVersion"] = appVersion;
+                }
+
+                let userProject = await database.models.projects.create(
+                    createProject
+                );
+
+                if (!userProject._id) {
+                    throw {
+                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_CREATED,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
+
+                return resolve({
+                    success : true,
+                    message : CONSTANTS.apiResponses.PROJECT_CREATED,
+                    data : {
+                        programId : 
+                        userProject.programInformation && userProject.programInformation._id ?
+                        userProject.programInformation._id : ""
+                    } 
+                });
+
+            } catch (error) {
+                return resolve({
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
 };
 
 /**
@@ -2875,6 +3022,63 @@ function _entitiesMetaInformation( entitiesData ) {
     });
 
     return entitiesData;
+}
+
+/**
+  * Project Add And Sync Common information.
+  * @method
+  * @name _projectData 
+  * @param {Array} data - Req data.
+  * @returns {Object} Project Add information.
+*/
+
+function _projectData(data) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let projectData = {};
+            if ( data.categories && data.categories.length > 0 ) {
+        
+                let categories =
+                await _projectCategories(data.categories);
+
+                if( !categories.success ) {
+                    return resolve(categories);
+                } 
+
+                projectData.categories = categories.data;
+            }
+
+            if ( data.startDate ) {
+                projectData["startDate"] = data.startDate;
+            }
+
+            if ( data.endDate ) {
+                projectData["endDate"] = data.endDate;
+            }
+
+            if (data.learningResources) {
+                projectData.learningResources = data.learningResources;
+            }
+
+            projectData.syncedAt = new Date();
+
+            return resolve({
+                success : true,
+                data : projectData
+            });
+
+        } catch (error) {
+            return resolve({
+                message : error.message,
+                status : 
+                error.status ? 
+                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                success : false,
+                data : {}
+            });
+        }
+    })
 }
 
 

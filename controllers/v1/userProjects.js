@@ -1173,4 +1173,111 @@ module.exports = class UserProjects extends Abstract {
             }
         })
     }
+
+        /**
+    * @api {post} /improvement-project/api/v1/userProjects/add
+    * Add project.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/add
+    * @apiParamExample {json} Request:
+    * {
+    "title": "Project 1",
+    "description": "Project 1 description",
+    "tasks": [
+        {
+            "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
+            "name": "Task 1",
+            "description": "Task 1 description",
+            "status": "notStarted/inProgress/completed",
+            "startDate": "2020-09-29T09:08:41.667Z",
+            "endDate": "2020-09-29T09:08:41.667Z",
+            "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+            "type": "single/multiple",
+            “isDeleted” : false,
+             “remarks” : “Tasks completed”,
+             “assignee” : “Aman”,
+            "children": [
+                {
+                    "_id": "289d9558-b98f-41cf-81d3-92486f114a50",
+                    "name": "Task 2",
+                    "description": "Task 2 description",
+                    "status": "notStarted/inProgress/completed",
+                    "children": [],
+                    "startDate": "2020-09-29T09:08:41.667Z",
+                    "endDate": "2020-09-29T09:08:41.667Z",
+                    "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+                    "type": "single/multiple”,
+                    “isDeleted” : false
+                }
+            ]
+        }
+    ],
+    "programId": "",
+    "programName": "New Project Program",
+    "entityId" : “5beaa888af0065f0e0a10515”,
+    "categories": [
+        {
+            "value": "5f102331665bee6a740714e8",
+            "label": "teacher"
+        },
+        {
+            "value": "",
+            "label": "other"
+        }
+    ],
+    "status": "notStarted/inProgress/completed",
+    “lastDownloadedAt” : "2020-09-29T09:08:41.667Z",
+    "payload": {
+        "_id": "289d9558-b98f-41cf-81d3-92486f114a51"
+    }}
+    * @apiParamExample {json} Response:
+    * {
+    * "message": "Project created successfully",
+    * "status": 200,
+    * "result" : {
+    *   "programId" : "5fb669f223575a2f0cef3b33"
+    * }
+    * }
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Add projects.
+      * @method
+      * @name add
+      * @param {Object} req - request data.
+      * @returns {JSON} Create Self projects.
+     */
+
+    async add(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let createdProject = await userProjectsHelper.add(
+                    req.body,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken,
+                    req.headers["x-app-id"]  ? 
+                    req.headers["x-app-id"]  : 
+                    req.headers.appname ? req.headers.appname : "",
+                    req.headers["x-app-ver"] ? 
+                    req.headers["x-app-ver"] : 
+                    req.headers.appversion ? req.headers.appversion : ""
+                );
+
+                createdProject.result = createdProject.data;
+
+                return resolve(createdProject);
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
 };
