@@ -1096,7 +1096,7 @@ module.exports = class UserProjects extends Abstract {
     }
 
       /**
-    * @api {post} /improvement-project/api/v1/userProjects/getProject?page=:page&limit=:limit&search=:search
+    * @api {post} /improvement-project/api/v1/userProjects/getProject?page=:page&limit=:limit&search=:search&filter=:assignedToMe
     * List of User projects and auto targeted.
     * @apiVersion 1.0.0
     * @apiGroup User Projects
@@ -1157,7 +1157,8 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken,
                     req.pageSize,
                     req.pageNo,
-                    req.searchText
+                    req.searchText,
+                    req.query.filter
                 );
 
                 projects.result = projects.data;

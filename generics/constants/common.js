@@ -27,5 +27,7 @@ module.exports = {
     "PROJECT_DESCRIPTION" : "Manage and track your school Improvement easily by creating tasks and planning timelines.",
     "RESOURCE_TYPE" : "Improvement Project Solution",
     "ENGLISH_LANGUAGE" : "English",
-    "KEYWORDS" : "Improvement Project"
+    "KEYWORDS" : "Improvement Project",
+    "ASSIGN_TO_ME" : "assignedToMe",
+    "CREATED_BY_ME" : "createdByMe"
 };

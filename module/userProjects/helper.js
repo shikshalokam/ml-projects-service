@@ -1879,7 +1879,7 @@ module.exports = class UserProjectsHelper {
     * @returns {Object}
    */
 
-  static getProject( bodyData,userId,userToken,pageSize,pageNo,search ) {
+  static getProject( bodyData,userId,userToken,pageSize,pageNo,search, filter ) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -1890,12 +1890,31 @@ module.exports = class UserProjectsHelper {
             }
 
             let searchQuery = [];
+            let filterQuery = [];
 
             if (search !== "") {
                 searchQuery = [
                     { "title" : new RegExp(search, 'i') },
                     { "description" : new RegExp(search, 'i') }
                 ];
+            }
+
+            if (filter && filter !== "") {
+                if(filter == CONSTANTS.common.ASSIGN_TO_ME){
+
+                    filterQuery = [
+                        { isAPrivateProgram : false }
+                    ];
+
+                }else if(filter == CONSTANTS.common.CREATED_BY_ME){
+
+                    filterQuery = [
+                        { isAPrivateProgram: { $ne: false }} 
+                    ];
+                }
+
+                query = {...query, ...filterQuery[0]};
+                
             }
 
             let projects = await this.projects(
@@ -1942,6 +1961,10 @@ module.exports = class UserProjectsHelper {
             bodyData.filter["projectTemplateId"] = {
                 $exists : true
             };
+
+            if(filterQuery && filterQuery.length > 0){
+                bodyData["filter"] = {...bodyData.filter,...filterQuery[0]}
+            }
 
             let targetedSolutions = 
             await kendraService.solutionBasedOnRoleAndLocation(
