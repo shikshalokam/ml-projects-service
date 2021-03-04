@@ -2451,7 +2451,8 @@ module.exports = class UserProjectsHelper {
                     data : {
                         programId : 
                         userProject.programInformation && userProject.programInformation._id ?
-                        userProject.programInformation._id : ""
+                        userProject.programInformation._id : "",
+                        projectId: userProject._id
                     } 
                 });
 

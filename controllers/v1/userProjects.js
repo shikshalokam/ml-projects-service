@@ -1238,6 +1238,7 @@ module.exports = class UserProjects extends Abstract {
     * "status": 200,
     * "result" : {
     *   "programId" : "5fb669f223575a2f0cef3b33"
+    *   "projectId" : "5f102331665bee6a740714e8"
     * }
     * }
     * @apiUse successBody

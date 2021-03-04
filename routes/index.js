@@ -16,7 +16,10 @@ module.exports = function (app) {
 
   const APPLICATION_BASE_URL = process.env.APPLICATION_BASE_URL;
   
-  app.use(APPLICATION_BASE_URL, authenticator);
+  if (process.env.NODE_ENV !== "testing") {
+    app.use(APPLICATION_BASE_URL, authenticator);
+  }
+
   app.use(APPLICATION_BASE_URL, pagination);
 
   var router = async function (req, res, next) {
