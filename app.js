@@ -55,30 +55,7 @@ app.use(express.static("public"));
 fs.existsSync(process.env.LOGGER_DIRECTORY) || 
 fs.mkdirSync(process.env.LOGGER_DIRECTORY);
 
-//API documentation (apidoc)
-if ( process.env.APPLICATION_ENV == "development" ) {
-  app.use(express.static("apidoc"));
-  app.get(process.env.APIDOC_URL, (req, res) => {
-    
-    let urlArray = req.path.split("/");
-    urlArray.splice(0, 3);
-    let apidocPath = process.env.APIDOC_PATH + urlArray.join("/");
-
-    res.sendFile(path.join(__dirname, apidocPath));
-  });
-}
-
 app.all('*', (req, res, next) => {
-  
-  if(ENABLE_FILE_LOGGING === "ON") {
-    LOGGER.info("Requests:", {
-      method: req.method,
-      url: req.url,
-      headers: req.headers,
-      body: req.body
-    })
-  }
-
 
   if(process.env.ENABLE_CONSOLE_LOGGING === "ON") {
     console.log("-------Request log starts here------------------");

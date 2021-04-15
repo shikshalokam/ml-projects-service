@@ -11,7 +11,6 @@ const kafka = require("./kafka");
 const { v1 : uuidv1 } = require('uuid');
 const assessmentHealthCheck = require("./assessments");
 const kendraHealthCheck = require("./kendra");
-const sunbirdHealthCheck = require("./sunbird");
 
 const obj = {
     MONGO_DB: {
@@ -50,7 +49,6 @@ let health_check = async function(req,res) {
     let kafkaConnection = await kafka.health_check();
     let assessmentServiceStatus = await assessmentHealthCheck.health_check();
     let kendraServiceStatus = await kendraHealthCheck.health_check();
-    let sunbirdServiceStatus = await sunbirdHealthCheck.health_check();
     checks.push(singleCheckObj("KAFKA",kafkaConnection));
     checks.push(singleCheckObj("MONGO_DB",mongodbConnection));
     checks.push(singleCheckObj("ASSESSMENT_SERVICE",assessmentServiceStatus));

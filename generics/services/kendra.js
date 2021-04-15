@@ -9,7 +9,7 @@
 const request = require('request');
 const fs = require("fs");
 
-const KENDRA_URL = process.env.KENDRA_APPLICATION_ENDPOINT +  process.env.KENDRA_BASE_URL;
+const KENDRA_URL = process.env.ML_CORE_SERVICE_ENDPOINT;
 
 /**
   * Get downloadable file.
@@ -154,7 +154,6 @@ const entityTypesDocuments = function (
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                 },
                 json : {
@@ -217,7 +216,6 @@ const rolesDocuments = function (
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                 },
                 json : {
@@ -275,7 +273,6 @@ const formDetails = function ( formName ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                 }
             };
@@ -329,7 +326,6 @@ const entityDocuments = function (
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                 },
                 json : {
@@ -385,7 +381,6 @@ const createUserProgramAndSolution = function ( data,userToken ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "X-authenticated-user-token" : userToken
                 },
@@ -438,7 +433,6 @@ const getProfile = function ( token ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : token
                 }
@@ -493,7 +487,6 @@ const updateUserProfile = function ( token,updateData ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : token
                 },
@@ -541,7 +534,6 @@ const userPrivatePrograms = function ( token ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : token
                 }
@@ -594,7 +586,6 @@ const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) 
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : token
                 }
@@ -708,7 +699,6 @@ const getUsersByEntityAndRole = function (
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN
                 }
             };
@@ -761,7 +751,6 @@ const createSolution = function ( bodyData,token ) {
              const options = {
                  headers : {
                      "content-type": "application/json",
-                     AUTHORIZATION : process.env.AUTHORIZATION,
                      "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                      "x-authenticated-user-token" : token
                  },
@@ -822,7 +811,6 @@ const solutionBasedOnRoleAndLocation = function ( token,bodyData,typeAndSubType,
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : token
                 },
@@ -879,7 +867,6 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    AUTHORIZATION : process.env.AUTHORIZATION,
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : token
                 },
