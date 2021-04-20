@@ -22,7 +22,7 @@ const viewFullReport = function (token,input) {
     return new Promise(async (resolve, reject) => {
         try {
             const url = 
-            process.env.REPORT_SERIVCE_ENDPOINT + 
+            process.env.ML_REPORT_SERVICE_URL + 
             CONSTANTS.endpoints.VIEW_PROJECT_REPORT;
 
             let options = {
@@ -68,7 +68,7 @@ const entityReport = function (token,input) {
   return new Promise(async (resolve, reject) => {
       try {
           const url = 
-          process.env.REPORT_SERIVCE_ENDPOINT + 
+          process.env.ML_REPORT_SERVICE_URL + 
           CONSTANTS.endpoints.ENTITY_REPORT;
 
           let options = {
@@ -115,7 +115,7 @@ const projectAndTaskReport = function (token, input, projectPdf) {
     return new Promise(async (resolve, reject) => {
         try {
             const url = 
-            process.env.REPORT_SERIVCE_ENDPOINT + 
+            process.env.ML_REPORT_SERVICE_URL + 
             CONSTANTS.endpoints.PROJECT_AND_TASK_REPORT + "?projectPdf=" + projectPdf;
           
             let options = {

@@ -38,11 +38,6 @@ const expressValidator = require('express-validator');
 app.use(cors());
 app.use(expressValidator())
 
-//health check
-app.get(process.env.HEALTH_CHECK_URL, (req, res) => {
-  res.send("pong!");
-});
-
 app.use(fileUpload());
 app.use(bodyParser.json({ limit: process.env.BODY_PARSER_LIMIT }));
 app.use(bodyParser.urlencoded({ 
@@ -51,9 +46,6 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use(express.static("public"));
-
-fs.existsSync(process.env.LOGGER_DIRECTORY) || 
-fs.mkdirSync(process.env.LOGGER_DIRECTORY);
 
 app.all('*', (req, res, next) => {
 

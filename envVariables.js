@@ -22,14 +22,6 @@ let enviromentVariables = {
     "message" : "Required mongodb url",
     "optional" : false
   },
-  "MONGODB_PORT" : {
-    "message" : "Required mongodb port",
-    "optional" : false
-  },
-  "MONGODB_DATABASE_NAME" : {
-    "message" : "Required database",
-    "optional" : false
-  },
   "INTERNAL_ACCESS_TOKEN" : {
     "message" : "Required internal access token",
     "optional" : false
@@ -38,7 +30,7 @@ let enviromentVariables = {
     "message" : "Please specify the value for e.g. ON/OFF",
     "optional" : false
   },
-  "ML_CORE_SERVICE_ENDPOINT" : {
+  "ML_CORE_SERVICE_URL" : {
     "message" : "Required",
     "optional" : false
   },
@@ -50,33 +42,11 @@ let enviromentVariables = {
     "message" : "Required",
     "optional" : false
   },
-  "PUBLIC_FOLDER_PATH" : {
-    "message" : "Required",
-    "optional" : false,
-    "default" : "public" 
-  },
-  "CSV_REPORTS_PATH" : {
-    "message" : "Required",
-    "optional" : false,
-    "default" : "reports" 
-  },
   "KAFKA_COMMUNICATIONS_ON_OFF" : {
     "message" : "Enable/Disable kafka communications",
     "optional" : false
   },
   "KAFKA_URL" : {
-    "message" : "Required",
-    "optional" : false
-  },
-  "NOTIFICATIONS_TOPIC" : {
-    "message" : "Required",
-    "optional" : false
-  },
-  "IMPROVEMENT_PROJECT_APP_TYPE" : {
-    "message" : "Required",
-    "optional" : false
-  },
-  "IMPROVEMENT_PROJECT_APP_NAME" : {
     "message" : "Required",
     "optional" : false
   }
