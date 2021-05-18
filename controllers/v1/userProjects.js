@@ -730,12 +730,19 @@ module.exports = class UserProjects extends Abstract {
         })
     }
 
-      /**
-    * @api {get} /improvement-project/api/v1/userProjects/details/:projectId
+    /**
+    * @api {post} /improvement-project/api/v1/userProjects/details/:projectId?programId=:programId&solutionId=:solutionId&templateId=:templateId 
     * Project Details.
-    * @apiVersion 1.0.0
+    * @apiVersion 2.0.0
     * @apiGroup User Projects
-    * @apiSampleRequest /improvement-project/api/v1/userProjects/details/5f731631e8d7cd3b88ac0659
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/details/5f731631e8d7cd3b88ac0659?programId=5f4e538bdf6dd17bab708173&solutionId=5f8688e7d7f86f040b77f460&templateId=IDEAIMP4
+    * @apiParamExample {json} Request:
+    {
+        "role" : "HM",
+        "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
     * @apiParamExample {json} Response:
     * {
     "message": "Successfully fetched project details",
@@ -791,14 +798,14 @@ module.exports = class UserProjects extends Abstract {
                         "type": "single",
                         "isDeleted": false,
                         "externalId": "task 2",
-                        "isDeletable": false,
+                        "isDeleteable": false,
                         "createdAt": "2020-10-28T05:58:24.907Z",
                         "updatedAt": "2020-10-28T05:58:24.907Z",
                         "isImportedFromLibrary": false
                     }
                 ],
                 "externalId": "task 1",
-                "isDeletable": false,
+                "isDeleteable": false,
                 "createdAt": "2020-10-28T05:58:24.907Z",
                 "updatedAt": "2020-10-28T05:58:24.907Z",
                 "isImportedFromLibrary": false
@@ -828,9 +835,20 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let projectDetails = await userProjectsHelper.details(
-                    req.params._id,
-                    req.userDetails.userInformation.userId
+                let projectDetails = 
+                await userProjectsHelper.detailsV2(
+                    req.params._id ? req.params._id : "",
+                    req.query.solutionId,
+                    req.userDetails.userInformation.userId,
+                    req.userDetails.userToken,
+                    req.body,
+                    req.headers["x-app-id"]  ? 
+                    req.headers["x-app-id"]  : 
+                    req.headers.appname ? req.headers.appname : "",
+                    req.headers["x-app-ver"] ? 
+                    req.headers["x-app-ver"] : 
+                    req.headers.appversion ? req.headers.appversion : "",
+                    req.query.templateId
                 );
 
                 projectDetails.result = projectDetails.data;
