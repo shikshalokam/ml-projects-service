@@ -6,11 +6,11 @@
  */
 
 // dependencies
-const sunbirdHelper = require(GENERICS_FILES_PATH + "/services/sunbird");
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-const accessTokenValidationMode = (process.env.VALIDATE_ACCESS_TOKEN_OFFLINE && process.env.VALIDATE_ACCESS_TOKEN_OFFLINE === "OFF")? "OFF" : "ON";
 const keyCloakPublicKeyPath = (process.env.KEYCLOAK_PUBLIC_KEY_PATH && process.env.KEYCLOAK_PUBLIC_KEY_PATH != "") ? PROJECT_ROOT_DIRECTORY+"/"+process.env.KEYCLOAK_PUBLIC_KEY_PATH+"/" : PROJECT_ROOT_DIRECTORY+"/"+"keycloak-public-keys/" ;
+const PEM_FILE_BEGIN_STRING = "-----BEGIN PUBLIC KEY-----";
+const PEM_FILE_END_STRING = "-----END PUBLIC KEY-----";
 
 var respUtil = function (resp) {
   return {
@@ -86,81 +86,59 @@ module.exports = async function (req, res, next, token = "") {
     return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
   }
 
-  if (accessTokenValidationMode === "ON") {
+  rspObj.errCode = CONSTANTS.apiResponses.TOKEN_INVALID_CODE;
+  rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_INVALID_MESSAGE;
+  rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
 
-    let rspObj = {};
-    rspObj.errCode = CONSTANTS.apiResponses.TOKEN_INVALID_CODE;
-    rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_INVALID_MESSAGE;
-    rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
-
-    var decoded = jwt.decode(token, { complete: true });
-    if(decoded === null || decoded.header === undefined){
-      return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-    }
-
-    const kid = decoded.header.kid
-    let cert = "";
-    let path = keyCloakPublicKeyPath + kid + '.pem';
-    
-    if (fs.existsSync(path)) {
-
-      cert = fs.readFileSync(path);
-      jwt.verify(token, cert, { algorithm: 'RS256' }, function (err, decode) {
-  
-        if (err) {
-          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-        }
-
-        if (decode !== undefined) {
-          const expiry = decode.exp;
-          const now = new Date();
-          if (now.getTime() > expiry * 1000) {
-            return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-          }
-
-          req.userDetails = {
-            userToken : token,
-            userInformation : {
-              userId : decode.sub.split(":").pop(),
-              userName : decode.preferred_username,
-              email : decode.email,
-              firstName : decode.name
-            }
-          };
-
-          next();
-        
-        } else {
-
-          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-        }
-
-      });
-    } else {
-      return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-    }
-  }else{
-
-    sunbirdHelper
-      .verifyToken(token)
-      .then(async userDetails => {
-        if (userDetails.result.isValid == true) {
-          req.userDetails = {};
-          req.userDetails = userDetails.result;
-          req.userDetails['userToken'] = token;
-          next();
-        } else {
-          rspObj.errCode = CONSTANTS.apiResponses.TOKEN_INVALID_CODE;
-          rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_INVALID_MESSAGE;
-          rspObj.responseCode = HTTP_STATUS_CODE["unauthorized"].status;
-          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
-        }
-
-      }).catch(error => {
-        return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(error);
-      });
+  var decoded = jwt.decode(token, { complete: true });
+  if(decoded === null || decoded.header === undefined){
+    return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
   }
 
+  const kid = decoded.header.kid
+  let cert = "";
+  let path = keyCloakPublicKeyPath + kid;
+    
+  if (fs.existsSync(path)) {
 
+    let accessKeyFile  = await fs.readFileSync(path);
 
+    if(accessKeyFile) {
+      if(!accessKeyFile.includes(PEM_FILE_BEGIN_STRING)){
+        await fs.writeFileSync(path,PEM_FILE_BEGIN_STRING+"\n"+accessKeyFile+"\n"+PEM_FILE_END_STRING)
+      }   
+    }
+    
+    cert = fs.readFileSync(path);
+    jwt.verify(token, cert, { algorithm: ['sha1', 'RS256', 'HS256'] }, function (err, decode) {
+
+      if (err) {
+        return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+      }
+
+      if (decode !== undefined) {
+        const expiry = decode.exp;
+        const now = new Date();
+        if (now.getTime() > expiry * 1000) {
+          return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+        }
+
+        req.userDetails = {
+          userToken : token,
+          userInformation : {
+            userId : decode.sub.split(":").pop(),
+            userName : decode.preferred_username,
+            email : decode.email,
+            firstName : decode.name
+          }
+        };
+
+        next();
+      } else {
+        return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+      }
+    });
+  } else {
+    return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+  }
 };
