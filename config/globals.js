@@ -76,13 +76,6 @@ module.exports = function () {
     }
   });
 
-  //create report folder
-  let csvReportsPath = PROJECT_ROOT_DIRECTORY + "/public/reports" ;
-
-  if( !fs.existsSync(csvReportsPath)) {
-    fs.mkdirSync(csvReportsPath);
-  }
-
   // All controllers
   global.controllers = requireAll({
     dirname: PROJECT_ROOT_DIRECTORY + "/controllers",
