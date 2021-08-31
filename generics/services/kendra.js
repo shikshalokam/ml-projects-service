@@ -677,6 +677,7 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
             
             const url = 
             KENDRA_URL + CONSTANTS.endpoints.SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION + "/" + solutionId;
+            console.log("solution details url",url)
 
             const options = {
                 headers : {
@@ -696,10 +697,12 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
                 };
 
                 if (err) {
+                    console.log("solution details error is",err);
                     result.success = false;
                 } else {
                     
                     let response = data.body;
+                    console.log("solution details response is",response);
                     
                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
                         result["data"] = response.result;
@@ -738,6 +741,8 @@ const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) 
                 url = url + "/" + userId;
             }
 
+            console.log("user organisations url",url)
+
             const options = {
                 headers : {
                     "content-type": "application/json",
@@ -754,10 +759,12 @@ const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) 
                 };
 
                 if (err) {
+                    console.log("--user organisation and root organisation issue ---",err);
                     result.success = false;
                 } else {
 
                     let response = JSON.parse(data.body);
+                    console.log("-- user organisation and root organisation success ---",response);
                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
                         result["data"] = response.result;
                     } else {
