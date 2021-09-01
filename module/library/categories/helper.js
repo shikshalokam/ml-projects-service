@@ -8,6 +8,8 @@
 // Dependencies 
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const sessionHelpers = require(GENERIC_HELPERS_PATH+"/sessions");
+const projectCategoriesService = require(DB_SERVICE_BASE_PATH + "/projectCategories");
+const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
 const moment = require("moment-timezone");
 
 /**
@@ -16,59 +18,6 @@ const moment = require("moment-timezone");
 */
 
 module.exports = class LibraryCategoriesHelper {
-
-      /**
-   * Library project categories documents.
-   * @method
-   * @name categoryDocuments
-   * @param {Object} [findQuery = "all"] - filtered data.
-   * @param {Array} [fields = "all"] - projected data.
-   * @param {Array} [skipFields = "none"] - fields to skip.
-   * @returns {Array} - Library project categories data.
-   */
-
-  static categoryDocuments(
-    findQuery = "all", 
-    fields = "all",
-    skipFields = "none"
-  ) {
-      return new Promise(async (resolve, reject) => {
-        
-        try {
-          
-          let queryObject = {};
-
-          if (findQuery != "all") {
-              queryObject = findQuery;
-          }
-
-          let projection = {};
-
-          if (fields != "all") {
-              fields.forEach(element => {
-                  projection[element] = 1;
-              });
-          }
-
-          if (skipFields != "none") {
-              skipFields.forEach(element => {
-                  projection[element] = 0;
-              });
-          }
-
-          let projectCategoriesData = 
-          await database.models.projectCategories.find(
-            queryObject, 
-            projection
-          ).lean();
-          
-          return resolve(projectCategoriesData);
-
-      } catch (error) {
-          return reject(error);
-        }
-      });
-    }
 
       /**
       * List of library projects.
@@ -150,8 +99,7 @@ module.exports = class LibraryCategoriesHelper {
                     }
                 });
 
-                let result = 
-                await database.models.projectTemplates.aggregate(aggregateData);
+                let result = await projectTemplateService.getAggregate(aggregateData);
 
                 if( result[0].data.length > 0 ) {
                     
@@ -199,11 +147,7 @@ module.exports = class LibraryCategoriesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let categoriesUpdated = 
-                await database.models.projectCategories.updateMany(
-                    filterQuery,
-                    updateData
-                );
+                let categoriesUpdated = await projectCategoriesService.updateMany(filterQuery,updateData);
 
                 if( !categoriesUpdated.ok ) {
                     throw {

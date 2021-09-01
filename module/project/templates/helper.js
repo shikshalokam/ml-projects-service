@@ -17,55 +17,11 @@ const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
+const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
+const projectTemplateTaskService = require(DB_SERVICE_BASE_PATH + "/projectTemplateTask");
+const projectService = require(DB_SERVICE_BASE_PATH + "/projects");
 
 module.exports = class ProjectTemplatesHelper {
-
-     /**
-     * Lists of template.
-     * @method
-     * @name templateDocument
-     * @param {Array} [filterData = "all"] - template filter query.
-     * @param {Array} [fieldsArray = "all"] - projected fields.
-     * @param {Array} [skipFields = "none"] - field not to include
-     * @returns {Array} Lists of template. 
-     */
-    
-    static templateDocument(
-        filterData = "all", 
-        fieldsArray = "all",
-        skipFields = "none"
-    ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                
-                let queryObject = (filterData != "all") ? filterData : {};
-                let projection = {}
-           
-                if (fieldsArray != "all") {
-                    fieldsArray.forEach(field => {
-                        projection[field] = 1;
-                   });
-               }
-               
-               if( skipFields !== "none" ) {
-                   skipFields.forEach(field=>{
-                       projection[field] = 0;
-                   });
-               }
-               
-               let templates = 
-               await database.models.projectTemplates.find(
-                   queryObject, 
-                   projection
-               ).lean();
-           
-               return resolve(templates);
-           
-           } catch (error) {
-               return reject(error);
-           }
-       });
-   }
 
     /**
       * Extract csv information.
@@ -122,7 +78,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( categoryIds.length > 0 ) {
 
                     let categories = 
-                    await libraryCategoriesHelper.categoryDocuments({
+                    await projectCategoriesService.categoryDocuments({
                         externalId : { $in : categoryIds }
                     },["externalId","name"]);
 
@@ -338,13 +294,13 @@ module.exports = class ProjectTemplatesHelper {
                 for ( let template = 0; template < templates.length ; template ++ ) {
 
                     let currentData = templates[template];
-                    
+
                     let templateData = 
-                    await this.templateDocument({
-                        status : CONSTANTS.common.PUBLISHED,
-                        externalId : currentData.externalId,
-                        isReusable : true
-                    },["_id"]);
+                        await projectTemplateService.templateDocument({
+                            status : CONSTANTS.common.PUBLISHED,
+                            externalId : currentData.externalId,
+                            isReusable : true
+                        },["_id"]);
 
                     if( templateData.length > 0 && templateData[0]._id ) {
                         currentData["_SYSTEM_ID"] = 
@@ -361,10 +317,7 @@ module.exports = class ProjectTemplatesHelper {
                         templateData.createdBy = templateData.updatedBy = templateData.userId = userId;
                         templateData.isReusable = true;
     
-                        let createdTemplate = 
-                        await database.models.projectTemplates.create(
-                            templateData
-                        ); 
+                        let createdTemplate = await projectTemplateService.createTemplate(templateData);
     
                         if( !createdTemplate._id ) {
                             currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
@@ -478,7 +431,7 @@ module.exports = class ProjectTemplatesHelper {
                     } else {
 
                         const template = 
-                        await this.templateDocument({
+                        await projectTemplateService.templateDocument({
                             status : CONSTANTS.common.PUBLISHED,
                             _id : currentData._SYSTEM_ID,
                             status : CONSTANTS.common.PUBLISHED
@@ -498,15 +451,15 @@ module.exports = class ProjectTemplatesHelper {
                             templateData.updatedBy = userId;
 
                             let projectTemplateUpdated = 
-                            await database.models.projectTemplates.findOneAndUpdate({
+                            await projectTemplateService.findOneAndUpdate({
                                 _id : currentData._SYSTEM_ID
                             },{
                                 $set : templateData
                             },{
-                                    new : true
+                                new : true
                             });
 
-                            if( !projectTemplateUpdated._id ) {
+                            if( !projectTemplateUpdated || !projectTemplateUpdated._id ) {
                                 currentData["UPDATE_STATUS"] = 
                                 constants.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED;
                             }
@@ -591,7 +544,7 @@ module.exports = class ProjectTemplatesHelper {
             try {
 
                 let projectTemplateData = 
-                await this.templateDocument({
+                await projectTemplateService.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     externalId : templateId,
                     isReusable : true
@@ -667,7 +620,7 @@ module.exports = class ProjectTemplatesHelper {
                 newProjectTemplate.isReusable = false;
 
                 let duplicateTemplateDocument = 
-                await database.models.projectTemplates.create(
+                await projectTemplateService.createTemplate(
                   _.omit(newProjectTemplate, ["_id"])
                 );
 
@@ -743,7 +696,7 @@ module.exports = class ProjectTemplatesHelper {
                 }
 
                 let templateData = 
-                await this.templateDocument({
+                await projectTemplateService.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : templateId,
                     isReusable : true
@@ -794,7 +747,7 @@ module.exports = class ProjectTemplatesHelper {
                     updateRating.noOfRatings = calculateRating.noOfRatings;
     
                     ratingUpdated = 
-                    await database.models.projectTemplates.findOneAndUpdate({
+                    await projectTemplateService.findOneAndUpdate({
                         _id : templateId
                     },{
                         $set : updateRating
@@ -856,10 +809,14 @@ module.exports = class ProjectTemplatesHelper {
 
                 await Promise.all(taskIds.map(async taskId => {
 
-                    let taskData = await database.models.projectTemplateTasks.findOne(
+                    let taskData = await projectTemplateTaskService.taskDocuments(
                         {
                             _id : taskId
-                        }).lean();
+                        });
+
+                    if(taskData && taskData.length > 0){
+                        taskData = taskData[0];
+                    }
 
                         if(taskData){
                             //duplicate task
@@ -868,7 +825,7 @@ module.exports = class ProjectTemplatesHelper {
                             newProjectTemplateTask.projectTemplateExternalId = duplicateTemplateExternalId;
                             newProjectTemplateTask.externalId = taskData.externalId +"-"+ UTILS.epochTime();
                             duplicateTemplateTask = 
-                                await database.models.projectTemplateTasks.create(
+                                await projectTemplateTaskService.createTemplateTask(
                                   _.omit(newProjectTemplateTask, ["_id"])
                                 );
                             newTaskId.push(duplicateTemplateTask._id);
@@ -879,10 +836,14 @@ module.exports = class ProjectTemplatesHelper {
                           
                                 if(childTaskIds && childTaskIds.length > 0){
                                     await Promise.all(childTaskIds.map(async childtaskId => {
-                                        let childTaskData = await database.models.projectTemplateTasks.findOne(
-                                        {
-                                            _id : childtaskId
-                                        }).lean();
+                                        let childTaskData = await projectTemplateTaskService.taskDocuments(
+                                            {
+                                                _id : childtaskId
+                                            });
+                                        
+                                        if(childTaskData && childTaskData.length > 0){
+                                            childTaskData = childTaskData[0];
+                                        }
                                         
                                         if(childTaskData){
                                             newProjectTemplateChildTask = {...childTaskData};
@@ -891,7 +852,7 @@ module.exports = class ProjectTemplatesHelper {
                                             newProjectTemplateChildTask.parentId = duplicateTemplateTask._id;
                                             newProjectTemplateChildTask.externalId = childTaskData.externalId +"-"+ UTILS.epochTime();
                                             duplicateChildTemplateTask = 
-                                                await database.models.projectTemplateTasks.create(
+                                                await projectTemplateTaskService.createTemplateTask(
                                                   _.omit(newProjectTemplateChildTask, ["_id"])
                                                 );
 
@@ -900,7 +861,7 @@ module.exports = class ProjectTemplatesHelper {
                                     }))
 
                                     if(childTaskIdArray && childTaskIdArray.length > 0){
-                                        let updateTaskData = await database.models.projectTemplateTasks.findOneAndUpdate(
+                                        let updateTaskData = projectTemplateTaskService.updateTaskDocument(
                                         {
                                             _id : duplicateTemplateTask._id
                                         },
@@ -908,7 +869,7 @@ module.exports = class ProjectTemplatesHelper {
                                             $set : {
                                                     children : childTaskIdArray
                                             }
-                                        }).lean();
+                                        })
                                     }
                                 }
                             }
@@ -919,7 +880,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 if(newTaskId && newTaskId.length > 0){
 
-                    updateDuplicateTemplate = await database.models.projectTemplates.findOneAndUpdate(
+                    updateDuplicateTemplate = await projectTemplateService.findOneAndUpdate(
                     {
                         _id : duplicateTemplateId
                     },
@@ -927,7 +888,7 @@ module.exports = class ProjectTemplatesHelper {
                         $set : {
                             tasks : newTaskId
                         }
-                    }).lean();
+                    })
                 }
 
                 return resolve(
@@ -941,53 +902,6 @@ module.exports = class ProjectTemplatesHelper {
         })
     }
 
-     /**
-    * Update projectTemplates document.
-    * @method
-    * @name updateProjectTemplateDocument
-    * @param {Object} query - query to find document
-    * @param {Object} updateObject - fields to update
-    * @returns {String} - message.
-    */
-
-   static updateProjectTemplateDocument(query= {}, updateObject= {}) {
-    return new Promise(async (resolve, reject) => {
-        try {
-
-            if (Object.keys(query).length == 0) {
-                throw new Error(CONSTANTS.apiResponses.UPDATE_QUERY_REQUIRED)
-            }
-
-            if (Object.keys(updateObject).length == 0) {
-                throw new Error (CONSTANTS.apiResponses.UPDATE_OBJECT_REQUIRED)
-            }
-
-            let updateResponse = await database.models.projectTemplates.updateOne
-            (
-                query,
-                updateObject
-            )
-            
-            if (updateResponse.nModified == 0) {
-                throw new Error(CONSTANTS.apiResponses.FAILED_TO_UPDATE)
-            }
-
-            return resolve({
-                success: true,
-                message: CONSTANTS.apiResponses.UPDATED_DOCUMENT_SUCCESSFULLY,
-                data: true
-            });
-
-        } catch (error) {
-            return resolve({
-                success: false,
-                message: error.message,
-                data: false
-            });
-        }
-    });
-   }
-
       /**
       * Templates list.
       * @method
@@ -1000,7 +914,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templateData = await this.templateDocument({
+                let templateData = await projectTemplateService.templateDocument({
                     externalId : { $in : externalIds }
                 },["title","metaInformation.goal","externalId"]);
 
@@ -1045,7 +959,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templateData = await this.templateDocument({
+                let templateData = await projectTemplateService.templateDocument({
                     externalId : templateId 
                 },"all",
                 [
@@ -1085,15 +999,13 @@ module.exports = class ProjectTemplatesHelper {
                     
                     templateData[0].projectId = "";
 
-                    let project = await database.models.projects.findOne({
+                    let project = await projectService.projectDocument({
                         userId : userId,
                         projectTemplateId : templateData[0]._id
-                    },{
-                        _id : 1
-                    }).lean();
+                    },["_id"]);
 
-                    if( project && project._id ) {
-                        templateData[0].projectId = project._id;
+                    if(project && project.length > 0){
+                        templateData[0].projectId = project[0]._id;
                     }
                 }
 
@@ -1122,7 +1034,7 @@ module.exports = class ProjectTemplatesHelper {
             try {
 
                 const templateDocument = 
-                await this.templateDocument({
+                await projectTemplateService.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : templateId
                 },["tasks"]);
@@ -1130,31 +1042,27 @@ module.exports = class ProjectTemplatesHelper {
                 let tasks = [];
 
                 if( templateDocument[0].tasks ) {
-                    
-                    tasks = await database.models.projectTemplateTasks.find({
+
+                    let findQuery = {
                         _id : {
                             $in : templateDocument[0].tasks
                         },
                         parentId : { $exists : false }
-                    },{
-                        "projectTemplateId" : 0,
-                        "__v" : 0,
-                        "projectTemplateExternalId" : 0
-                    }).lean();
+                    }
+                    
+                    tasks = await projectTemplateService.templateDocument(findQuery,"all", ["projectTemplateId","__v","projectTemplateExternalId"]);
 
                     for( let task = 0 ; task < tasks.length ; task ++ ) {
 
                         if( tasks[task].children && tasks[task].children.length > 0 ) {
-                            
-                            let subTasks = await database.models.projectTemplateTasks.find({
+
+                            let subTaskQuery = {
                                 _id : {
                                     $in : tasks[task].children
                                 }
-                            },{
-                                "projectTemplateId" : 0,
-                                "__v" : 0,
-                                "projectTemplateExternalId" : 0
-                            }).lean();
+                            }
+
+                            let subTasks = await projectTemplateTaskService.taskDocuments(subTaskQuery, ["projectTemplateId","__v","projectTemplateExternalId"]);
                             
                             tasks[task].children = subTasks;
                         }

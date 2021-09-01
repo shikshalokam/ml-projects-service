@@ -14,6 +14,10 @@ const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templat
 const { v4: uuidv4 } = require('uuid');
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 const dhitiService = require(GENERICS_FILES_PATH + "/services/dhiti");
+const projectService = require(DB_SERVICE_BASE_PATH + "/projects");
+const projectCategoriesService = require(DB_SERVICE_BASE_PATH + "/projectCategories");
+const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
+const projectTemplateTaskService = require(DB_SERVICE_BASE_PATH + "/projectTemplateTask");
 
 /**
     * UserProjectsHelper
@@ -21,53 +25,6 @@ const dhitiService = require(GENERICS_FILES_PATH + "/services/dhiti");
 */
 
 module.exports = class UserProjectsHelper {
-
-    /**
-     * Lists of projects.
-     * @method
-     * @name projectDocument
-     * @param {Array} [filterData = "all"] - project filter query.
-     * @param {Array} [fieldsArray = "all"] - projected fields.
-     * @param {Array} [skipFields = "none"] - field not to include
-     * @returns {Array} Lists of projects. 
-     */
-
-    static projectDocument(
-        filterData = "all",
-        fieldsArray = "all",
-        skipFields = "none"
-    ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                let queryObject = (filterData != "all") ? filterData : {};
-                let projection = {}
-
-                if (fieldsArray != "all") {
-                    fieldsArray.forEach(field => {
-                        projection[field] = 1;
-                    });
-                }
-
-                if (skipFields !== "none") {
-                    skipFields.forEach(field => {
-                        projection[field] = 0;
-                    });
-                }
-
-                let templates =
-                    await database.models.projects.find(
-                        queryObject,
-                        projection
-                    ).lean();
-
-                return resolve(templates);
-
-            } catch (error) {
-                return reject(error);
-            }
-        });
-    }
 
     /**
       * Projects boolean data.
@@ -141,7 +98,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const userProject = await this.projectDocument({
+                const userProject = await projectService.projectDocument({
                     _id: projectId,
                     userId: userId
                 }, [
@@ -363,7 +320,7 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let projectUpdated =
-                    await database.models.projects.findOneAndUpdate(
+                    await projectService.findOneAndUpdate(
                         {
                             _id: userProject[0]._id
                         },
@@ -510,7 +467,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projectDetails = await this.projectDocument({
+                const projectDetails = await projectService.projectDocument({
                     _id: projectId,
                     userId: userId
                 }, "all",
@@ -540,7 +497,7 @@ module.exports = class UserProjectsHelper {
                 if (Object.keys(userRoleInformtion).length > 0) {
 
                     if (!projectDetails[0].userRoleInformtion || !Object.keys(projectDetails[0].userRoleInformtion).length > 0) {
-                        await database.models.projects.findOneAndUpdate({
+                        await projectService.findOneAndUpdate({
                             _id: projectId
                         },{
                             $set: {userRoleInformtion: userRoleInformtion}
@@ -641,7 +598,7 @@ module.exports = class UserProjectsHelper {
                 );
 
                 let result =
-                    await database.models.projects.aggregate(aggregateData);
+                    await projectService.getAggregate(aggregateData);
 
                 return resolve({
                     success: true,
@@ -713,7 +670,7 @@ module.exports = class UserProjectsHelper {
                 aggregatedData.push(projectData);
 
                 let projects =
-                    await database.models.projects.aggregate(aggregatedData);
+                    await projectService.getAggregate(aggregatedData);
 
                 return resolve({
                     success: true,
@@ -817,7 +774,7 @@ module.exports = class UserProjectsHelper {
                 });
 
                 const tasksUpdated =
-                    await database.models.projects.findOneAndUpdate({
+                    await projectService.findOneAndUpdate({
                         _id: projectId,
                         "tasks._id": taskId
                     }, { $set: update });
@@ -844,7 +801,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let project = await this.projectDocument(
+                let project = await projectService.projectDocument(
                     {
                         "_id": projectId,
                         "tasks._id": taskId
@@ -909,7 +866,7 @@ module.exports = class UserProjectsHelper {
                             currentTask.solutionDetails.programId;
                     }
 
-                    await database.models.projects.findOneAndUpdate({
+                    await projectService.findOneAndUpdate({
                         "_id": projectId,
                         "tasks._id": taskId
                     }, {
@@ -946,127 +903,6 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-    /**
-  * User assigned project creation data.
-  * @method
-  * @name userAssignedProjectCreation
-  * @param {String} templateId - Project template id.
-  * @param {String} userId - Logged in user id.
-  * @param {String} userToken - Logged in user token.
-  * @returns {String} - message.
-  */
-
-    static userAssignedProjectCreation(templateId, userId, userToken) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                const projectTemplateData =
-                    await projectTemplatesHelper.templateDocument({
-                        status: CONSTANTS.common.PUBLISHED,
-                        _id: templateId,
-                        isReusable: false
-                    }, "all",
-                        [
-                            "ratings",
-                            "noOfRatings",
-                            "averageRating"
-                        ]);
-
-                if (!projectTemplateData.length > 0) {
-                    throw {
-                        message: CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                let result = { ...projectTemplateData[0] };
-
-                result.projectTemplateId = result._id;
-                result.projectTemplateExternalId = result.externalId;
-                result.userId = userId;
-                result.createdBy = userId;
-                result.updatedBy = userId;
-
-                let userOrganisations =
-                    await kendraService.getUserOrganisationsAndRootOrganisations(
-                        userToken,
-                        userId
-                    );
-
-                if (!userOrganisations.success) {
-                    throw {
-                        message: CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                result.createdFor =
-                    userOrganisations.data.createdFor;
-
-                result.rootOrganisations =
-                    userOrganisations.data.rootOrganisations;
-
-                result.assesmentOrObservationTask = false;
-
-                if (projectTemplateData[0].tasks && projectTemplateData[0].tasks.length > 0) {
-
-                    const tasksAndSubTasks =
-                        await projectTemplatesHelper.tasksAndSubTasks(
-                            projectTemplateData[0]._id
-                        );
-
-                    if (tasksAndSubTasks.length > 0) {
-
-                        result.tasks = _projectTask(tasksAndSubTasks);
-
-                        result.tasks.forEach(task => {
-                            if (
-                                task.type === CONSTANTS.common.ASSESSMENT ||
-                                task.type === CONSTANTS.common.OBSERVATION
-                            ) {
-                                result.assesmentOrObservationTask = true;
-                            }
-                        });
-
-
-                        let taskReport = {
-                            total: result.tasks.length
-                        };
-
-                        result.tasks.forEach(task => {
-                            if (!taskReport[task.status]) {
-                                taskReport[task.status] = 1;
-                            } else {
-                                taskReport[task.status] += 1;
-                            }
-                        });
-
-                        result["taskReport"] = taskReport;
-
-                    }
-                }
-
-                delete result._id;
-
-                return resolve({
-                    success: true,
-                    message: CONSTANTS.apiResponses.UPDATED_DOCUMENT_SUCCESSFULLY,
-                    data: result
-                });
-
-            } catch (error) {
-                return resolve({
-                    status:
-                        error.status ?
-                            error.status : HTTP_STATUS_CODE['internal_server_error'].status,
-                    success: false,
-                    message: error.message,
-                    data: {}
-                });
-            }
-        });
-    }
-
   /**
      * Creation of user targeted projects.
      * @method
@@ -1090,7 +926,7 @@ module.exports = class UserProjectsHelper {
             if( templateId !== "" ) {
                 
                 let templateDocuments = 
-                await projectTemplatesHelper.templateDocument({
+                await projectTemplateService.templateDocument({
                     "externalId" : templateId,
                     "isReusable" : false,
                     "solutionId" : { $exists : true }
@@ -1112,7 +948,7 @@ module.exports = class UserProjectsHelper {
 
             if (projectId === "") {
                 
-                const projectDetails = await this.projectDocument({
+                const projectDetails = await projectService.projectDocument({
                     solutionId: solutionId,
                     userId: userId
                 }, ["_id"]);
@@ -1254,7 +1090,7 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.lastDownloadedAt = new Date();
                     projectCreation.data.userRoleInformtion = userRoleInformation;
     
-                    let project = await database.models.projects.create(projectCreation.data);
+                    let project = await projectService.createProject(projectCreation.data);
                     projectId = project._id;
                 }
             }
@@ -1299,7 +1135,7 @@ module.exports = class UserProjectsHelper {
             try {
 
                 const projectTemplateData =
-                    await projectTemplatesHelper.templateDocument({
+                    await projectTemplateService.templateDocument({
                         status: CONSTANTS.common.PUBLISHED,
                         _id: templateId,
                         isReusable: false
@@ -1550,7 +1386,7 @@ module.exports = class UserProjectsHelper {
                     createProject.userRoleInformtion = data.profileInformation;
                 }
 
-                let userProject = await database.models.projects.create(
+                let userProject = await projectService.createProject(
                     createProject
                 );
 
@@ -1610,7 +1446,7 @@ module.exports = class UserProjectsHelper {
 
                 if (!taskIds.length ) {
 
-                    projectDocument = await this.projectDocument
+                    projectDocument = await projectService.projectDocument
                     (
                         query,
                         [
@@ -1642,7 +1478,7 @@ module.exports = class UserProjectsHelper {
                         }}
                     }}]
                    
-                    projectDocument = await database.models.projects.aggregate(aggregateData);
+                    projectDocument = await projectService.getAggregate(aggregateData);
                 }
               
                 if (!projectDocument.length) {
@@ -1856,7 +1692,7 @@ module.exports = class UserProjectsHelper {
                 filterQuery["programId"] = programId;
             }
 
-            let importedProjects = await this.projectDocument(
+            let importedProjects = await projectService.projectDocument(
                 filterQuery,
                 [
                     "solutionInformation",
@@ -2097,7 +1933,7 @@ function _projectCategories(categories) {
             if (categoryIds.length > 0) {
 
                 categoryData =
-                    await libraryCategoriesHelper.categoryDocuments({
+                    await projectCategoriesService.categoryDocuments({
                         _id: { $in: categoryIds }
                     }, ["name", "externalId"]);
 
@@ -2223,7 +2059,7 @@ function _assessmentDetails(assessmentData) {
             if (assessmentData.project) {
 
                 let templateTasks =
-                    await projectTemplateTasksHelper.taskDocuments({
+                    await projectTemplateTaskService.taskDocuments({
                         externalId: assessmentData.project.taskId
                     }, ["_id"])
 
@@ -2343,7 +2179,7 @@ function _observationDetails(observationData) {
             if (observationData.project) {
 
                 let templateTasks =
-                    await projectTemplateTasksHelper.taskDocuments({
+                    await projectTemplateTaskService.taskDocuments({
                         externalId: observationData.project.taskId
                     }, ["_id"])
 

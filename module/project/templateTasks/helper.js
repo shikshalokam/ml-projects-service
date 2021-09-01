@@ -14,55 +14,10 @@
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
+const projectTemplateTaskService = require(DB_SERVICE_BASE_PATH + "/projectTemplateTask");
+const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
 
 module.exports = class ProjectTemplateTasksHelper {
-
-    /**
-     * Lists of tasks.
-     * @method
-     * @name taskDocuments
-     * @param {Array} [filterData = "all"] - tasks filter query.
-     * @param {Array} [fieldsArray = "all"] - projected fields.
-     * @param {Array} [skipFields = "none"] - field not to include
-     * @returns {Array} Lists of tasks. 
-     */
-    
-    static taskDocuments(
-        filterData = "all", 
-        fieldsArray = "all",
-        skipFields = "none"
-    ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                
-                let queryObject = (filterData != "all") ? filterData : {};
-                let projection = {}
-           
-                if (fieldsArray != "all") {
-                    fieldsArray.forEach(field => {
-                        projection[field] = 1;
-                   });
-               }
-               
-               if( skipFields !== "none" ) {
-                   skipFields.forEach(field=>{
-                       projection[field] = 0;
-                   });
-               }
-               
-               let tasks = 
-               await database.models.projectTemplateTasks.find(
-                   queryObject, 
-                   projection
-               ).lean();
-           
-               return resolve(tasks);
-           
-           } catch (error) {
-               return reject(error);
-           }
-       });
-    }
 
     /**
      * Extract csv information.
@@ -119,7 +74,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         }
                     }
 
-                    let tasksData = await this.taskDocuments(
+                    let tasksData = await projectTemplateTaskService.taskDocuments(
                         filterData,
                         ["_id","children","externalId","projectTemplateId","parentId"]
                     );
@@ -136,7 +91,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let projectTemplate = 
-                await projectTemplatesHelper.templateDocument({
+                await projectTemplateService.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : projectTemplateId
                 },["_id","entityType","externalId"]);
@@ -335,7 +290,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     if( !update ) {
                         taskData = 
-                        await database.models.projectTemplateTasks.create(allValues);
+                        await projectTemplateTaskService.createTemplateTask(allValues);
                         if ( !taskData._id ) {
                             parsedData.STATUS = 
                             CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
@@ -347,7 +302,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     } else {
                         
                         taskData = 
-                        await database.models.projectTemplateTasks.findOneAndUpdate({
+                        await projectTemplateTaskService.findOneAndUpdate({
                             _id :  parsedData._SYSTEM_ID
                         },{
                             $set : allValues
@@ -361,7 +316,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         if( parsedData.hasAParentTask === "YES" ) { 
                     
                             let parentTask =
-                            await database.models.projectTemplateTasks.findOneAndUpdate({
+                            await projectTemplateTaskService.findOneAndUpdate({
                                 externalId : parsedData.parentTaskId
                             },{
                                 $addToSet : {
@@ -388,7 +343,7 @@ module.exports = class ProjectTemplateTasksHelper {
                                     value : parsedData.parentTaskValue
                                 });
                                 
-                                await database.models.projectTemplateTasks.findOneAndUpdate({
+                                await projectTemplateTaskService.findOneAndUpdate({
                                     _id : taskData._id
                                 },{
                                     $set : {
@@ -403,7 +358,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             }
                         }
 
-                        await projectTemplatesHelper.updateProjectTemplateDocument
+                        await projectTemplateService.updateProjectTemplateDocument
                         (
                             { _id : template._id },
                             { $addToSet : { tasks : ObjectId(taskData._id) } }
@@ -601,7 +556,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         csvData.data.tasks[currentData._SYSTEM_ID].parentId.toString() !== createdTask._parentTaskId.toString()
                     ) {
 
-                        await database.models.projectTemplateTasks.findOneAndUpdate(
+                        await projectTemplateTaskService.findOneAndUpdate(
                             {
                               _id: csvData.data.tasks[currentData._SYSTEM_ID].parentId
                             },
