@@ -717,64 +717,6 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
     })
 }
 
-/**
-  * Update solution
-  * @function
-  * @name getUserOrganisationsAndRootOrganisations
-  * @param {String} token - Logged in user token.
-  * @param {String} userId - User id.
-  * @returns {JSON} - Update solutions.
-*/
-
-const getUserOrganisationsAndRootOrganisations = function ( token,userId = "" ) {
-    return new Promise(async (resolve, reject) => {
-        try {
-
-            let url = 
-            KENDRA_URL + 
-            CONSTANTS.endpoints.GET_USER_ORGANISATIONS;
-
-            if( userId !== "" ) {
-                url = url + "/" + userId;
-            }
-
-            const options = {
-                headers : {
-                    "content-type": "application/json",
-                    "x-authenticated-user-token" : token
-                }
-            };
-
-            request.post(url,options,kendraCallback);
-
-            function kendraCallback(err, data) {
-
-                let result = {
-                    success : true
-                };
-
-                if (err) {
-                    result.success = false;
-                } else {
-
-                    let response = JSON.parse(data.body);
-                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
-                        result["data"] = response.result;
-                    } else {
-                        result.success = false;
-                    }
-
-                }
-
-                return resolve(result);
-            }
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-}
-
 module.exports = {
     entityTypesDocuments : entityTypesDocuments,
     rolesDocuments : rolesDocuments,
@@ -788,7 +730,6 @@ module.exports = {
     createSolution: createSolution,
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
-    getDownloadableUrl : getDownloadableUrl,
-    getUserOrganisationsAndRootOrganisations : getUserOrganisationsAndRootOrganisations
+    getDownloadableUrl : getDownloadableUrl
 };
 
