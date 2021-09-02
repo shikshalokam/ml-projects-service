@@ -1053,8 +1053,6 @@ module.exports = class ProjectTemplatesHelper {
                     "noOfRatings",
                     "averageRating",
                     "parentTemplateId",
-                    "createdFor",
-                    "rootOrganisations",
                     "userId",
                     "createdBy",
                     "updatedBy",

@@ -28,10 +28,6 @@ module.exports = {
             default : "",
             index: true
         },
-        createdFor : {
-            type : Array,
-            default : []
-        },
         status : {
             type : String,
             default : "notStarted",
@@ -81,10 +77,6 @@ module.exports = {
         },
         startDate: Date,
         endDate: Date,
-        rootOrganisations : {
-            type : [String],
-            default : []
-        },
         learningResources : {
             type : Array,
             default : []
