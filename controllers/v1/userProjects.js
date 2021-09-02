@@ -400,7 +400,6 @@ module.exports = class UserProjects extends Abstract {
     "status": 200,
     "result": {
         "userId": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-        "createdFor": [],
         "isDeleted": false,
         "categories": [
             {
@@ -498,7 +497,6 @@ module.exports = class UserProjects extends Abstract {
             }
         ],
         "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-        "rootOrganisations": [],
         "_id": "5f731d68920a8c3e092e6e4c",
         "deleted": false,
         "name": "Test-2",

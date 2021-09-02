@@ -16,8 +16,6 @@ module.exports = class Solutions {
     * @apiGroup Solutions
     * @apiParamExample {json} Request-Body:
     * {
-    * "createdFor" : ["01305447637218918413"],
-    * "rootOrganisations" : ["01305447637218918413"],
     "programExternalId" : "AMAN_TEST_123-1607937244986",
     "entityType" : "school",
     "externalId" : "IMPROVEMENT-PROJECT-TEST-SOLUTION",

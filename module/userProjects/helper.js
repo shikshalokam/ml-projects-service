@@ -90,9 +90,7 @@ module.exports = class UserProjectsHelper {
                         }, "all", [
                         "createdBy",
                         "updatedBy",
-                        "rootOrganisations",
                         "taskReport",
-                        "createdFor",
                         "projectTemplateId",
                         "projectTemplateExternalId",
                         "__v"
@@ -721,21 +719,6 @@ module.exports = class UserProjectsHelper {
                     )
                 }
 
-                let userOrganisations =
-                    await kendraService.getUserOrganisationsAndRootOrganisations(
-                        userToken
-                    );
-
-                if (!userOrganisations.success) {
-                    throw {
-                        message: CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                libraryProjects.data.createdFor = userOrganisations.data.createdFor;
-                libraryProjects.data.rootOrganisations = userOrganisations.data.rootOrganisations;
-
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
                 libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
@@ -795,29 +778,10 @@ module.exports = class UserProjectsHelper {
             try {
 
                 let creationData = {
-                    lastDownloadedAt: new Date(),
-                    createdFor: [],
-                    rootOrganisations: []
+                    lastDownloadedAt: new Date()
                 }
 
                 creationData["userId"] = creationData["createdBy"] = creationData["updatedBy"] = userId;
-
-                let userOrganisations =
-                    await kendraService.getUserOrganisationsAndRootOrganisations(
-                        userToken
-                    );
-
-                if (!userOrganisations.success) {
-                    throw {
-                        message: CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                if (userOrganisations.data) {
-                    creationData.createdFor = userOrganisations.data.createdFor;
-                    creationData.rootOrganisations = userOrganisations.data.rootOrganisations;
-                }
 
                 let userProject = await database.models.projects.create(
                     creationData
@@ -1235,8 +1199,6 @@ module.exports = class UserProjectsHelper {
                 }, "all",
                     [
                         "taskReport",
-                        "createdFor",
-                        "rootOrganisations",
                         "projectTemplateId",
                         "projectTemplateExternalId",
                         "userId",
@@ -1757,25 +1719,6 @@ module.exports = class UserProjectsHelper {
                 result.createdBy = userId;
                 result.updatedBy = userId;
 
-                let userOrganisations =
-                    await kendraService.getUserOrganisationsAndRootOrganisations(
-                        userToken,
-                        userId
-                    );
-
-                if (!userOrganisations.success) {
-                    throw {
-                        message: CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                result.createdFor =
-                    userOrganisations.data.createdFor;
-
-                result.rootOrganisations =
-                    userOrganisations.data.rootOrganisations;
-
                 result.assesmentOrObservationTask = false;
 
                 if (projectTemplateData[0].tasks && projectTemplateData[0].tasks.length > 0) {
@@ -2251,25 +2194,6 @@ module.exports = class UserProjectsHelper {
                 result.createdBy = userId;
                 result.updatedBy = userId;
 
-                let userOrganisations =
-                await kendraService.getUserOrganisationsAndRootOrganisations(
-                    userToken,
-                    userId
-                );
-
-                if (!userOrganisations.success) {
-                    throw {
-                        message: CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                result.createdFor =
-                    userOrganisations.data.createdFor;
-
-                result.rootOrganisations =
-                    userOrganisations.data.rootOrganisations;
-
                 result.createdAt = new Date();
                 result.updatedAt = new Date();
 
@@ -2354,23 +2278,6 @@ module.exports = class UserProjectsHelper {
                 let createProject = {};
 
                 createProject["userId"] = createProject["createdBy"] = createProject["updatedBy"] = userId;
-
-                let userOrganisations =
-                    await kendraService.getUserOrganisationsAndRootOrganisations(
-                        userToken
-                    );
-
-                if (!userOrganisations.success) {
-                    throw {
-                        message: CONSTANTS.apiResponses.USER_ORGANISATION_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                if (userOrganisations.data) {
-                    createProject.createdFor = userOrganisations.data.createdFor;
-                    createProject.rootOrganisations = userOrganisations.data.rootOrganisations;
-                }
 
                 let projectData = await _projectData(data);
                 if (projectData && projectData.success == true) {
