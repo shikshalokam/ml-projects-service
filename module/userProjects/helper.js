@@ -14,10 +14,10 @@ const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templat
 const { v4: uuidv4 } = require('uuid');
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
 const dhitiService = require(GENERICS_FILES_PATH + "/services/dhiti");
-const projectService = require(DB_SERVICE_BASE_PATH + "/projects");
-const projectCategoriesService = require(DB_SERVICE_BASE_PATH + "/projectCategories");
-const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
-const projectTemplateTaskService = require(DB_SERVICE_BASE_PATH + "/projectTemplateTask");
+const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
+const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
+const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
+const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 
 /**
     * UserProjectsHelper
@@ -98,7 +98,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const userProject = await projectService.projectDocument({
+                const userProject = await projectQueries.projectDocument({
                     _id: projectId,
                     userId: userId
                 }, [
@@ -320,7 +320,7 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let projectUpdated =
-                    await projectService.findOneAndUpdate(
+                    await projectQueries.findOneAndUpdate(
                         {
                             _id: userProject[0]._id
                         },
@@ -467,7 +467,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const projectDetails = await projectService.projectDocument({
+                const projectDetails = await projectQueries.projectDocument({
                     _id: projectId,
                     userId: userId
                 }, "all",
@@ -497,7 +497,7 @@ module.exports = class UserProjectsHelper {
                 if (Object.keys(userRoleInformtion).length > 0) {
 
                     if (!projectDetails[0].userRoleInformtion || !Object.keys(projectDetails[0].userRoleInformtion).length > 0) {
-                        await projectService.findOneAndUpdate({
+                        await projectQueries.findOneAndUpdate({
                             _id: projectId
                         },{
                             $set: {userRoleInformtion: userRoleInformtion}
@@ -598,7 +598,7 @@ module.exports = class UserProjectsHelper {
                 );
 
                 let result =
-                    await projectService.getAggregate(aggregateData);
+                    await projectQueries.getAggregate(aggregateData);
 
                 return resolve({
                     success: true,
@@ -670,7 +670,7 @@ module.exports = class UserProjectsHelper {
                 aggregatedData.push(projectData);
 
                 let projects =
-                    await projectService.getAggregate(aggregatedData);
+                    await projectQueries.getAggregate(aggregatedData);
 
                 return resolve({
                     success: true,
@@ -774,7 +774,7 @@ module.exports = class UserProjectsHelper {
                 });
 
                 const tasksUpdated =
-                    await projectService.findOneAndUpdate({
+                    await projectQueries.findOneAndUpdate({
                         _id: projectId,
                         "tasks._id": taskId
                     }, { $set: update });
@@ -801,7 +801,7 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let project = await projectService.projectDocument(
+                let project = await projectQueries.projectDocument(
                     {
                         "_id": projectId,
                         "tasks._id": taskId
@@ -866,7 +866,7 @@ module.exports = class UserProjectsHelper {
                             currentTask.solutionDetails.programId;
                     }
 
-                    await projectService.findOneAndUpdate({
+                    await projectQueries.findOneAndUpdate({
                         "_id": projectId,
                         "tasks._id": taskId
                     }, {
@@ -926,7 +926,7 @@ module.exports = class UserProjectsHelper {
             if( templateId !== "" ) {
                 
                 let templateDocuments = 
-                await projectTemplateService.templateDocument({
+                await projectTemplateQueries.templateDocument({
                     "externalId" : templateId,
                     "isReusable" : false,
                     "solutionId" : { $exists : true }
@@ -948,7 +948,7 @@ module.exports = class UserProjectsHelper {
 
             if (projectId === "") {
                 
-                const projectDetails = await projectService.projectDocument({
+                const projectDetails = await projectQueries.projectDocument({
                     solutionId: solutionId,
                     userId: userId
                 }, ["_id"]);
@@ -1090,7 +1090,7 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.lastDownloadedAt = new Date();
                     projectCreation.data.userRoleInformtion = userRoleInformation;
     
-                    let project = await projectService.createProject(projectCreation.data);
+                    let project = await projectQueries.createProject(projectCreation.data);
                     projectId = project._id;
                 }
             }
@@ -1135,7 +1135,7 @@ module.exports = class UserProjectsHelper {
             try {
 
                 const projectTemplateData =
-                    await projectTemplateService.templateDocument({
+                    await projectTemplateQueries.templateDocument({
                         status: CONSTANTS.common.PUBLISHED,
                         _id: templateId,
                         isReusable: false
@@ -1386,7 +1386,7 @@ module.exports = class UserProjectsHelper {
                     createProject.userRoleInformtion = data.profileInformation;
                 }
 
-                let userProject = await projectService.createProject(
+                let userProject = await projectQueries.createProject(
                     createProject
                 );
 
@@ -1446,7 +1446,7 @@ module.exports = class UserProjectsHelper {
 
                 if (!taskIds.length ) {
 
-                    projectDocument = await projectService.projectDocument
+                    projectDocument = await projectQueries.projectDocument
                     (
                         query,
                         [
@@ -1478,7 +1478,7 @@ module.exports = class UserProjectsHelper {
                         }}
                     }}]
                    
-                    projectDocument = await projectService.getAggregate(aggregateData);
+                    projectDocument = await projectQueries.getAggregate(aggregateData);
                 }
               
                 if (!projectDocument.length) {
@@ -1692,7 +1692,7 @@ module.exports = class UserProjectsHelper {
                 filterQuery["programId"] = programId;
             }
 
-            let importedProjects = await projectService.projectDocument(
+            let importedProjects = await projectQueries.projectDocument(
                 filterQuery,
                 [
                     "solutionInformation",
@@ -1933,7 +1933,7 @@ function _projectCategories(categories) {
             if (categoryIds.length > 0) {
 
                 categoryData =
-                    await projectCategoriesService.categoryDocuments({
+                    await projectCategoriesQueries.categoryDocuments({
                         _id: { $in: categoryIds }
                     }, ["name", "externalId"]);
 
@@ -2059,7 +2059,7 @@ function _assessmentDetails(assessmentData) {
             if (assessmentData.project) {
 
                 let templateTasks =
-                    await projectTemplateTaskService.taskDocuments({
+                    await projectTemplateTaskQueries.taskDocuments({
                         externalId: assessmentData.project.taskId
                     }, ["_id"])
 
@@ -2179,7 +2179,7 @@ function _observationDetails(observationData) {
             if (observationData.project) {
 
                 let templateTasks =
-                    await projectTemplateTaskService.taskDocuments({
+                    await projectTemplateTaskQueries.taskDocuments({
                         externalId: observationData.project.taskId
                     }, ["_id"])
 

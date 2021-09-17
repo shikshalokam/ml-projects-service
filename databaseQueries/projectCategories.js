@@ -8,11 +8,11 @@
 // Dependencies 
 
 /**
-    * ProjectCategoriesService
+    * ProjectCategories
     * @class
 */
 
-module.exports = class ProjectCategoriesService {
+module.exports = class ProjectCategories {
 
       /**
    * Library project categories documents.

@@ -17,9 +17,9 @@ const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
-const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
-const projectTemplateTaskService = require(DB_SERVICE_BASE_PATH + "/projectTemplateTask");
-const projectService = require(DB_SERVICE_BASE_PATH + "/projects");
+const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
+const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
+const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -296,7 +296,7 @@ module.exports = class ProjectTemplatesHelper {
                     let currentData = templates[template];
 
                     let templateData = 
-                        await projectTemplateService.templateDocument({
+                        await projectTemplateQueries.templateDocument({
                             status : CONSTANTS.common.PUBLISHED,
                             externalId : currentData.externalId,
                             isReusable : true
@@ -317,7 +317,7 @@ module.exports = class ProjectTemplatesHelper {
                         templateData.createdBy = templateData.updatedBy = templateData.userId = userId;
                         templateData.isReusable = true;
     
-                        let createdTemplate = await projectTemplateService.createTemplate(templateData);
+                        let createdTemplate = await projectTemplateQueries.createTemplate(templateData);
     
                         if( !createdTemplate._id ) {
                             currentData["_SYSTEM_ID"] = CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
@@ -431,7 +431,7 @@ module.exports = class ProjectTemplatesHelper {
                     } else {
 
                         const template = 
-                        await projectTemplateService.templateDocument({
+                        await projectTemplateQueries.templateDocument({
                             status : CONSTANTS.common.PUBLISHED,
                             _id : currentData._SYSTEM_ID,
                             status : CONSTANTS.common.PUBLISHED
@@ -451,7 +451,7 @@ module.exports = class ProjectTemplatesHelper {
                             templateData.updatedBy = userId;
 
                             let projectTemplateUpdated = 
-                            await projectTemplateService.findOneAndUpdate({
+                            await projectTemplateQueries.findOneAndUpdate({
                                 _id : currentData._SYSTEM_ID
                             },{
                                 $set : templateData
@@ -544,7 +544,7 @@ module.exports = class ProjectTemplatesHelper {
             try {
 
                 let projectTemplateData = 
-                await projectTemplateService.templateDocument({
+                await projectTemplateQueries.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     externalId : templateId,
                     isReusable : true
@@ -620,7 +620,7 @@ module.exports = class ProjectTemplatesHelper {
                 newProjectTemplate.isReusable = false;
 
                 let duplicateTemplateDocument = 
-                await projectTemplateService.createTemplate(
+                await projectTemplateQueries.createTemplate(
                   _.omit(newProjectTemplate, ["_id"])
                 );
 
@@ -696,7 +696,7 @@ module.exports = class ProjectTemplatesHelper {
                 }
 
                 let templateData = 
-                await projectTemplateService.templateDocument({
+                await projectTemplateQueries.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : templateId,
                     isReusable : true
@@ -747,7 +747,7 @@ module.exports = class ProjectTemplatesHelper {
                     updateRating.noOfRatings = calculateRating.noOfRatings;
     
                     ratingUpdated = 
-                    await projectTemplateService.findOneAndUpdate({
+                    await projectTemplateQueries.findOneAndUpdate({
                         _id : templateId
                     },{
                         $set : updateRating
@@ -809,7 +809,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 await Promise.all(taskIds.map(async taskId => {
 
-                    let taskData = await projectTemplateTaskService.taskDocuments(
+                    let taskData = await projectTemplateTaskQueries.taskDocuments(
                         {
                             _id : taskId
                         });
@@ -825,7 +825,7 @@ module.exports = class ProjectTemplatesHelper {
                             newProjectTemplateTask.projectTemplateExternalId = duplicateTemplateExternalId;
                             newProjectTemplateTask.externalId = taskData.externalId +"-"+ UTILS.epochTime();
                             duplicateTemplateTask = 
-                                await projectTemplateTaskService.createTemplateTask(
+                                await projectTemplateTaskQueries.createTemplateTask(
                                   _.omit(newProjectTemplateTask, ["_id"])
                                 );
                             newTaskId.push(duplicateTemplateTask._id);
@@ -836,7 +836,7 @@ module.exports = class ProjectTemplatesHelper {
                           
                                 if(childTaskIds && childTaskIds.length > 0){
                                     await Promise.all(childTaskIds.map(async childtaskId => {
-                                        let childTaskData = await projectTemplateTaskService.taskDocuments(
+                                        let childTaskData = await projectTemplateTaskQueries.taskDocuments(
                                             {
                                                 _id : childtaskId
                                             });
@@ -852,7 +852,7 @@ module.exports = class ProjectTemplatesHelper {
                                             newProjectTemplateChildTask.parentId = duplicateTemplateTask._id;
                                             newProjectTemplateChildTask.externalId = childTaskData.externalId +"-"+ UTILS.epochTime();
                                             duplicateChildTemplateTask = 
-                                                await projectTemplateTaskService.createTemplateTask(
+                                                await projectTemplateTaskQueries.createTemplateTask(
                                                   _.omit(newProjectTemplateChildTask, ["_id"])
                                                 );
 
@@ -861,7 +861,7 @@ module.exports = class ProjectTemplatesHelper {
                                     }))
 
                                     if(childTaskIdArray && childTaskIdArray.length > 0){
-                                        let updateTaskData = projectTemplateTaskService.updateTaskDocument(
+                                        let updateTaskData = projectTemplateTaskQueries.updateTaskDocument(
                                         {
                                             _id : duplicateTemplateTask._id
                                         },
@@ -880,7 +880,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 if(newTaskId && newTaskId.length > 0){
 
-                    updateDuplicateTemplate = await projectTemplateService.findOneAndUpdate(
+                    updateDuplicateTemplate = await projectTemplateQueries.findOneAndUpdate(
                     {
                         _id : duplicateTemplateId
                     },
@@ -914,7 +914,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templateData = await projectTemplateService.templateDocument({
+                let templateData = await projectTemplateQueries.templateDocument({
                     externalId : { $in : externalIds }
                 },["title","metaInformation.goal","externalId"]);
 
@@ -959,7 +959,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templateData = await projectTemplateService.templateDocument({
+                let templateData = await projectTemplateQueries.templateDocument({
                     externalId : templateId 
                 },"all",
                 [
@@ -999,7 +999,7 @@ module.exports = class ProjectTemplatesHelper {
                     
                     templateData[0].projectId = "";
 
-                    let project = await projectService.projectDocument({
+                    let project = await projectQueries.projectDocument({
                         userId : userId,
                         projectTemplateId : templateData[0]._id
                     },["_id"]);
@@ -1034,7 +1034,7 @@ module.exports = class ProjectTemplatesHelper {
             try {
 
                 const templateDocument = 
-                await projectTemplateService.templateDocument({
+                await projectTemplateQueries.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : templateId
                 },["tasks"]);
@@ -1050,7 +1050,7 @@ module.exports = class ProjectTemplatesHelper {
                         parentId : { $exists : false }
                     }
                     
-                    tasks = await projectTemplateService.templateDocument(findQuery,"all", ["projectTemplateId","__v","projectTemplateExternalId"]);
+                    tasks = await projectTemplateQueries.templateDocument(findQuery,"all", ["projectTemplateId","__v","projectTemplateExternalId"]);
 
                     for( let task = 0 ; task < tasks.length ; task ++ ) {
 
@@ -1062,7 +1062,7 @@ module.exports = class ProjectTemplatesHelper {
                                 }
                             }
 
-                            let subTasks = await projectTemplateTaskService.taskDocuments(subTaskQuery, ["projectTemplateId","__v","projectTemplateExternalId"]);
+                            let subTasks = await projectTemplateTaskQueries.taskDocuments(subTaskQuery, ["projectTemplateId","__v","projectTemplateExternalId"]);
                             
                             tasks[task].children = subTasks;
                         }

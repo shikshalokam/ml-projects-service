@@ -8,11 +8,11 @@
 // Dependencies 
 
 /**
-    * ProjectTemplateTaskService
+    * ProjectTemplateTask
     * @class
 */
 
-module.exports = class ProjectTemplateTaskService {
+module.exports = class ProjectTemplateTask {
 
     /**
      * Lists of template tasks.

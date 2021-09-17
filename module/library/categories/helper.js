@@ -8,8 +8,8 @@
 // Dependencies 
 const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const sessionHelpers = require(GENERIC_HELPERS_PATH+"/sessions");
-const projectCategoriesService = require(DB_SERVICE_BASE_PATH + "/projectCategories");
-const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
+const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
+const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const moment = require("moment-timezone");
 
 /**
@@ -99,7 +99,7 @@ module.exports = class LibraryCategoriesHelper {
                     }
                 });
 
-                let result = await projectTemplateService.getAggregate(aggregateData);
+                let result = await projectTemplateQueries.getAggregate(aggregateData);
 
                 if( result[0].data.length > 0 ) {
                     
@@ -147,7 +147,7 @@ module.exports = class LibraryCategoriesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let categoriesUpdated = await projectCategoriesService.updateMany(filterQuery,updateData);
+                let categoriesUpdated = await projectCategoriesQueries.updateMany(filterQuery,updateData);
 
                 if( !categoriesUpdated.ok ) {
                     throw {

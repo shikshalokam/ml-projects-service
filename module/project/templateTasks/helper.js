@@ -14,8 +14,8 @@
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
 const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
-const projectTemplateTaskService = require(DB_SERVICE_BASE_PATH + "/projectTemplateTask");
-const projectTemplateService = require(DB_SERVICE_BASE_PATH + "/projectTemplates");
+const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
+const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 
 module.exports = class ProjectTemplateTasksHelper {
 
@@ -74,7 +74,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         }
                     }
 
-                    let tasksData = await projectTemplateTaskService.taskDocuments(
+                    let tasksData = await projectTemplateTaskQueries.taskDocuments(
                         filterData,
                         ["_id","children","externalId","projectTemplateId","parentId"]
                     );
@@ -91,7 +91,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let projectTemplate = 
-                await projectTemplateService.templateDocument({
+                await projectTemplateQueries.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : projectTemplateId
                 },["_id","entityType","externalId"]);
@@ -290,7 +290,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     if( !update ) {
                         taskData = 
-                        await projectTemplateTaskService.createTemplateTask(allValues);
+                        await projectTemplateTaskQueries.createTemplateTask(allValues);
                         if ( !taskData._id ) {
                             parsedData.STATUS = 
                             CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_CREATED;
@@ -302,7 +302,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     } else {
                         
                         taskData = 
-                        await projectTemplateTaskService.findOneAndUpdate({
+                        await projectTemplateTaskQueries.findOneAndUpdate({
                             _id :  parsedData._SYSTEM_ID
                         },{
                             $set : allValues
@@ -316,7 +316,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         if( parsedData.hasAParentTask === "YES" ) { 
                     
                             let parentTask =
-                            await projectTemplateTaskService.findOneAndUpdate({
+                            await projectTemplateTaskQueries.findOneAndUpdate({
                                 externalId : parsedData.parentTaskId
                             },{
                                 $addToSet : {
@@ -343,7 +343,7 @@ module.exports = class ProjectTemplateTasksHelper {
                                     value : parsedData.parentTaskValue
                                 });
                                 
-                                await projectTemplateTaskService.findOneAndUpdate({
+                                await projectTemplateTaskQueries.findOneAndUpdate({
                                     _id : taskData._id
                                 },{
                                     $set : {
@@ -358,7 +358,7 @@ module.exports = class ProjectTemplateTasksHelper {
                             }
                         }
 
-                        await projectTemplateService.updateProjectTemplateDocument
+                        await projectTemplateQueries.updateProjectTemplateDocument
                         (
                             { _id : template._id },
                             { $addToSet : { tasks : ObjectId(taskData._id) } }
@@ -556,7 +556,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         csvData.data.tasks[currentData._SYSTEM_ID].parentId.toString() !== createdTask._parentTaskId.toString()
                     ) {
 
-                        await projectTemplateTaskService.findOneAndUpdate(
+                        await projectTemplateTaskQueries.findOneAndUpdate(
                             {
                               _id: csvData.data.tasks[currentData._SYSTEM_ID].parentId
                             },
