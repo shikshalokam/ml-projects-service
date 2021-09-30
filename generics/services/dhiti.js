@@ -141,16 +141,17 @@ const projectAndTaskReport = function (token, input, projectPdf) {
                 };
 
                 if (err) {
-                    console.log("--- err is ----",err);
+                    console.log("--- err is ----",JSON.stringify(err));
                     result.success = false;
                 } else {
-                    console.log("--- data is ----",data);
+                    console.log("--- data is ----",JSON.stringify(data.body));
                     result["data"] = data.body;
                 }
                 return resolve(result);
             }
 
         } catch (error) {
+            console.log("catch error",error);
             return reject(error);
         }
     })
