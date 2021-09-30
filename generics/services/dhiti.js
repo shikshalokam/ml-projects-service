@@ -30,7 +30,7 @@ const viewFullReport = function (token,input) {
                 headers : {
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "content-type": "application/json",
-                    "x-auth-token": token
+                    "x-authenticated-user-token": token
                 },
                 json : input
             };
@@ -76,7 +76,7 @@ const entityReport = function (token,input) {
               headers : {
                   "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                   "content-type": "application/json",
-                  "x-auth-token": token
+                  "x-authenticated-user-token": token
               },
               json : input
           };
@@ -125,12 +125,10 @@ const projectAndTaskReport = function (token, input, projectPdf) {
                 headers : {
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "content-type": "application/json",
-                    "x-auth-token": token
+                    "x-authenticated-user-token": token
                 },
                 json : input
             };
-
-            console.log("--- options is- ----",JSON.stringify(options));
 
             request.post(url,options,dhitiCallback);
 
@@ -141,10 +139,8 @@ const projectAndTaskReport = function (token, input, projectPdf) {
                 };
 
                 if (err) {
-                    console.log("--- err is ----",JSON.stringify(err));
                     result.success = false;
                 } else {
-                    console.log("--- data is ----",JSON.stringify(data.body));
                     result["data"] = data.body;
                 }
                 return resolve(result);
