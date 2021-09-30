@@ -130,6 +130,8 @@ const projectAndTaskReport = function (token, input, projectPdf) {
                 json : input
             };
 
+            console.log("--- options is- ----",JSON.stringify(options));
+
             request.post(url,options,dhitiCallback);
 
             function dhitiCallback(err, data) {
@@ -139,8 +141,10 @@ const projectAndTaskReport = function (token, input, projectPdf) {
                 };
 
                 if (err) {
+                    console.log("--- err is ----",err);
                     result.success = false;
                 } else {
+                    console.log("--- data is ----",data);
                     result["data"] = data.body;
                 }
                 return resolve(result);
