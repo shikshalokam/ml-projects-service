@@ -118,6 +118,8 @@ const projectAndTaskReport = function (token, input, projectPdf) {
             const url =  
             reportsUrl + 
             CONSTANTS.endpoints.PROJECT_AND_TASK_REPORT + "?projectPdf=" + projectPdf;
+
+            console.log("--- url is- ----",url);
           
             let options = {
                 headers : {
