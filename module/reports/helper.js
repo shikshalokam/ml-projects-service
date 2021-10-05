@@ -9,6 +9,7 @@
 
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
 const dhitiService = require(GENERICS_FILES_PATH + "/services/dhiti");
+const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const moment = require('moment');
 
 
@@ -64,7 +65,7 @@ module.exports = class ReportsHelper {
                     { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
-                const projectDetails = await userProjectsHelper.projectDocument(
+                const projectDetails = await projectQueries.projectDocument(
                     query,
                     ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
@@ -486,7 +487,7 @@ module.exports = class ReportsHelper {
                     query['programId'] = ObjectId(programId);
                 }
 
-                const projectDetails = await userProjectsHelper.projectDocument(
+                const projectDetails = await projectQueries.projectDocument(
                     query,
                     ["title",
                         "taskReport",
