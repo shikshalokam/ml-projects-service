@@ -350,7 +350,8 @@ module.exports = class UserProjectsHelper {
         programName = "",
         entities,
         userToken,
-        solutionId
+        solutionId,
+        isATargetedSolution = ""
     ) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -376,7 +377,8 @@ module.exports = class UserProjectsHelper {
                 let solutionAndProgramCreation =
                     await kendraService.createUserProgramAndSolution(
                         programAndSolutionData,
-                        userToken
+                        userToken,
+                        isATargetedSolution
                     );
 
                 if (!solutionAndProgramCreation.success) {
@@ -408,6 +410,11 @@ module.exports = class UserProjectsHelper {
 
                 result.programInformation._id =
                     ObjectId(result.programInformation._id);
+
+                if( solutionAndProgramCreation.data.parentSolutionInformation ){
+                    result["link"] = solutionAndProgramCreation.data.parentSolutionInformation.link ? solutionAndProgramCreation.data.parentSolutionInformation.link : "";
+                }
+
 
                 return resolve({
                     success: true,
@@ -478,7 +485,7 @@ module.exports = class UserProjectsHelper {
                 let result = await _projectInformation(projectDetails[0]);
 
                 if (!result.success) {
-                    return resolve(projectInformation);
+                    return resolve(result);
                 }
 
                 return resolve({
@@ -890,7 +897,7 @@ module.exports = class UserProjectsHelper {
    static detailsV2( projectId,solutionId,userId,userToken,bodyData,appName = "",appVersion = "",templateId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
-            
+
             let solutionExternalId = "";
             
             if( templateId !== "" ) {
@@ -901,7 +908,7 @@ module.exports = class UserProjectsHelper {
                     "isReusable" : false,
                     "solutionId" : { $exists : true }
                 },["solutionId","solutionExternalId"]);
-            
+
                 if( !templateDocuments.length > 0 ) {
                     throw {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
@@ -909,13 +916,11 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
-            
                 solutionId = templateDocuments[0].solutionId;
                 solutionExternalId = templateDocuments[0].solutionExternalId;
             }
 
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
-
             if (projectId === "") {
                 
                 const projectDetails = await projectQueries.projectDocument({
@@ -1070,7 +1075,7 @@ module.exports = class UserProjectsHelper {
                 userId,
                 userRoleInformation
             );
-            
+
             return resolve({
                 success: true,
                 message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -1527,6 +1532,9 @@ module.exports = class UserProjectsHelper {
                     };
                 } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
                     query["isAPrivateProgram"] = false;
+                } else{
+                    query["createdBy"] = userId;
+                    query["referenceFrom"] = CONSTANTS.common.LINK;
                 }
             }
 
@@ -1544,7 +1552,8 @@ module.exports = class UserProjectsHelper {
                     "projectTemplateId",
                     "solutionExternalId",
                     "lastDownloadedAt",
-                    "hasAcceptedTAndC"
+                    "hasAcceptedTAndC",
+                    "referenceFrom"
                 ]
             );
 
@@ -1659,6 +1668,212 @@ module.exports = class UserProjectsHelper {
         }
     })
   }
+
+  /**
+   * List of projects.
+   * @method
+   * @name list
+   * @returns {Array} List of projects.
+   */
+  
+  static list( bodyData ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let projects = await projectQueries.projectDocument(
+                bodyData.query,
+                bodyData.projection,
+                bodyData.skipFields
+            );
+
+            return resolve({
+                success : true,
+                message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                result : projects
+            });
+            
+        } catch (error) {
+            return reject(error);
+        }
+    });
+  }
+
+  /**
+      * Sync project.
+      * @method
+      * @name importFromLibrary 
+      * @param {String} projectTemplateId - project template id.
+      * @param {Object} requestedData - body data.
+      * @param {String} userId - Logged in user id.
+      * @param {String} userToken - User token.
+      * @param {Boolean} isATargetedSolution - User targeted or not .
+      * @returns {Object} Project created information.
+     */
+
+    static importFromLibrary(projectTemplateId, requestedData, userToken, userId, isATargetedSolution = "" ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                isATargetedSolution = UTILS.convertStringToBoolean(isATargetedSolution);
+
+                let libraryProjects =
+                    await libraryCategoriesHelper.projectDetails(
+                        projectTemplateId, 
+                        "",
+                        isATargetedSolution
+                    );
+
+                if (
+                    libraryProjects.data &&
+                    !Object.keys(libraryProjects.data).length > 0
+                ) {
+                    throw {
+                        message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
+                        status: HTTP_STATUS_CODE['bad_request'].status
+                    };
+                }
+
+                let taskReport = {};
+
+                if (
+                    libraryProjects.data.tasks &&
+                    libraryProjects.data.tasks.length > 0
+                ) {
+
+                    libraryProjects.data.tasks = await _projectTask(
+                        libraryProjects.data.tasks,
+                        isATargetedSolution === false ? false : true
+                    );
+
+                    taskReport.total = libraryProjects.data.tasks.length;
+
+                    libraryProjects.data.tasks.forEach(task => {
+                        if (!taskReport[task.status]) {
+                            taskReport[task.status] = 1;
+                        } else {
+                            taskReport[task.status] += 1;
+                        }
+                    });
+
+                    libraryProjects.data["taskReport"] = taskReport;
+                }
+
+                if (requestedData.entityId && requestedData.entityId !== "") {
+
+                    let entityInformation =
+                        await _entitiesInformation([requestedData.entityId]);
+
+                    if (!entityInformation.success) {
+                        return resolve(entityInformation);
+                    }
+
+                    libraryProjects.data["entityInformation"] = entityInformation.data[0];
+                    libraryProjects.data.entityId = entityInformation.data[0]._id;
+                }
+
+                if( requestedData.solutionId && requestedData.solutionId !== "" && isATargetedSolution === false){
+
+                    let programAndSolutionInformation =
+                        await this.createProgramAndSolution(
+                            requestedData.programId,
+                            requestedData.programName,
+                            requestedData.entityId ? [requestedData.entityId] : "",
+                            userToken,
+                            requestedData.solutionId,
+                            isATargetedSolution
+                        );
+
+                    if (!programAndSolutionInformation.success) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    libraryProjects.data = _.merge(
+                        libraryProjects.data,
+                        programAndSolutionInformation.data
+                    )
+
+                    libraryProjects.data["referenceFrom"] = CONSTANTS.common.LINK;
+                }
+                else if (
+                    (requestedData.programId && requestedData.programId !== "") ||
+                    (requestedData.programName && requestedData.programName !== "" )
+                ) {
+
+                    let programAndSolutionInformation =
+                        await this.createProgramAndSolution(
+                            requestedData.programId,
+                            requestedData.programName,
+                            requestedData.entityId ? [requestedData.entityId] : "",
+                            userToken
+                        );
+
+                    if (!programAndSolutionInformation.success) {
+                        return resolve(programAndSolutionInformation);
+                    }
+
+                    if (
+                        libraryProjects.data["entityInformation"] &&
+                        libraryProjects.data["entityInformation"].entityType !==
+                        programAndSolutionInformation.data.solutionInformation.entityType
+                    ) {
+                        throw {
+                            message: CONSTANTS.apiResponses.ENTITY_TYPE_MIS_MATCHED,
+                            status: HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
+
+                    libraryProjects.data = _.merge(
+                        libraryProjects.data,
+                        programAndSolutionInformation.data
+                    )
+
+                }
+
+                libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
+                libraryProjects.data.lastDownloadedAt = new Date();
+                libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+
+                if (requestedData.startDate) {
+                    libraryProjects.data.startDate = requestedData.startDate;
+                }
+
+                if (requestedData.endDate) {
+                    libraryProjects.data.endDate = requestedData.endDate;
+                }
+
+                libraryProjects.data.projectTemplateId = libraryProjects.data._id;
+                libraryProjects.data.projectTemplateExternalId = libraryProjects.data.externalId;
+
+                let projectCreation = await database.models.projects.create(
+                    _.omit(libraryProjects.data, ["_id"])
+                );
+
+                if (requestedData.rating && requestedData.rating > 0) {
+                    await projectTemplatesHelper.ratings(
+                        projectTemplateId,
+                        requestedData.rating,
+                        userToken
+                    );
+                }
+
+                projectCreation = await _projectInformation(projectCreation._doc);
+
+                return resolve({
+                    success: true,
+                    message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                    data: projectCreation.data
+                });
+
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
 };
 
 /**

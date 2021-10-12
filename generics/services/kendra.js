@@ -302,11 +302,15 @@ const entityDocuments = function (
   * @returns {JSON} - Create user program and solution.
 */
 
-const createUserProgramAndSolution = function ( data,userToken ) {
+const createUserProgramAndSolution = function ( data,userToken, isATargetedSolution ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = KENDRA_URL + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
+            let url = KENDRA_URL + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
+
+            if( isATargetedSolution == false ) {
+                url = url + "?isATargetedSolution=" + isATargetedSolution;
+            }
 
             const options = {
                 headers : {
@@ -326,6 +330,7 @@ const createUserProgramAndSolution = function ( data,userToken ) {
                 };
 
                 if (err) {
+                    console.log(err,"err")
                     result.success = false;
                 } else {
 

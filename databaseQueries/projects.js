@@ -52,7 +52,6 @@ module.exports = class Projects {
                    queryObject, 
                    projection
                ).lean();
-           
                return resolve(projects);
            
            } catch (error) {

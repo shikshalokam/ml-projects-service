@@ -959,9 +959,17 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templateData = await projectTemplateQueries.templateDocument({
-                    externalId : templateId 
-                },"all",
+                let findQuery = {};
+
+                let validateTemplateId = UTILS.isValidMongoId(templateId);
+
+                if( validateTemplateId ) {
+                  findQuery["_id"] = templateId;
+                } else {
+                  findQuery["externalId"] = templateId;
+                }
+
+                let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
                 [
                     "ratings",
                     "noOfRatings",

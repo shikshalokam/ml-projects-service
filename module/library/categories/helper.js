@@ -10,6 +10,7 @@ const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
 const sessionHelpers = require(GENERIC_HELPERS_PATH+"/sessions");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
+const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const moment = require("moment-timezone");
 
 /**
@@ -164,6 +165,133 @@ module.exports = class LibraryCategoriesHelper {
 
             } catch (error) {   
                 return resolve({
+                    success: false,
+                    message: error.message,
+                    data : {}
+                });
+            }
+        })
+    }
+
+     /**
+      * Details of library projects.
+      * @method
+      * @name projectDetails
+      * @param projectId - project internal id.
+      * @returns {Object} Details of library projects.
+     */
+
+    static projectDetails(projectId,userToken = "", isATargetedSolution = "") {    
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let projectsData = await projectTemplateQueries.templateDocument(
+                    {
+                        status : CONSTANTS.common.PUBLISHED,
+                        "_id" : projectId,
+                        "isDeleted" : false,
+                    }, "all", ["__v"]);
+
+                if( !projectsData.length > 0 ) {
+                    throw {
+                        status : HTTP_STATUS_CODE['bad_request'].status,
+                        message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
+                    };
+                }
+
+                projectsData[0].showProgramAndEntity = false;
+
+                if( projectsData[0].tasks && projectsData[0].tasks.length > 0 ) {
+
+                    let tasks = await projectTemplateTaskQueries.taskDocuments(
+                    {
+                       _id : {
+                            $in : projectsData[0].tasks
+                        },
+                        isDeleted : false
+                    });
+
+                    if( tasks &&  tasks.length > 0 ) {
+
+                        let taskData = {};
+
+                        for ( 
+                            let taskPointer = 0; 
+                            taskPointer < tasks.length; 
+                            taskPointer ++ 
+                        ) {
+
+                            let currentTask = tasks[taskPointer];
+                            
+                            if( 
+                                currentTask.type === CONSTANTS.common.ASSESSMENT ||
+                                currentTask.type === CONSTANTS.common.OBSERVATION
+                            ) {
+                                projectsData[0].showProgramAndEntity = true;
+                            }
+
+                            if( currentTask.parentId && currentTask.parentId !== "" ) {
+
+                                if( !taskData[currentTask.parentId.toString()] ) {
+                                    taskData[currentTask.parentId.toString()].children = [];
+                                } 
+
+                                taskData[currentTask.parentId.toString()].children.push(
+                                    _.omit(currentTask,["parentId"])
+                                ); 
+
+                            } else {
+                                currentTask.children = [];
+                                taskData[currentTask._id.toString()] = currentTask;
+                            }
+
+                            
+                        }
+
+                        projectsData[0].tasks = Object.values(taskData);
+                        
+                    }
+                }
+
+                if( userToken !== "" ) {
+                    
+                    let userProfileData = await kendraService.getProfile(userToken);
+
+                    if( !userProfileData.success ) {
+                        throw {
+                            status : HTTP_STATUS_CODE['bad_request'].status,
+                            message : CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
+                        }
+                    }
+
+                    projectsData[0].userRating = 0;
+
+                    if( 
+                        userProfileData.data &&
+                        userProfileData.data.ratings && 
+                        userProfileData.data.ratings.length > 0 
+                    ) {
+    
+                        let projectIndex = 
+                        userProfileData.data.ratings.findIndex(   
+                            project => project._id.toString() === projectId.toString() 
+                        );
+    
+                        if( projectIndex > 0 ) {
+                            projectsData[0].userRating = userProfileData.data.ratings[projectIndex].rating;
+                        }
+                    } 
+                }
+
+                return resolve({
+                    success: true,
+                    message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                    data : projectsData[0]
+                });
+
+            } catch (error) {   
+                return resolve({
+                    status : error.status ? error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                     success: false,
                     message: error.message,
                     data : {}
