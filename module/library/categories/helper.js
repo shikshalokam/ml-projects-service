@@ -6,7 +6,7 @@
  */
 
 // Dependencies 
-const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+const coreService = require(GENERICS_FILES_PATH + "/services/core");
 const sessionHelpers = require(GENERIC_HELPERS_PATH+"/sessions");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
@@ -181,14 +181,14 @@ module.exports = class LibraryCategoriesHelper {
       * @returns {Object} Details of library projects.
      */
 
-    static projectDetails(projectId,userToken = "", isATargetedSolution = "") {    
+    static projectDetails(projectId, userToken = "", isATargetedSolution = "") {    
         return new Promise(async (resolve, reject) => {
             try {
 
                 let projectsData = await projectTemplateQueries.templateDocument(
                     {
-                        status : CONSTANTS.common.PUBLISHED,
                         "_id" : projectId,
+                        status : CONSTANTS.common.PUBLISHED,
                         "isDeleted" : false,
                     }, "all", ["__v"]);
 
@@ -251,36 +251,6 @@ module.exports = class LibraryCategoriesHelper {
                         projectsData[0].tasks = Object.values(taskData);
                         
                     }
-                }
-
-                if( userToken !== "" ) {
-                    
-                    let userProfileData = await kendraService.getProfile(userToken);
-
-                    if( !userProfileData.success ) {
-                        throw {
-                            status : HTTP_STATUS_CODE['bad_request'].status,
-                            message : CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
-                        }
-                    }
-
-                    projectsData[0].userRating = 0;
-
-                    if( 
-                        userProfileData.data &&
-                        userProfileData.data.ratings && 
-                        userProfileData.data.ratings.length > 0 
-                    ) {
-    
-                        let projectIndex = 
-                        userProfileData.data.ratings.findIndex(   
-                            project => project._id.toString() === projectId.toString() 
-                        );
-    
-                        if( projectIndex > 0 ) {
-                            projectsData[0].userRating = userProfileData.data.ratings[projectIndex].rating;
-                        }
-                    } 
                 }
 
                 return resolve({

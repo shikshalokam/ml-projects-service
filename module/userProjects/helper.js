@@ -7,13 +7,13 @@
 
 // Dependencies
 
-const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+const coreService = require(GENERICS_FILES_PATH + "/services/core");
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
 const { v4: uuidv4 } = require('uuid');
-const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
-const dhitiService = require(GENERICS_FILES_PATH + "/services/dhiti");
+const surveyService = require(GENERICS_FILES_PATH + "/services/survey");
+const reportService = require(GENERICS_FILES_PATH + "/services/report");
 const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
@@ -184,7 +184,7 @@ module.exports = class UserProjectsHelper {
                     if (solutionExists) {
 
                         let updateProgram =
-                            await assessmentService.removeSolutionsFromProgram(
+                            await surveyService.removeSolutionsFromProgram(
                                 userToken,
                                 userProject[0].programInformation._id,
                                 [userProject[0].solutionInformation._id]
@@ -375,7 +375,7 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let solutionAndProgramCreation =
-                    await kendraService.createUserProgramAndSolution(
+                    await coreService.createUserProgramAndSolution(
                         programAndSolutionData,
                         userToken,
                         isATargetedSolution
@@ -937,7 +937,7 @@ module.exports = class UserProjectsHelper {
                     if( templateId === "" ) {
                     
                         solutionDetails = 
-                        await kendraService.solutionDetailsBasedOnRoleAndLocation(
+                        await coreService.solutionDetailsBasedOnRoleAndLocation(
                             userToken,
                             bodyData,
                             solutionId
@@ -954,7 +954,7 @@ module.exports = class UserProjectsHelper {
 
                     } else {
                         solutionDetails =
-                        await assessmentService.listSolutions([solutionExternalId]);
+                        await surveyService.listSolutions([solutionExternalId]);
 
                         if( !solutionDetails.success ) {
                             throw {
@@ -1043,7 +1043,7 @@ module.exports = class UserProjectsHelper {
                             solutionDetails.entityType && bodyData[solutionDetails.entityType] 
                         ) {
                             let entityInformation = 
-                            await assessmentService.listEntitiesByLocationIds(
+                            await surveyService.listEntitiesByLocationIds(
                                 userToken,
                                 [bodyData[solutionDetails.entityType]] 
                             );
@@ -1462,7 +1462,7 @@ module.exports = class UserProjectsHelper {
                 delete projectDocument.metaInformation;
                 delete projectDocument.programInformation;
                
-                let response = await dhitiService.projectAndTaskReport(userToken, projectDocument, projectPdf);
+                let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {
                     return resolve({
@@ -1529,6 +1529,9 @@ module.exports = class UserProjectsHelper {
                 if( filter === CONSTANTS.common.CREATED_BY_ME ) {
                     query["isAPrivateProgram"] = {
                         $ne : false
+                    };
+                    query["referenceFrom"] = {
+                        $ne : CONSTANTS.common.LINK
                     };
                 } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
                     query["isAPrivateProgram"] = false;
@@ -1931,7 +1934,7 @@ function _projectInformation(project) {
                 if (attachments.length > 0) {
 
                     let attachmentsUrl =
-                        await kendraService.getDownloadableUrl(
+                        await coreService.getDownloadableUrl(
                             {
                                 filePaths: attachments
                             }
@@ -2154,7 +2157,7 @@ function _entitiesInformation(entityIds) {
         try {
 
             let entityData =
-                await kendraService.entityDocuments(
+                await coreService.entityDocuments(
                     entityIds,
                     ["metaInformation", "entityType", "entityTypeId", "registryDetails"]
                 );
@@ -2220,7 +2223,7 @@ function _assessmentDetails(assessmentData) {
             if (assessmentData.solutionDetails.isReusable) {
 
                 let createdAssessment =
-                    await assessmentService.createAssessmentSolutionFromTemplate(
+                    await surveyService.createAssessmentSolutionFromTemplate(
                         assessmentData.token,
                         assessmentData.solutionDetails._id,
                         {
@@ -2247,7 +2250,7 @@ function _assessmentDetails(assessmentData) {
             } else {
 
                 let assignedAssessmentToUser =
-                    await assessmentService.createEntityAssessors(
+                    await surveyService.createEntityAssessors(
                         assessmentData.token,
                         assessmentData.solutionDetails.programId,
                         assessmentData.solutionDetails._id,
@@ -2262,7 +2265,7 @@ function _assessmentDetails(assessmentData) {
                 }
 
                 let entitiesAddedToSolution =
-                    await assessmentService.addEntitiesToSolution(
+                    await surveyService.addEntitiesToSolution(
                         assessmentData.token,
                         assessmentData.solutionDetails._id,
                         [assessmentData.entityId.toString()]
@@ -2276,7 +2279,7 @@ function _assessmentDetails(assessmentData) {
                 }
 
                 let solutionUpdated =
-                    await assessmentService.updateSolution(
+                    await surveyService.updateSolution(
                         assessmentData.token,
                         {
                             "project": assessmentData.project,
@@ -2340,7 +2343,7 @@ function _observationDetails(observationData) {
             if (observationData.solutionDetails.isReusable) {
 
                 let observationCreatedFromTemplate =
-                    await assessmentService.createObservationFromSolutionTemplate(
+                    await surveyService.createObservationFromSolutionTemplate(
                         observationData.token,
                         observationData.solutionDetails._id,
                         {
@@ -2369,7 +2372,7 @@ function _observationDetails(observationData) {
             } else {
 
                 let solutionUpdated =
-                    await assessmentService.updateSolution(
+                    await surveyService.updateSolution(
                         observationData.token,
                         {
                             project: observationData.project,
@@ -2399,7 +2402,7 @@ function _observationDetails(observationData) {
                     project: observationData.project
                 };
 
-                let observationCreated = await assessmentService.createObservation(
+                let observationCreated = await surveyService.createObservation(
                     observationData.token,
                     observationData.solutionDetails._id,
                     observation
