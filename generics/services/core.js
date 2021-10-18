@@ -302,14 +302,14 @@ const entityDocuments = function (
   * @returns {JSON} - Create user program and solution.
 */
 
-const createUserProgramAndSolution = function ( data,userToken, createADuplicateSolution ) {
+const createUserProgramAndSolution = function ( data,userToken, createADuplicateSolution = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
             
             let url = ML_CORE_URL + CONSTANTS.endpoints.CREATE_PROGRAM_AND_SOLUTION;
 
-            if( isATargetedSolution == false ) {
-                url = url + "?createADuplicateSolution=" + createADuplicateSolution;
+            if( createADuplicateSolution == false ) {
+                url = url + "?createADuplicateSolution=" + true;
             }
 
             const options = {
