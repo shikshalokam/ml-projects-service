@@ -13,7 +13,7 @@
 // Dependencies
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
-const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
+const surveyService = require(GENERICS_FILES_PATH + "/services/survey");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 
@@ -115,7 +115,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 if ( solutionIds.length > 0 ) {
                     
                     let solutions = 
-                    await assessmentService.listSolutions(solutionIds);
+                    await surveyService.listSolutions(solutionIds);
 
                     if( !solutions.success ) {
                         throw {

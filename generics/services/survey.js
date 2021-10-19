@@ -1,5 +1,5 @@
 /**
- * name : assessment.js
+ * name : survey.js
  * author : Aman Jung Karki
  * Date : 21-Nov-2020
  * Description : Assessment service related information.
@@ -565,7 +565,6 @@ const listProgramsBasedOnIds = function ( programIds ) {
                 } else {
                     
                     let response = data.body;
-                    
                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
                         result["data"] = response.result;
                     } else {

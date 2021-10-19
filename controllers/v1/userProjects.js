@@ -716,4 +716,235 @@ module.exports = class UserProjects extends Abstract {
             }
         })
     }
+
+    /**
+   * @api {post} /improvement-project/api/v1/userProjects/list
+   * Lists of projects.
+   * @apiVersion 0.0.1
+   * @apiName Lists of projects.
+   * @apiGroup Entity Types
+   * @apiHeader {String} X-authenticated-user-token Authenticity token
+   * @apiSampleRequest /improvement-project/api/v1/userProjects/list
+   * @apiUse successBody
+   * @apiUse errorBody
+   * @apiParamExample {json} Request-Body:
+   * {
+    "query" : {
+        "code" : "HM"
+    },
+    "projection" : ["_id","code"]
+    }
+   * @apiParamExample {json} Response: 
+   * {
+   * "message": "Project fetched successfully",
+   * "status": 200,
+   * "result" : [
+   *  {
+   * "_id": "5d15a959e9185967a6d5e8a6",
+   *  "title": "Come See Our School!- Parent Mela"
+   }]
+  }
+   */
+
+  /**
+   * Lists of projects.
+   * @method
+   * @name list
+   * @returns {JSON} List projects.
+  */
+
+    async list(req) {
+      return new Promise(async (resolve, reject) => {
+        try {
+
+          let projects = await userProjectsHelper.list(req.body);
+          return resolve(projects);
+
+        } catch (error) {
+          return reject({
+            status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+            message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+            errorObject: error
+          });
+        }
+      });
+    }
+
+    /**
+    * @api {post} /improvement-project/api/v1/userProjects/importFromLibrary/:projectTemplateId&isATargetedSolution=false
+    * Import project from library.
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/importFromLibrary/5f5b32cef16777642d51aaf0
+    * @apiParamExample {json} Request:
+    * {
+    * "programId" : "",
+    * "programName" : "My Program",
+    * "rating" : 2
+    * }
+    * @apiParamExample {json} Response:
+    * {
+    "message": "Successfully fetched projects",
+    "status": 200,
+    "result": {
+        "userId": "01c04166-a65e-4e92-a87b-a9e4194e771d",
+        "isDeleted": false,
+        "categories": [
+            {
+                "_id": "5f102331665bee6a740714eb",
+                "externalId": "community",
+                "name": "Community"
+            }
+        ],
+        "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
+        "tasks": [
+            {
+                "_id": "61d6690d-82cb-4db2-8191-8dd945c5e742",
+                "isDeleted": false,
+                "isDeletable": false,
+                "taskSequence": [],
+                "children": [
+                    {
+                        "_id": "b5068cef-eefc-4f43-8a29-ab9c2268f451",
+                        "isDeleted": false,
+                        "isDeletable": false,
+                        "taskSequence": [],
+                        "children": [],
+                        "visibleIf": [
+                            {
+                                "operator": "===",
+                                "_id": "5f72f9998925ec7c60f79a91",
+                                "value": "started"
+                            }
+                        ],
+                        "deleted": false,
+                        "type": "single",
+                        "projectTemplateId": "5f5b32cef16777642d51aaf0",
+                        "name": "Sub task 1",
+                        "externalId": "Sub-task-1",
+                        "description": "Sub-Task-1-Description",
+                        "updatedAt": "2020-09-29T09:08:41.681Z",
+                        "createdAt": "2020-09-29T09:08:41.675Z",
+                        "__v": 0,
+                        "status": "notStarted"
+                    },
+                    {
+                        "_id": "988ef20f-267f-4bed-9a38-9d7dc6a320e9",
+                        "isDeleted": false,
+                        "isDeletable": false,
+                        "taskSequence": [],
+                        "children": [],
+                        "visibleIf": [
+                            {
+                                "operator": "===",
+                                "_id": "5f72f9998925ec7c60f79a91",
+                                "value": "started"
+                            }
+                        ],
+                        "deleted": false,
+                        "type": "single",
+                        "projectTemplateId": "5f5b32cef16777642d51aaf0",
+                        "name": "Sub task 2",
+                        "externalId": "Sub-task-2",
+                        "description": "Sub-Task-2-Description",
+                        "updatedAt": "2020-09-29T09:08:41.693Z",
+                        "createdAt": "2020-09-29T09:08:41.689Z",
+                        "__v": 0,
+                        "status": "notStarted"
+                    }
+                ],
+                "visibleIf": [],
+                "deleted": false,
+                "type": "multiple",
+                "projectTemplateId": "5f5b32cef16777642d51aaf0",
+                "name": "Task 1",
+                "externalId": "task-1",
+                "description": "Task-1 Description",
+                "updatedAt": "2020-09-29T09:08:41.691Z",
+                "createdAt": "2020-09-29T09:08:41.612Z",
+                "__v": 0,
+                "status": "notStarted"
+            },
+            {
+                "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
+                "isDeleted": false,
+                "isDeletable": false,
+                "taskSequence": [],
+                "children": [],
+                "visibleIf": [],
+                "deleted": false,
+                "type": "single",
+                "projectTemplateId": "5f5b32cef16777642d51aaf0",
+                "name": "Task 12",
+                "externalId": "Task-12",
+                "description": "Task-1 Description",
+                "updatedAt": "2020-09-29T09:08:41.667Z",
+                "createdAt": "2020-09-29T09:08:41.667Z",
+                "__v": 0,
+                "status": "notStarted"
+            }
+        ],
+        "updatedBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
+        "_id": "5f731d68920a8c3e092e6e4c",
+        "deleted": false,
+        "name": "Test-2",
+        "description": "improving school library",
+        "status": "notStarted",
+        "updatedAt": "2020-09-29T11:41:28.656Z",
+        "createdAt": "2020-09-11T08:18:22.077Z",
+        "__v": 0,
+        "solutionInformation": {
+            "externalId": "01c04166-a65e-4e92-a87b-a9e4194e771d-1601379673400"
+        },
+        "programInformation": {
+            "externalId": "My Program-1601379673400",
+            "name": "My Program"
+        },
+        "taskReport": {},
+        "entityInformation": {},
+        "rationale": "sample",
+        "primaryAudience": [
+            "teachers",
+            "head master"
+        ]
+    }}
+    * @apiUse successBody
+    * @apiUse errorBody
+    */
+
+    /**
+      * Import project from library.
+      * @method
+      * @name importFromLibrary
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - project Template Id.
+      * @returns {JSON} import project from library.
+     */
+
+    async importFromLibrary(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const createdProject = await userProjectsHelper.importFromLibrary(
+                    req.params._id,
+                    req.body,
+                    req.userDetails.userToken,
+                    req.userDetails.userInformation.userId,
+                    req.query.isATargetedSolution ? req.query.isATargetedSolution : ""
+                );
+
+                return resolve({
+                    message: createdProject.message,
+                    result: createdProject.data
+                });
+
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        })
+    }
 };

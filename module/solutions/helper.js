@@ -7,7 +7,7 @@
 
 // Dependencies
 
-const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+const coreService = require(GENERICS_FILES_PATH + "/services/core");
 
 /**
     * SolutionsHelper
@@ -36,7 +36,7 @@ module.exports = class SolutionsHelper {
             requestedData.isReusable = false;
             
             let solutionCreated = 
-            await kendraService.createSolution(requestedData,token);
+            await coreService.createSolution(requestedData,token);
 
             if( !solutionCreated.success ) {
               throw {

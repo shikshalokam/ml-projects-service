@@ -13,10 +13,10 @@
 // Dependencies
 
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
-const kendraService = require(GENERICS_FILES_PATH + "/services/kendra");
+const coreService = require(GENERICS_FILES_PATH + "/services/core");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const learningResourcesHelper = require(MODULES_BASE_PATH + "/learningResources/helper");
-const assessmentService = require(GENERICS_FILES_PATH + "/services/assessment");
+const surveyService = require(GENERICS_FILES_PATH + "/services/survey");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
@@ -104,7 +104,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( roleIds.length > 0 ) {
 
                     let userRolesData = 
-                    await kendraService.rolesDocuments({
+                    await coreService.rolesDocuments({
                         code : { $in : roleIds }
                     },["code"]);
 
@@ -129,7 +129,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( entityTypes.length > 0 ) {
                     
                     let entityTypesDocument = 
-                    await kendraService.entityTypesDocuments();
+                    await coreService.entityTypesDocuments();
 
                     if( !entityTypesDocument.success ) {
                         throw {
@@ -560,7 +560,7 @@ module.exports = class ProjectTemplatesHelper {
                 newProjectTemplate.createdBy = newProjectTemplate.updatedBy = userId;
 
                 let solutionData = 
-                await assessmentService.listSolutions([solutionId]);
+                await surveyService.listSolutions([solutionId]);
                 
                 if( !solutionData.success ) {
                     throw {
@@ -637,7 +637,7 @@ module.exports = class ProjectTemplatesHelper {
                     );
                 }
 
-                await assessmentService.updateSolution(
+                await surveyService.updateSolution(
                     userToken,
                     {
                         projectTemplateId : duplicateTemplateDocument._id,
@@ -686,7 +686,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                let userProfileData = await kendraService.getProfile(userToken);
+                let userProfileData = await coreService.getProfile(userToken);
 
                 if( !userProfileData.success ) {
                     throw {
@@ -767,7 +767,7 @@ module.exports = class ProjectTemplatesHelper {
                         });
                     }
 
-                    await kendraService.updateUserProfile(
+                    await coreService.updateUserProfile(
                         userToken,
                         {   
                             "ratings" : improvementProjects
@@ -959,9 +959,17 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let templateData = await projectTemplateQueries.templateDocument({
-                    externalId : templateId 
-                },"all",
+                let findQuery = {};
+
+                let validateTemplateId = UTILS.isValidMongoId(templateId);
+
+                if( validateTemplateId ) {
+                  findQuery["_id"] = templateId;
+                } else {
+                  findQuery["externalId"] = templateId;
+                }
+
+                let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
                 [
                     "ratings",
                     "noOfRatings",
@@ -1116,7 +1124,7 @@ function _templateInformation(project) {
             if( project.programId ) {
                     
                 let programs = 
-                await assessmentService.listProgramsBasedOnIds([project.programId]);
+                await surveyService.listProgramsBasedOnIds([project.programId]);
                 
                 if( !programs.success ) {
                     throw {

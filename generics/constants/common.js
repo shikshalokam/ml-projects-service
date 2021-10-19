@@ -35,6 +35,7 @@ module.exports = {
     "OBSERVATION_REFERENCE_KEY" : "observation",
     "ALLOW_MULTIPLE_ASSESSMENTS" :  "allowMultipleAssessemts",
     "IS_RUBRIC_DRIVEN" :  "isRubricDriven",
-    "CRITERIA_LEVEL_REPORT" :  "criteriaLevelReport"
+    "CRITERIA_LEVEL_REPORT" :  "criteriaLevelReport",
+    "LINK" : "link"
 
 };
