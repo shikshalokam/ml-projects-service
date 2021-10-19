@@ -1702,7 +1702,7 @@ module.exports = class UserProjectsHelper {
   }
 
   /**
-      * Sync project.
+      * Create project from template.
       * @method
       * @name importFromLibrary 
       * @param {String} projectTemplateId - project template id.
