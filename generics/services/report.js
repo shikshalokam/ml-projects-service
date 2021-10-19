@@ -1,5 +1,5 @@
 /**
- * name : dhiti.js
+ * name : report.js
  * author : Rakesh Kumar
  * Date : 10-Nov-2020
  * Description : All dhiti service related information.
