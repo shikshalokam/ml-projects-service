@@ -112,6 +112,10 @@ module.exports = {
             type : String,
             index : true
         },
-        submissions : Object
+        submissions : Object,
+        link : {
+            type : String,
+            index : true
+        }
     }
 };

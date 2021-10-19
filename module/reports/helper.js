@@ -8,7 +8,8 @@
 // Dependencies
 
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
-const dhitiService = require(GENERICS_FILES_PATH + "/services/dhiti");
+const reportService = require(GENERICS_FILES_PATH + "/services/report");
+const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const moment = require('moment');
 
 
@@ -64,7 +65,7 @@ module.exports = class ReportsHelper {
                     { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
 
-                const projectDetails = await userProjectsHelper.projectDocument(
+                const projectDetails = await projectQueries.projectDocument(
                     query,
                     ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
@@ -123,7 +124,7 @@ module.exports = class ReportsHelper {
 
                         }
 
-                        let response = await dhitiService.entityReport(userToken, pdfRequest);
+                        let response = await reportService.entityReport(userToken, pdfRequest);
 
                         if (response && response.success == true) {
 
@@ -269,7 +270,7 @@ module.exports = class ReportsHelper {
                         pdfRequest['entityName'] = projectDetails[0].entityInformation.name;
                     }
 
-                    let response = await dhitiService.entityReport(userToken, pdfRequest);
+                    let response = await reportService.entityReport(userToken, pdfRequest);
                     if (response && response.success == true) {
                         return resolve({
                             success: true,
@@ -486,7 +487,7 @@ module.exports = class ReportsHelper {
                     query['programId'] = ObjectId(programId);
                 }
 
-                const projectDetails = await userProjectsHelper.projectDocument(
+                const projectDetails = await projectQueries.projectDocument(
                     query,
                     ["title",
                         "taskReport",
@@ -542,7 +543,7 @@ module.exports = class ReportsHelper {
                         "reportType": returnTypeInfo[0].label,
                         "projectDetails": projectData
                     }
-                    let response = await dhitiService.viewFullReport(userToken, data);
+                    let response = await reportService.viewFullReport(userToken, data);
 
                     if (response && response.success == true) {
 
