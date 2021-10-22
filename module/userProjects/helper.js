@@ -27,6 +27,34 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 module.exports = class UserProjectsHelper {
 
     /**
+      * Projects boolean data.
+      * @method
+      * @name booleanData     
+      * @returns {Array} Boolean data.
+    */
+
+    static booleanData() {
+
+        const projectsSchema = schemas["projects"].schema;
+        const projectSchemaKey = Object.keys(projectsSchema);
+
+        let booleanProjects = [];
+
+        projectSchemaKey.forEach(projectSchema => {
+            const currentSchema = projectsSchema[projectSchema];
+
+            if (
+                currentSchema.hasOwnProperty('default') &&
+                typeof currentSchema.default === "boolean"
+            ) {
+                booleanProjects.push(projectSchema);
+            }
+        });
+
+        return booleanProjects;
+    }
+
+    /**
       * Projects object id field.
       * @method
       * @name mongooseIdData     
