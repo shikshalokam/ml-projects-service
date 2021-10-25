@@ -1746,14 +1746,14 @@ module.exports = class UserProjectsHelper {
             try {
 
                 isATargetedSolution = UTILS.convertStringToBoolean(isATargetedSolution);
-
+                console.log(isATargetedSolution,"isATargetedSolution")
                 let libraryProjects =
                     await libraryCategoriesHelper.projectDetails(
                         projectTemplateId, 
                         "",
                         isATargetedSolution
                     );
-
+                console.log(libraryProjects,"libraryProjects")
                 if (
                     libraryProjects.data &&
                     !Object.keys(libraryProjects.data).length > 0
@@ -1896,6 +1896,7 @@ module.exports = class UserProjectsHelper {
                 });
 
             } catch (error) {
+                console.log(error,"helper error")
                 return resolve({
                     success: false,
                     message: error.message,

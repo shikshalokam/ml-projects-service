@@ -192,6 +192,7 @@ module.exports = class LibraryCategoriesHelper {
                         "isDeleted" : false,
                     }, "all", ["__v"]);
 
+                console.log(projectsData,"projectsData")
                 if( !projectsData.length > 0 ) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
@@ -252,7 +253,7 @@ module.exports = class LibraryCategoriesHelper {
                         
                     }
                 }
-
+                console.log(projectsData[0],"projectsData[0]")
                 return resolve({
                     success: true,
                     message : CONSTANTS.apiResponses.PROJECTS_FETCHED,
