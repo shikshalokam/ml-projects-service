@@ -1746,14 +1746,35 @@ module.exports = class UserProjectsHelper {
             try {
 
                 isATargetedSolution = UTILS.convertStringToBoolean(isATargetedSolution);
-                console.log(isATargetedSolution,"isATargetedSolution")
+
+                if( isATargetedSolution === false ) {
+
+                    let project = await projectQueries.projectDocument(
+                    {   
+                        userId : userId, 
+                        createdBy : userId,
+                        projectTemplateId : projectTemplateId
+                    }, "all");
+
+                    if(project && project.length > 0){
+
+                        let projectData = await _projectInformation(project[0]);
+
+                        return resolve({
+                            success: true,
+                            message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
+                            data: projectData.data
+                        });
+                    }
+                }
+
                 let libraryProjects =
                     await libraryCategoriesHelper.projectDetails(
                         projectTemplateId, 
                         "",
                         isATargetedSolution
                     );
-                console.log(libraryProjects,"libraryProjects")
+
                 if (
                     libraryProjects.data &&
                     !Object.keys(libraryProjects.data).length > 0
@@ -1896,7 +1917,6 @@ module.exports = class UserProjectsHelper {
                 });
 
             } catch (error) {
-                console.log(error,"helper error")
                 return resolve({
                     success: false,
                     message: error.message,
