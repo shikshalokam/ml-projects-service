@@ -933,7 +933,6 @@ module.exports = class UserProjects extends Abstract {
                     req.query.isATargetedSolution ? req.query.isATargetedSolution : ""
                 );
 
-                console.log(createdProject,"createdProject")
                 return resolve({
                     status: createdProject.status,
                     message: createdProject.message,
@@ -941,7 +940,6 @@ module.exports = class UserProjects extends Abstract {
                 });
 
             } catch (error) {
-                console.log(error,"importFromLibrary error")
                 return reject({
                     status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
                     message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
