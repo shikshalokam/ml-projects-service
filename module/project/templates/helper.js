@@ -20,6 +20,7 @@ const surveyService = require(GENERICS_FILES_PATH + "/services/survey");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
+const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -78,7 +79,7 @@ module.exports = class ProjectTemplatesHelper {
                 if( categoryIds.length > 0 ) {
 
                     let categories = 
-                    await projectCategoriesService.categoryDocuments({
+                    await projectCategoriesQueries.categoryDocuments({
                         externalId : { $in : categoryIds }
                     },["externalId","name"]);
 
