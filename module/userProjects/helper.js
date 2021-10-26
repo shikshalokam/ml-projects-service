@@ -1747,27 +1747,6 @@ module.exports = class UserProjectsHelper {
 
                 isATargetedSolution = UTILS.convertStringToBoolean(isATargetedSolution);
 
-                if( isATargetedSolution === false ) {
-
-                    let project = await projectQueries.projectDocument(
-                    {   
-                        userId : userId, 
-                        createdBy : userId,
-                        projectTemplateId : projectTemplateId
-                    }, "all");
-
-                    if(project && project.length > 0){
-
-                        let projectData = await _projectInformation(project[0]);
-
-                        return resolve({
-                            success: true,
-                            message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
-                            data: projectData.data
-                        });
-                    }
-                }
-
                 let libraryProjects =
                     await libraryCategoriesHelper.projectDetails(
                         projectTemplateId, 
