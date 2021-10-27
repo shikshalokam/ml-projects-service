@@ -1056,9 +1056,8 @@ module.exports = class ProjectTemplatesHelper {
                         },
                         parentId : { $exists : false }
                     }
-                    
-                    tasks = await projectTemplateQueries.templateDocument(findQuery,"all", ["projectTemplateId","__v","projectTemplateExternalId"]);
 
+                    tasks = await projectTemplateTaskQueries.taskDocuments(findQuery,"all", ["projectTemplateId","__v","projectTemplateExternalId"]);
                     for( let task = 0 ; task < tasks.length ; task ++ ) {
 
                         if( tasks[task].children && tasks[task].children.length > 0 ) {
