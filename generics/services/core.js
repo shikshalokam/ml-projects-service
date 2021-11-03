@@ -23,8 +23,6 @@ const getDownloadableUrl = function (bodyData) {
 
     let fileDownloadUrl = ML_CORE_URL + CONSTANTS.endpoints.FILES_DOWNLOADABLE_URL;
 
-    console.log("File Downloadable url is",fileDownloadUrl);
-
     return new Promise((resolve, reject) => {
         try {
 
@@ -35,11 +33,9 @@ const getDownloadableUrl = function (bodyData) {
                 };
 
                 if (err) {
-                    console.log("File download error is",err);
                     result.success = false;
                 } else {
                     let response = data.body;
-                    console.log("File downloaded response is",response);
 
                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
                         result["data"] = response.result;
