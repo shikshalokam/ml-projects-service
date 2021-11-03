@@ -43,5 +43,6 @@ module.exports = {
     SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION : "/v1/solutions/detailsBasedOnRoleAndLocation",
     LIST_ENTITIES_BY_LOCATION_IDS : "/v1/entities/listByLocationIds",
     CREATE_IMPROVEMENT_PROJECT_SOLUTION : "/v1/solutions/create",
-    PROJECT_AND_TASK_REPORT : "/v1/improvement-project/projectAndTaskReport"
+    PROJECT_AND_TASK_REPORT : "/v1/improvement-project/projectAndTaskReport",
+    FILES_DOWNLOADABLE_URL: "/v1/cloud-services/files/getDownloadableUrl"
 };
