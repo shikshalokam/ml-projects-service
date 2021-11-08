@@ -1042,8 +1042,8 @@ module.exports = class ProjectTemplatesHelper {
 
                 const templateDocument = 
                 await projectTemplateQueries.templateDocument({
-                    status : CONSTANTS.common.PUBLISHED,
-                    _id : templateId
+                    _id : templateId,
+                    status : CONSTANTS.common.PUBLISHED
                 },["tasks"]);
 
                 let tasks = [];
@@ -1068,7 +1068,7 @@ module.exports = class ProjectTemplatesHelper {
                                 }
                             }
 
-                            let subTasks = await projectTemplateTaskQueries.taskDocuments(subTaskQuery, ["projectTemplateId","__v","projectTemplateExternalId"]);
+                            let subTasks = await projectTemplateTaskQueries.taskDocuments(subTaskQuery, "all", ["projectTemplateId","__v","projectTemplateExternalId"]);
                             
                             tasks[task].children = subTasks;
                         }
