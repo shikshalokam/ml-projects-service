@@ -37,7 +37,8 @@ module.exports = {
         syncedAt : Date,
         isDeleted : {
             type : Boolean,
-            default : false
+            default : false,
+            index: true
         },
         categories : {
             type : Array,
@@ -45,7 +46,8 @@ module.exports = {
         },
         createdBy : {
             type : String,
-            default : "SYSTEM"
+            default : "SYSTEM",
+            index: true
         },
         tasks : {
             type : Array,
@@ -101,7 +103,10 @@ module.exports = {
             type : String,
             index : true
         },
-        isAPrivateProgram : Boolean,
+        isAPrivateProgram : {
+            type : Boolean,
+            index : true
+        },
         appInformation : Object,
         userRoleInformtion : Object,
         hasAcceptedTAndC : {
