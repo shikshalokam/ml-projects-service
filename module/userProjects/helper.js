@@ -984,7 +984,6 @@ module.exports = class UserProjectsHelper {
                     } else {
                         solutionDetails =
                         await surveyService.listSolutions([solutionExternalId]);
-
                         if( !solutionDetails.success ) {
                             throw {
                                 message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
@@ -1000,7 +999,7 @@ module.exports = class UserProjectsHelper {
                         userId,
                         userToken
                     );
-    
+
                     if( !projectCreation.success ) {
                         return resolve(projectCreation);
                     }
@@ -1182,7 +1181,6 @@ module.exports = class UserProjectsHelper {
                     if (tasksAndSubTasks.length > 0) {
 
                         result.tasks = _projectTask(tasksAndSubTasks);
-
                         result.tasks.forEach(task => {
                             if (
                                 task.type === CONSTANTS.common.ASSESSMENT ||
@@ -1567,7 +1565,6 @@ module.exports = class UserProjectsHelper {
                 } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
                     query["isAPrivateProgram"] = false;
                 } else{
-                    query["createdBy"] = userId;
                     query["referenceFrom"] = CONSTANTS.common.LINK;
                 }
             }
