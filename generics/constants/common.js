@@ -36,6 +36,8 @@ module.exports = {
     "ALLOW_MULTIPLE_ASSESSMENTS" :  "allowMultipleAssessemts",
     "IS_RUBRIC_DRIVEN" :  "isRubricDriven",
     "CRITERIA_LEVEL_REPORT" :  "criteriaLevelReport",
-    "LINK" : "link"
+    "LINK" : "link",
+    "DEFAULT_SUBMISSION_REQUIRED" : 1,
+    "STARTED" : "started",
 
 };

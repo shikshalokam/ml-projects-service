@@ -262,9 +262,10 @@ module.exports = class UserProjectsHelper {
                                 );
                             } else {
                                 
-                                if (userProject[0].tasks[taskIndex].submissionDetails) {
-                                    task.submissionDetails = userProject[0].tasks[taskIndex].submissionDetails;
+                                if (userProject[0].tasks[taskIndex].submissions) {
+                                    task.submissions = userProject[0].tasks[taskIndex].submissions;
                                 }
+                               
                                 userProject[0].tasks[taskIndex] = task;
                             }
                         });
@@ -700,7 +701,7 @@ module.exports = class UserProjectsHelper {
      * @returns {Object}
     */
 
-    static tasksStatus(projectId, taskIds = []) {
+    static tasksStatus(projectId, taskIds = [], userToken ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -727,13 +728,34 @@ module.exports = class UserProjectsHelper {
                         _id: currentTask._id
                     };
 
+                    let completedSubmissionCount = 0;
+
+                    let noOfSubmissionsRequired = (currentTask.solutionDetails && currentTask.solutionDetails.noOfSubmissionsRequired ) ? currentTask.solutionDetails.noOfSubmissionsRequired : CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
+
                     if (
                         currentTask.type === CONSTANTS.common.ASSESSMENT ||
                         currentTask.type === CONSTANTS.common.OBSERVATION
                     ) {
 
-                        data["submissionDetails"] =
-                            currentTask.submissionDetails ? currentTask.submissionDetails : {};
+                        data["submissionStatus"] = CONSTANTS.common.STARTED;
+
+                        let submissionDetails = currentTask.observationInformation ? currentTask.observationInformation : {};
+                        
+                        if( currentTask.submissions && currentTask.submissions.length > 0 ) {
+                            Object.assign(submissionDetails, currentTask.submissions[0]);
+                            completedSubmissionCount = currentTask.submissions.filter((eachSubmission) => eachSubmission.status === CONSTANTS.common.COMPLETED_STATUS).length;
+                        }
+
+                        data["submissionDetails"] = submissionDetails;
+
+                        if ( completedSubmissionCount >= noOfSubmissionsRequired ) {
+                            data.submissionStatus = CONSTANTS.common.COMPLETED_STATUS;
+                        }
+
+                        if ( currentTask.type === CONSTANTS.common.OBSERVATION ) {
+                            data["submissions"] =  currentTask.submissions ? currentTask.submissions : [];
+                        }
+            
                     }
 
                     result.push(data);
@@ -768,21 +790,19 @@ module.exports = class UserProjectsHelper {
      * @returns {Object}
     */
 
-    static updateTask(projectId, taskId, updatedData) {
+    static pushSubmissionToTask(projectId, taskId, updatedData) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let update = {};
 
-                Object.keys(updatedData).forEach(taskData => {
-                    update["tasks.$." + taskData] = updatedData[taskData];
-                });
+                update["tasks.$." + "submissions"] = updatedData
 
                 const tasksUpdated =
                     await projectQueries.findOneAndUpdate({
                         _id: projectId,
                         "tasks._id": taskId
-                    }, { $set: update });
+                    }, { $push: update });
 
                 return resolve(tasksUpdated);
 
@@ -802,7 +822,7 @@ module.exports = class UserProjectsHelper {
      * @returns {Object}
     */
 
-    static solutionDetails(userToken, projectId, taskId) {
+    static solutionDetails(userToken, projectId, taskId, bodyData = {}) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -816,7 +836,8 @@ module.exports = class UserProjectsHelper {
                     "tasks.type",
                     "tasks._id",
                     "tasks.solutionDetails",
-                    "tasks.submissionDetails",
+                    "tasks.submissions",
+                    "tasks.observationInformation",
                     "tasks.externalId",
                     "programInformation._id",
                     "projectTemplateId"
@@ -839,8 +860,8 @@ module.exports = class UserProjectsHelper {
                     programId: project[0].programInformation._id
                 }
 
-                if (currentTask.submissionDetails) {
-                    assessmentOrObservationData = currentTask.submissionDetails;
+                if (currentTask.observationInformation) {
+                    assessmentOrObservationData = currentTask.observationInformation;
                 } else {
     
                     let assessmentOrObservation = {
@@ -852,12 +873,13 @@ module.exports = class UserProjectsHelper {
                             "_id": projectId,
                             "taskId": taskId
                         }
+
                     };
 
                     let assignedAssessmentOrObservation =
                         solutionDetails.type === CONSTANTS.common.ASSESSMENT ?
                             await _assessmentDetails(assessmentOrObservation) :
-                            await _observationDetails(assessmentOrObservation);
+                            await _observationDetails(assessmentOrObservation, bodyData);
 
                     if (!assignedAssessmentOrObservation.success) {
                         return resolve(assignedAssessmentOrObservation);
@@ -876,7 +898,7 @@ module.exports = class UserProjectsHelper {
                         "tasks._id": taskId
                     }, {
                         $set: {
-                            "tasks.$.submissionDetails": assessmentOrObservationData
+                            "tasks.$.observationInformation": assessmentOrObservationData
                         }
                     });
 
@@ -989,6 +1011,7 @@ module.exports = class UserProjectsHelper {
                                 status : HTTP_STATUS_CODE['bad_request'].status
                             }
                         }
+                        
                         solutionDetails = solutionDetails.data[0];
                     }
 
@@ -2347,7 +2370,7 @@ function _assessmentDetails(assessmentData) {
    * @returns {Object} 
 */
 
-function _observationDetails(observationData) {
+function _observationDetails(observationData, bodyData = {}) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -2427,21 +2450,22 @@ function _observationDetails(observationData) {
                     project: observationData.project
                 };
 
+                if ( bodyData && Object.keys(bodyData).length > 0 ) {
+                    Object.assign(observation, bodyData);
+                }
+
                 let observationCreated = await surveyService.createObservation(
                     observationData.token,
                     observationData.solutionDetails._id,
                     observation
                 );
 
-                if (!observationCreated.success) {
-                    throw {
-                        status: HTTP_STATUS_CODE['bad_request'].status,
-                        message: CONSTANTS.apiResponses.OBSERVATION_NOT_CREATED
-                    }
+                if ( observationCreated.success ) {
+                    result["observationId"] = observationCreated.data._id;
                 }
 
                 result["solutionId"] = observationData.solutionDetails._id;
-                result["observationId"] = observationCreated.data._id;
+                
             }
 
             return resolve({

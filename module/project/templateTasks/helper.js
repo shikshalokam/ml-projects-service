@@ -198,7 +198,6 @@ module.exports = class ProjectTemplateTasksHelper {
                 } else if ( solutionTypes.includes(allValues.type) ) { 
 
                     allValues.solutionDetails = {};
-
                     if( parsedData.solutionType && parsedData.solutionType !== "" ) {
                         allValues.solutionDetails.type = parsedData.solutionType; 
                     } else {
@@ -244,11 +243,31 @@ module.exports = class ProjectTemplateTasksHelper {
                                 CONSTANTS.apiResponses.MIS_MATCHED_PROJECT_AND_TASK_ENTITY_TYPE;
                             } else {
 
+                                let projectionFields = _solutionDocumentProjectionFieldsForTask();
+                                allValues.solutionDetails.noOfSubmissionsRequired = CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
+                                
+                                if ( parsedData.noOfSubmissionsRequired && parsedData.noOfSubmissionsRequired != "" ) {
+
+                                    // noOfSubmissionsRequired present in csv
+                                    if ( parsedData.noOfSubmissionsRequired > CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED ) {
+                                        if ( solutionData[parsedData.solutionId].allowMultipleAssessemts ) {
+                                            allValues.solutionDetails.noOfSubmissionsRequired = parsedData.noOfSubmissionsRequired;
+                                        } 
+                                    }
+
+                                }else{
+                                    // noOfSubmissionsRequired not present in csv
+                                    if ( solutionData[parsedData.solutionId].noOfSubmissionsRequired ) {
+                                        projectionFields.push("noOfSubmissionsRequired");
+                                    }
+                                }
+
                                 allValues.solutionDetails = 
                                 _.pick(
                                     solutionData[parsedData.solutionId],
-                                    ["_id","isReusable","externalId","name","programId","type","subType","allowMultipleAssessemts","isRubricDriven","criteriaLevelReport","scoringSystem"]
+                                    projectionFields
                                 );
+
                             }
 
                         }
@@ -577,4 +596,33 @@ module.exports = class ProjectTemplateTasksHelper {
             }
         })
     }
+
 };
+
+/**
+    *  Helper function for list of solution fields to be sent in response.
+    * @method
+    * @name solutionDocumentProjectionFieldsForTask
+    * @returns {Promise} Returns a Promise.
+    */
+
+function _solutionDocumentProjectionFieldsForTask() {
+
+    let projectionFields = [
+                "_id",
+                "isReusable",
+                "externalId",
+                "name",
+                "programId",
+                "type",
+                "subType",
+                "allowMultipleAssessemts",
+                "isRubricDriven",
+                "criteriaLevelReport",
+                "scoringSystem"
+            ];
+
+    return projectionFields;
+}
+
+
