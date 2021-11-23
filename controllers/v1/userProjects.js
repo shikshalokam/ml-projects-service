@@ -340,8 +340,7 @@ module.exports = class UserProjects extends Abstract {
 
                 let taskStatus = await userProjectsHelper.tasksStatus(
                     req.params._id,
-                    req.body.taskIds,
-                    req.userDetails.userToken
+                    req.body.taskIds
                 );
 
                 taskStatus.result = taskStatus.data;

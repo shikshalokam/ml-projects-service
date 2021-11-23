@@ -701,7 +701,7 @@ module.exports = class UserProjectsHelper {
      * @returns {Object}
     */
 
-    static tasksStatus(projectId, taskIds = [], userToken ) {
+    static tasksStatus(projectId, taskIds = []) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -730,7 +730,7 @@ module.exports = class UserProjectsHelper {
 
                     let completedSubmissionCount = 0;
 
-                    let noOfSubmissionsRequired = (currentTask.solutionDetails && currentTask.solutionDetails.noOfSubmissionsRequired ) ? currentTask.solutionDetails.noOfSubmissionsRequired : CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
+                    let minNoOfSubmissionsRequired = currentTask.solutionDetails.minNoOfSubmissionsRequired;
 
                     if (
                         currentTask.type === CONSTANTS.common.ASSESSMENT ||
@@ -748,7 +748,7 @@ module.exports = class UserProjectsHelper {
 
                         data["submissionDetails"] = submissionDetails;
 
-                        if ( completedSubmissionCount >= noOfSubmissionsRequired ) {
+                        if (completedSubmissionCount >= minNoOfSubmissionsRequired ) {
                             data.submissionStatus = CONSTANTS.common.COMPLETED_STATUS;
                         }
 
