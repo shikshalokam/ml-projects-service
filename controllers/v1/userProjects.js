@@ -358,11 +358,18 @@ module.exports = class UserProjects extends Abstract {
     }
 
      /**
-    * @api {get} /improvement-project/api/v1/userProjects/solutionDetails/:projectId?taskId=:taskId
+    * @api {post} /improvement-project/api/v1/userProjects/solutionDetails/:projectId?taskId=:taskId
     * User project solution details
     * @apiVersion 1.0.0
     * @apiGroup User Projects
     * @apiSampleRequest /improvement-project/api/v1/userProjects/solutionDetails/5fba54dc5bf46b25a926bee5?taskId=347400e7-8a62-4dad-bc24-af7c5bd70ad1
+    * @apiParamExample {json} Request:
+    {
+        "role" : "HM",
+        "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
     * @apiParamExample {json} Response:
     * {
     "message" : "Solutions details fetched successfully",
@@ -409,7 +416,8 @@ module.exports = class UserProjects extends Abstract {
                 let solutionDetails = await userProjectsHelper.solutionDetails(
                     req.userDetails.userToken,
                     req.params._id,
-                    req.query.taskId
+                    req.query.taskId,
+                    req.body
                 );
 
                 solutionDetails.result = solutionDetails.data;
@@ -948,4 +956,5 @@ module.exports = class UserProjects extends Abstract {
             }
         })
     }
+
 };
