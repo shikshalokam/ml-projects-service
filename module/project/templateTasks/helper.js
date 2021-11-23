@@ -244,21 +244,21 @@ module.exports = class ProjectTemplateTasksHelper {
                             } else {
 
                                 let projectionFields = _solutionDocumentProjectionFieldsForTask();
-                                allValues.solutionDetails.noOfSubmissionsRequired = CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
+                                allValues.solutionDetails.minNoOfSubmissionsRequired = CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
                                 
-                                if ( parsedData.noOfSubmissionsRequired && parsedData.noOfSubmissionsRequired != "" ) {
+                                if (parsedData.minNoOfSubmissionsRequired && parsedData.minNoOfSubmissionsRequired != "" ) {
 
-                                    // noOfSubmissionsRequired present in csv
-                                    if ( parsedData.noOfSubmissionsRequired > CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED ) {
+                                    // minNoOfSubmissionsRequired present in csv
+                                    if (parsedData.minNoOfSubmissionsRequired > CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED ) {
                                         if ( solutionData[parsedData.solutionId].allowMultipleAssessemts ) {
-                                            allValues.solutionDetails.noOfSubmissionsRequired = parsedData.noOfSubmissionsRequired;
+                                            allValues.solutionDetails.minNoOfSubmissionsRequired = parsedData.minNoOfSubmissionsRequired;
                                         } 
                                     }
 
                                 }else{
-                                    // noOfSubmissionsRequired not present in csv
-                                    if ( solutionData[parsedData.solutionId].noOfSubmissionsRequired ) {
-                                        projectionFields.push("noOfSubmissionsRequired");
+                                    // minNoOfSubmissionsRequired not present in csv
+                                    if (solutionData[parsedData.solutionId].minNoOfSubmissionsRequired ) {
+                                        projectionFields.push("minNoOfSubmissionsRequired");
                                     }
                                 }
 

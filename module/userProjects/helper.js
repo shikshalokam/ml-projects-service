@@ -743,7 +743,7 @@ module.exports = class UserProjectsHelper {
                         
                         if( currentTask.submissions && currentTask.submissions.length > 0 ) {
                             Object.assign(submissionDetails, currentTask.submissions[0]);
-                            completedSubmissionCount = currentTask.submissions.filter((eachSubmission) => eachSubmission.status === CONSTANTS.common.COMPLETED_STATUS).length;
+                            completedSubmissionCount = currentTask.submissions.length;
                         }
 
                         data["submissionDetails"] = submissionDetails;
