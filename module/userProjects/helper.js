@@ -2370,7 +2370,7 @@ function _assessmentDetails(assessmentData) {
    * @returns {Object} 
 */
 
-function _observationDetails(observationData, bodyData = {}) {
+function _observationDetails(observationData, userRoleAndProfileInformation = {}) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -2450,14 +2450,11 @@ function _observationDetails(observationData, bodyData = {}) {
                     project: observationData.project
                 };
 
-                if ( bodyData && Object.keys(bodyData).length > 0 ) {
-                    Object.assign(observation, bodyData);
-                }
-
                 let observationCreated = await surveyService.createObservation(
                     observationData.token,
                     observationData.solutionDetails._id,
-                    observation
+                    observation,
+                    userRoleAndProfileInformation && Object.keys(userRoleAndProfileInformation).length > 0 ? userRoleAndProfileInformation : {}
                 );
 
                 if ( observationCreated.success ) {
