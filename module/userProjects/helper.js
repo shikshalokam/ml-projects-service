@@ -728,14 +728,14 @@ module.exports = class UserProjectsHelper {
                         _id: currentTask._id
                     };
 
-                    let completedSubmissionCount = 0;
-
-                    let minNoOfSubmissionsRequired = currentTask.solutionDetails.minNoOfSubmissionsRequired;
-
                     if (
                         currentTask.type === CONSTANTS.common.ASSESSMENT ||
                         currentTask.type === CONSTANTS.common.OBSERVATION
                     ) {
+
+                        let completedSubmissionCount = 0;
+
+                        let minNoOfSubmissionsRequired = currentTask.solutionDetails.minNoOfSubmissionsRequired;
 
                         data["submissionStatus"] = CONSTANTS.common.STARTED;
 
