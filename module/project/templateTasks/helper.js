@@ -244,14 +244,14 @@ module.exports = class ProjectTemplateTasksHelper {
                             } else {
 
                                 let projectionFields = _solutionDocumentProjectionFieldsForTask();
-                                allValues.solutionDetails.minNoOfSubmissionsRequired = CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
+                                allValues.solutionDetails["minNoOfSubmissionsRequired"] = CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
                                 
                                 if (parsedData.minNoOfSubmissionsRequired && parsedData.minNoOfSubmissionsRequired != "" ) {
 
                                     // minNoOfSubmissionsRequired present in csv
-                                    if (parsedData.minNoOfSubmissionsRequired > CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED ) {
+                                    if ( parsedData.minNoOfSubmissionsRequired > CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED ) {
                                         if ( solutionData[parsedData.solutionId].allowMultipleAssessemts ) {
-                                            allValues.solutionDetails.minNoOfSubmissionsRequired = parsedData.minNoOfSubmissionsRequired;
+                                            allValues.solutionDetails["minNoOfSubmissionsRequired"] = parsedData.minNoOfSubmissionsRequired;
                                         } 
                                     }
 
@@ -262,11 +262,10 @@ module.exports = class ProjectTemplateTasksHelper {
                                     }
                                 }
 
-                                allValues.solutionDetails = 
-                                _.pick(
+                                Object.assign(allValues.solutionDetails, _.pick(
                                     solutionData[parsedData.solutionId],
                                     projectionFields
-                                );
+                                ))
 
                             }
 
