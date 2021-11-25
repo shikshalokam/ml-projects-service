@@ -736,25 +736,33 @@ module.exports = class UserProjectsHelper {
 
                         let completedSubmissionCount = 0;
 
-                        let minNoOfSubmissionsRequired = currentTask.solutionDetails.minNoOfSubmissionsRequired;
+                        let minNoOfSubmissionsRequired = currentTask.solutionDetails.minNoOfSubmissionsRequired ? currentTask.solutionDetails.minNoOfSubmissionsRequired : CONSTANTS.common.DEFAULT_SUBMISSION_REQUIRED;
 
                         data["submissionStatus"] = CONSTANTS.common.STARTED;
 
                         let submissionDetails = currentTask.observationInformation ? currentTask.observationInformation : {};
-                        
-                        if( currentTask.submissions && currentTask.submissions.length > 0 ) {
-                            Object.assign(submissionDetails, currentTask.submissions[0]);
-                            completedSubmissionCount = currentTask.submissions.length;
-                        }
-
                         data["submissionDetails"] = submissionDetails;
+                      
+                        if ( currentTask.submissions && currentTask.submissions.length > 0 ) {
 
-                        if (completedSubmissionCount >= minNoOfSubmissionsRequired ) {
-                            data.submissionStatus = CONSTANTS.common.COMPLETED_STATUS;
-                        }
+                            let completedSubmissionDoc;
+                            completedSubmissionCount = currentTask.submissions.filter((eachSubmission) => eachSubmission.status === CONSTANTS.common.COMPLETED_STATUS).length;
 
-                        if ( currentTask.type === CONSTANTS.common.OBSERVATION ) {
-                            data["submissions"] =  currentTask.submissions ? currentTask.submissions : [];
+                            if (completedSubmissionCount >= minNoOfSubmissionsRequired ) {
+ 
+                                completedSubmissionDoc = currentTask.submissions.find(eachSubmission => eachSubmission.status === CONSTANTS.common.COMPLETED_STATUS);
+                                data.submissionStatus = CONSTANTS.common.COMPLETED_STATUS;
+
+                            } else {
+
+                                completedSubmissionDoc = currentTask.submissions.find(eachSubmission => eachSubmission.status === CONSTANTS.common.STARTED);
+                            }
+
+                            Object.assign(data["submissionDetails"],completedSubmissionDoc)
+
+                        } else {
+
+                            data["submissionDetails"].status = CONSTANTS.common.STARTED;
                         }
             
                     }
