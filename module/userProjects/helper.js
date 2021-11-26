@@ -864,57 +864,63 @@ module.exports = class UserProjectsHelper {
 
                 let solutionDetails = currentTask.solutionDetails;
 
-                let assessmentOrObservationData = {
-                    entityId: project[0].entityInformation._id,
-                    programId: project[0].programInformation._id
-                }
+                let assessmentOrObservationData = {};
+                
+                if (project[0].entityInformation && project[0].entityInformation._id && project[0].programInformation && project[0].programInformation._id) {
+                
+                    assessmentOrObservationData = {
+                        entityId: project[0].entityInformation._id,
+                        programId: project[0].programInformation._id
+                    }
 
-                if (currentTask.observationInformation) {
-                    assessmentOrObservationData = currentTask.observationInformation;
-                } else {
-    
-                    let assessmentOrObservation = {
-                        token: userToken,
-                        solutionDetails: solutionDetails,
-                        entityId: assessmentOrObservationData.entityId,
-                        programId: assessmentOrObservationData.programId,
-                        project: {
+                    if (currentTask.observationInformation) {
+                        assessmentOrObservationData = currentTask.observationInformation;
+                    } else {
+        
+                        let assessmentOrObservation = {
+                            token: userToken,
+                            solutionDetails: solutionDetails,
+                            entityId: assessmentOrObservationData.entityId,
+                            programId: assessmentOrObservationData.programId,
+                            project: {
+                                "_id": projectId,
+                                "taskId": taskId
+                            }
+
+                        };
+
+                        let assignedAssessmentOrObservation =
+                            solutionDetails.type === CONSTANTS.common.ASSESSMENT ?
+                                await _assessmentDetails(assessmentOrObservation) :
+                                await _observationDetails(assessmentOrObservation, bodyData);
+
+                        if (!assignedAssessmentOrObservation.success) {
+                            return resolve(assignedAssessmentOrObservation);
+                        }
+
+                        assessmentOrObservationData =
+                            _.merge(assessmentOrObservationData, assignedAssessmentOrObservation.data);
+
+                        if (!currentTask.solutionDetails.isReusable) {
+                            assessmentOrObservationData["programId"] =
+                                currentTask.solutionDetails.programId;
+                        }
+
+                        await projectQueries.findOneAndUpdate({
                             "_id": projectId,
-                            "taskId": taskId
-                        }
+                            "tasks._id": taskId
+                        }, {
+                            $set: {
+                                "tasks.$.observationInformation": assessmentOrObservationData
+                            }
+                        });
 
-                    };
-
-                    let assignedAssessmentOrObservation =
-                        solutionDetails.type === CONSTANTS.common.ASSESSMENT ?
-                            await _assessmentDetails(assessmentOrObservation) :
-                            await _observationDetails(assessmentOrObservation, bodyData);
-
-                    if (!assignedAssessmentOrObservation.success) {
-                        return resolve(assignedAssessmentOrObservation);
                     }
 
-                    assessmentOrObservationData =
-                        _.merge(assessmentOrObservationData, assignedAssessmentOrObservation.data);
-
-                    if (!currentTask.solutionDetails.isReusable) {
-                        assessmentOrObservationData["programId"] =
-                            currentTask.solutionDetails.programId;
-                    }
-
-                    await projectQueries.findOneAndUpdate({
-                        "_id": projectId,
-                        "tasks._id": taskId
-                    }, {
-                        $set: {
-                            "tasks.$.observationInformation": assessmentOrObservationData
-                        }
-                    });
+                    assessmentOrObservationData["entityType"] = project[0].entityInformation.entityType;
 
                 }
-
-                assessmentOrObservationData["entityType"] = project[0].entityInformation.entityType;
-
+                
                 if(currentTask.solutionDetails && !(_.isEmpty(currentTask.solutionDetails))) {
 
                     assessmentOrObservationData.solutionDetails = currentTask.solutionDetails;
