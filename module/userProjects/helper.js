@@ -1624,7 +1624,7 @@ module.exports = class UserProjectsHelper {
 
             let totalCount = 0;
             let data = [];
-
+            
             if( projects.success && projects.data ) {
 
                 totalCount = projects.data.count;
