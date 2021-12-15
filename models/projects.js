@@ -120,6 +120,10 @@ module.exports = {
         link : {
             type : String,
             index : true
-        }
+        },
+        taskSequence : {
+            type : Array,
+            default : []
+        },
     }
 };

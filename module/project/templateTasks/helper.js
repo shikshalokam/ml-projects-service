@@ -76,7 +76,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     let tasksData = await projectTemplateTaskQueries.taskDocuments(
                         filterData,
-                        ["_id","children","externalId","projectTemplateId","parentId"]
+                        ["_id","children","externalId","projectTemplateId","parentId", "taskSequence"]
                     );
 
                     if( tasksData.length > 0 ) {
@@ -94,7 +94,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 await projectTemplateQueries.templateDocument({
                     status : CONSTANTS.common.PUBLISHED,
                     _id : projectTemplateId
-                },["_id","entityType","externalId"]);
+                },["_id","entityType","externalId", "taskSequence"]);
 
                 if( !projectTemplate.length > 0 ) {
                     throw {
@@ -431,7 +431,7 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let pendingItems = [];
-
+                let taskSequence = [];
                 for ( let task = 0; task < tasks.length ; task ++ ) {
                     let currentData = UTILS.valueParser(tasks[task]);
                     currentData.createdBy = currentData.updatedBy = userId;
@@ -441,6 +441,7 @@ module.exports = class ProjectTemplateTasksHelper {
                         !csvData.data.tasks[currentData.parentTaskId]
                     ) {
                         pendingItems.push(currentData);
+
                     } else {
                         
                         if( csvData.data.tasks[currentData.externalId] ) {
@@ -455,23 +456,29 @@ module.exports = class ProjectTemplateTasksHelper {
                                 csvData.data.solutionData
                             );
 
+                            if (createdTask._SYSTEM_ID != ""){
+                                taskSequence.push(createdTask.externalId);
+                            }
+
                             input.push(createdTask);
                         }
                     }
                 }
 
+                let childTaskSequence = {};
                 if ( pendingItems && pendingItems.length > 0 ) {
                     
                     for ( let item = 0; item < pendingItems.length ; item ++ ) {
                         
                         let currentData = pendingItems[item];
+
                         currentData.createdBy = currentData.updatedBy = userId;
 
                         if( csvData.data.tasks[currentData.externalId] ) {
                             currentData._SYSTEM_ID = CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASK_EXISTS;
                             input.push(currentData);
                         } else {
-                            
+
                             let createdTask = await this.createOrUpdateTask(
                                 currentData,
                                 csvData.data.template,
@@ -479,10 +486,37 @@ module.exports = class ProjectTemplateTasksHelper {
                                 csvData.data.observationData
                             );
 
+                            if ( createdTask._SYSTEM_ID != "" ) {
+
+                                if (!childTaskSequence.hasOwnProperty(currentData.parentTaskId)){
+                                    childTaskSequence[currentData.parentTaskId] = new Array();
+                                }
+                                childTaskSequence[currentData.parentTaskId].push(currentData.externalId);
+                            }
+
                             input.push(createdTask);
                         }
 
                     }
+                }
+        
+                if ( taskSequence && taskSequence.length > 0 ) {
+                    await projectTemplateQueries.updateProjectTemplateDocument
+                        (
+                            { _id : ObjectId(projectTemplateId) },
+                            { $set : { taskSequence : taskSequence } }
+                        )
+                }
+
+                if ( childTaskSequence && Object.keys(childTaskSequence).length > 0 ) {
+                    for( let pointerToTask in childTaskSequence ) {
+                        await projectTemplateTaskQueries.updateTaskDocument
+                        (
+                            { externalId : pointerToTask },
+                            { $set : { taskSequence : childTaskSequence[pointerToTask] } }
+                        )
+                    }
+                        
                 }
 
                 input.push(null);
@@ -544,6 +578,8 @@ module.exports = class ProjectTemplateTasksHelper {
                     })
                 }
 
+                let updateChildTaskSequence = {};
+                let updateTemplateTaskSequence = new Array();
                 for ( let task = 0; task < tasks.length ; task ++ ) { 
                     
                     let currentData = UTILS.valueParser(tasks[task]);
@@ -569,6 +605,19 @@ module.exports = class ProjectTemplateTasksHelper {
                         true  
                     );
 
+                    if ( createdTask._SYSTEM_ID != "") {
+
+                        if ( currentData.parentTaskId != "" ) {
+                            if ( !updateChildTaskSequence.hasOwnProperty(currentData.parentTaskId)){
+                                updateChildTaskSequence[currentData.parentTaskId] = new Array();
+                            }
+
+                            updateChildTaskSequence[currentData.parentTaskId].push(currentData.externalId);
+                        }else{
+                            updateTemplateTaskSequence.push(currentData.externalId);
+                        }
+                    }
+
                     if( 
                         csvData.data.tasks[currentData._SYSTEM_ID].parentId && 
                         csvData.data.tasks[currentData._SYSTEM_ID].parentId.toString() !== createdTask._parentTaskId.toString()
@@ -586,6 +635,32 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
 
                     input.push(createdTask);
+                }
+                
+                let checkTemplateTaskSequence = true;
+                let templateTaskSequence = csvData.data.template.taskSequence;
+
+                if ( templateTaskSequence ) {
+                    checkTemplateTaskSequence = _.isEqual(templateTaskSequence, updateTemplateTaskSequence);
+                }
+                
+                if ( updateTemplateTaskSequence && updateTemplateTaskSequence.length > 0 && checkTemplateTaskSequence == false ) {
+                    await projectTemplateQueries.updateProjectTemplateDocument
+                        (
+                            { _id : ObjectId(projectTemplateId) },
+                            { $set : { taskSequence : updateTemplateTaskSequence } }
+                        )
+                }
+                
+                if ( updateChildTaskSequence && Object.keys(updateChildTaskSequence).length > 0 ) {
+                    for( let pointerToTask in updateChildTaskSequence ) {
+                        await projectTemplateTaskQueries.updateTaskDocument
+                        (
+                            { externalId : pointerToTask },
+                            { $set : { taskSequence : updateChildTaskSequence[pointerToTask] } }
+                        )
+                    }
+                        
                 }
 
                 input.push(null);

@@ -1788,6 +1788,7 @@ module.exports = class UserProjectsHelper {
                         isATargetedSolution
                     );
 
+
                 if (
                     libraryProjects.data &&
                     !Object.keys(libraryProjects.data).length > 0
@@ -1962,6 +1963,36 @@ function _projectInformation(project) {
             if (project.programInformation) {
                 project.programId = project.programInformation._id;
                 project.programName = project.programInformation.name;
+            }
+            //order task based on task sequence
+            if (project.taskSequence && project.taskSequence.length > 0) {
+
+                let tasks = [];
+                let taskSequence = project.taskSequence ? project.taskSequence : [];
+                let projectTasks = project.tasks;
+
+                for (let taskCounter = 0; taskCounter < taskSequence.length; taskCounter++) {
+
+                    let eachTask = projectTasks.find(item => item.externalId == taskSequence[taskCounter]);
+                    if (eachTask && Object.keys(eachTask).length > 0) {
+                        
+                        let childTasks = [];
+                        if (eachTask.children && eachTask.children.length > 0) {
+
+                            let childTaskSequence = eachTask.taskSequence;
+                            for (let childTaskPointer = 0; childTaskPointer < childTaskSequence.length; childTaskPointer++) {
+                                let eachChildTask = eachTask.children.find(childItem => childItem.externalId == childTaskSequence[childTaskPointer]);
+                                childTasks.push(eachChildTask);
+                            }
+
+                            eachTask.children = childTasks;
+                        }
+
+                        tasks.push(eachTask);
+                    }
+                }
+
+                project.tasks = tasks;
             }
 
             if (project.tasks && project.tasks.length > 0) {
