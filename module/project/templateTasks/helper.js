@@ -431,7 +431,9 @@ module.exports = class ProjectTemplateTasksHelper {
                 }
 
                 let pendingItems = [];
-                let taskSequence = [];
+                let taskSequence = csvData.data.template.taskSequence && csvData.data.template.taskSequence.length > 0 
+                    ? csvData.data.template.taskSequence: [];
+
                 for ( let task = 0; task < tasks.length ; task ++ ) {
                     let currentData = UTILS.valueParser(tasks[task]);
                     currentData.createdBy = currentData.updatedBy = userId;
