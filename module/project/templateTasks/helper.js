@@ -76,7 +76,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     let tasksData = await projectTemplateTaskQueries.taskDocuments(
                         filterData,
-                        ["_id","children","externalId","projectTemplateId","parentId", "taskSequence"]
+                        ["_id","children","externalId","projectTemplateId","parentId", "taskSequence", "hasSubTasks"]
                     );
 
                     if( tasksData.length > 0 ) {
@@ -434,14 +434,21 @@ module.exports = class ProjectTemplateTasksHelper {
                 let taskSequence = csvData.data.template.taskSequence && csvData.data.template.taskSequence.length > 0 
                     ? csvData.data.template.taskSequence: [];
 
+                let checkMandatoryTask = [];
+
                 for ( let task = 0; task < tasks.length ; task ++ ) {
                     let currentData = UTILS.valueParser(tasks[task]);
                     currentData.createdBy = currentData.updatedBy = userId;
+
+                    if ( currentData.isDeletable != "" && currentData.isDeletable === "TRUE" ) {
+                        checkMandatoryTask.push(currentData.externalId);
+                    }
 
                     if( 
                         currentData["hasAParentTask"] === "YES" &&
                         !csvData.data.tasks[currentData.parentTaskId]
                     ) {
+
                         pendingItems.push(currentData);
 
                     } else {
@@ -521,6 +528,12 @@ module.exports = class ProjectTemplateTasksHelper {
                         
                 }
 
+                if ( checkMandatoryTask && checkMandatoryTask.length > 0 ) {
+
+                    await this.checkAndUpdateParentTaskmandatory(checkMandatoryTask);
+                    
+                }
+
                 input.push(null);
 
             } catch (error) {
@@ -582,6 +595,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let updateChildTaskSequence = {};
                 let updateTemplateTaskSequence = new Array();
+                let checkMandatoryTask = [];
                 for ( let task = 0; task < tasks.length ; task ++ ) { 
                     
                     let currentData = UTILS.valueParser(tasks[task]);
@@ -598,6 +612,10 @@ module.exports = class ProjectTemplateTasksHelper {
                     }
 
                     currentData.updatedBy = userId;
+
+                    if ( currentData.isDeletable != "" && currentData.isDeletable === "TRUE" ) {
+                        checkMandatoryTask.push(currentData.externalId);
+                    }
                     
                     let createdTask = 
                     await this.createOrUpdateTask(
@@ -665,7 +683,81 @@ module.exports = class ProjectTemplateTasksHelper {
                         
                 }
 
+                if ( checkMandatoryTask && checkMandatoryTask.length > 0 ) {
+
+                    await this.checkAndUpdateParentTaskmandatory(checkMandatoryTask);
+                    
+                }
+
                 input.push(null);
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+    /**
+      * check parent task is mandatory.
+      * @method
+      * @name checkAndUpdateParentTaskmandatory
+      * @param {Array} mandatoryTask - task external Ids.
+      * @returns {Object} tasks.
+     */
+
+    static checkAndUpdateParentTaskmandatory( taskIds = [] ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let updateParentTask = [];
+
+                let taskData = await projectTemplateTaskQueries.taskDocuments(
+                    {   externalId : { $in : taskIds},
+                        hasSubTasks : true
+                    },
+                    ["children"]
+                );
+
+                if ( taskData && taskData.length > 0 ) {
+
+                    for ( let eachTask = 0 ; eachTask < taskData.length ; eachTask ++ ) {
+
+                        let currentTask = taskData[eachTask];
+                        if (currentTask.children && currentTask.children.length > 0) {
+
+                            let childTasks = await projectTemplateTaskQueries.taskDocuments(
+                                {   _id : { $in : currentTask.children}
+                                },
+                                ["isDeletable", "parentId"]
+                            );
+
+                            if ( childTasks && childTasks.length > 0 ) {
+
+                                childTasks.forEach( eachChildTask => {
+                                    console.log(eachChildTask._id)
+                                    if( eachChildTask.isDeletable  === false && eachChildTask.parentId != "" ) {
+                                        updateParentTask.push(eachChildTask.parentId);
+                                    } 
+                                });
+                            } 
+                        }
+                    }
+
+                    if ( updateParentTask && updateParentTask.length > 0 ) {
+                        let updatedTasks = await projectTemplateTaskQueries.updateTaskDocument
+                        (
+                            { _id : { $in : updateParentTask }},
+                            { $set : { isDeletable : false } }
+                        )
+                    }
+                    
+                }
+
+                return resolve({
+                    success: true,
+                    message: CONSTANTS.apiResponses.TASKS_MARKED_AS_ISDELETABLE_FALSE,
+                    data : updateParentTask
+                })
 
             } catch (error) {
                 return reject(error);
