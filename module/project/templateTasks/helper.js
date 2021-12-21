@@ -734,7 +734,6 @@ module.exports = class ProjectTemplateTasksHelper {
                             if ( childTasks && childTasks.length > 0 ) {
 
                                 childTasks.forEach( eachChildTask => {
-                                    console.log(eachChildTask._id)
                                     if( eachChildTask.isDeletable  === false && eachChildTask.parentId != "" ) {
                                         updateParentTask.push(eachChildTask.parentId);
                                     } 
