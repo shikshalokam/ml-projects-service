@@ -344,11 +344,10 @@ module.exports = class ReportsHelper {
                     query.userRole = {
                         $in : [
                             "",
-                            userRole
+                            ...userRole.split(",")
                         ]
                     }
                 }
-
 
                 let searchQuery = [];
                 if (search !== "") {

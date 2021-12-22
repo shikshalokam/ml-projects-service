@@ -39,5 +39,8 @@ module.exports = {
     "LINK" : "link",
     "DEFAULT_SUBMISSION_REQUIRED" : 1,
     "STARTED" : "started",
+    "TASK_SEQUENCE" : "taskSequence",
+    "CHILDREN" : "children",
+
 
 };
