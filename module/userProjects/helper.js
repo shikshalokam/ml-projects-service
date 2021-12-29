@@ -341,7 +341,7 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
-                await kafkaProducersHelper.pushImrovementProjectToKafka(projectUpdated);
+                await kafkaProducersHelper.pushProjectToKafka(projectUpdated);
 
                 return resolve({
                     success: true,
@@ -1135,7 +1135,7 @@ module.exports = class UserProjectsHelper {
     
                     let project = await projectQueries.createProject(projectCreation.data);
 
-                    await kafkaProducersHelper.pushImrovementProjectToKafka(project);
+                    await kafkaProducersHelper.pushProjectToKafka(project);
                     
                     projectId = project._id;
                 }
@@ -1398,7 +1398,7 @@ module.exports = class UserProjectsHelper {
                     createProject
                 );
 
-                await kafkaProducersHelper.pushImrovementProjectToKafka(userProject);
+                await kafkaProducersHelper.pushProjectToKafka(userProject);
 
                 if (!userProject._id) {
                     throw {

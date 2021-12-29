@@ -7,7 +7,7 @@
 
 // Dependencies
 const kafkaCommunicationsOnOff = (!process.env.KAFKA_COMMUNICATIONS_ON_OFF || process.env.KAFKA_COMMUNICATIONS_ON_OFF != "OFF") ? "ON" : "OFF";
-const improvementProjectSubmissionTopic = (process.env.IMPROVEMENT_PROJECT_SUBMISSION_TOPIC && process.env.IMPROVEMENT_PROJECT_SUBMISSION_TOPIC != "OFF") ? process.env.IMPROVEMENT_PROJECT_SUBMISSION_TOPIC : "sl-improvement-project-submission-dev";
+const projectSubmissionTopic = (process.env.PROJECT_SUBMISSION_TOPIC && process.env.PROJECT_SUBMISSION_TOPIC != "OFF") ? process.env.PROJECT_SUBMISSION_TOPIC : "sl-improvement-project-submission-dev";
 
 /**
   * Push improvement projects to kafka.
@@ -21,7 +21,7 @@ const pushProjectToKafka = function (message) {
       try {
 
           let kafkaPushStatus = await pushMessageToKafka([{
-            topic: process.env.NOTIFICATIONS_TOPIC,
+            topic: projectSubmissionTopic,
             messages: JSON.stringify(message)
           }]);
 
@@ -73,31 +73,7 @@ const pushMessageToKafka = function(payload) {
 }
 
 
-/**
-  * Push improvement projects to kafka.
-  * @function
-  * @name pushImrovementProjectToKafka
-  * @param {Object} message - Message data.
-*/
-
-const pushImrovementProjectToKafka = function (message) {
-  return new Promise(async (resolve, reject) => {
-      try {
-
-          let kafkaPushStatus = await pushMessageToKafka([{
-            topic: improvementProjectSubmissionTopic,
-            messages: JSON.stringify(message)
-          }]);
-          return resolve(kafkaPushStatus);
-
-      } catch (error) {
-          return reject(error);
-      }
-  })
-}
-
 module.exports = {
-  pushProjectToKafka : pushProjectToKafka,
-  pushImrovementProjectToKafka : pushImrovementProjectToKafka
+  pushProjectToKafka : pushProjectToKafka
 };
 
