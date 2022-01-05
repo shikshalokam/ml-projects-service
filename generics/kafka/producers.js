@@ -7,6 +7,7 @@
 
 // Dependencies
 const kafkaCommunicationsOnOff = (!process.env.KAFKA_COMMUNICATIONS_ON_OFF || process.env.KAFKA_COMMUNICATIONS_ON_OFF != "OFF") ? "ON" : "OFF";
+const projectSubmissionTopic = (process.env.PROJECT_SUBMISSION_TOPIC && process.env.PROJECT_SUBMISSION_TOPIC != "OFF") ? process.env.PROJECT_SUBMISSION_TOPIC : "sl-improvement-project-submission-dev";
 
 /**
   * Push improvement projects to kafka.
@@ -20,7 +21,7 @@ const pushProjectToKafka = function (message) {
       try {
 
           let kafkaPushStatus = await pushMessageToKafka([{
-            topic: process.env.NOTIFICATIONS_TOPIC,
+            topic: projectSubmissionTopic,
             messages: JSON.stringify(message)
           }]);
 
@@ -31,6 +32,8 @@ const pushProjectToKafka = function (message) {
       }
   })
 }
+
+
 
 /**
   * Push message to kafka.
@@ -68,6 +71,7 @@ const pushMessageToKafka = function(payload) {
     }
   })
 }
+
 
 module.exports = {
   pushProjectToKafka : pushProjectToKafka

@@ -19,6 +19,8 @@ const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategorie
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 
+const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
+
 /**
     * UserProjectsHelper
     * @class
@@ -338,6 +340,8 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
+
+                await kafkaProducersHelper.pushProjectToKafka(projectUpdated);
 
                 return resolve({
                     success: true,
@@ -1131,6 +1135,9 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.userRoleInformtion = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
+
+                    await kafkaProducersHelper.pushProjectToKafka(project);
+                    
                     projectId = project._id;
                 }
             }
@@ -1312,7 +1319,6 @@ module.exports = class UserProjectsHelper {
                     createProject["entityInformation"] = entityInformation.data[0];
                     createProject.entityId = entityInformation.data[0]._id;
                 }
-
                 if (createNewProgramAndSolution) {
 
                     let programAndSolutionInformation =
@@ -1394,6 +1400,8 @@ module.exports = class UserProjectsHelper {
                 let userProject = await projectQueries.createProject(
                     createProject
                 );
+
+                await kafkaProducersHelper.pushProjectToKafka(userProject);
 
                 if (!userProject._id) {
                     throw {
@@ -1916,6 +1924,8 @@ module.exports = class UserProjectsHelper {
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
+
+                await kafkaProducersHelper.pushProjectToKafka(projectCreation);
 
                 if (requestedData.rating && requestedData.rating > 0) {
                     await projectTemplatesHelper.ratings(
