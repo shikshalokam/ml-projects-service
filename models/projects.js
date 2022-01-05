@@ -107,7 +107,7 @@ module.exports = {
             index : true
         },
         appInformation : Object,
-        userRoleInformtion : Object,
+        userRoleInformation : Object,
         hasAcceptedTAndC : {
             type : Boolean,
             default : false

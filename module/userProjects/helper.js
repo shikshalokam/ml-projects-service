@@ -475,7 +475,7 @@ module.exports = class UserProjectsHelper {
      * @returns {Object} 
     */
 
-    static details(projectId, userId,userRoleInformtion = {}) {
+    static details(projectId, userId,userRoleInformation = {}) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -504,13 +504,13 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
-                if (Object.keys(userRoleInformtion).length > 0) {
+                if (Object.keys(userRoleInformation).length > 0) {
 
-                    if (!projectDetails[0].userRoleInformtion || !Object.keys(projectDetails[0].userRoleInformtion).length > 0) {
+                    if (!projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0) {
                         await projectQueries.findOneAndUpdate({
                             _id: projectId
                         },{
-                            $set: {userRoleInformtion: userRoleInformtion}
+                            $set: {userRoleInformation: userRoleInformation}
                         });
                     }
                 }
@@ -1131,7 +1131,7 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
                     projectCreation.data.lastDownloadedAt = new Date();
-                    projectCreation.data.userRoleInformtion = userRoleInformation;
+                    projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
 
@@ -1391,7 +1391,7 @@ module.exports = class UserProjectsHelper {
                 createProject["lastDownloadedAt"] = new Date();
 
                 if (data.profileInformation) {
-                    createProject.userRoleInformtion = data.profileInformation;
+                    createProject.userRoleInformation = data.profileInformation;
                 }
 
                 let userProject = await projectQueries.createProject(
