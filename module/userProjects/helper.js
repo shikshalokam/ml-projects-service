@@ -1922,6 +1922,8 @@ module.exports = class UserProjectsHelper {
                     _.omit(libraryProjects.data, ["_id"])
                 );
 
+                await kafkaProducersHelper.pushProjectToKafka(projectCreation);
+
                 if (requestedData.rating && requestedData.rating > 0) {
                     await projectTemplatesHelper.ratings(
                         projectTemplateId,
