@@ -69,7 +69,6 @@ module.exports = async function (req, res, next, token = "") {
     }
   }));
 
-  console.log("performInternalAccessTokenCheck",performInternalAccessTokenCheck);
   if (performInternalAccessTokenCheck) {
     if (req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
       rspObj.errCode = CONSTANTS.apiResponses.TOKEN_MISSING_CODE;
