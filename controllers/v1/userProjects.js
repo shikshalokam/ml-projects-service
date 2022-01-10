@@ -956,5 +956,39 @@ module.exports = class UserProjects extends Abstract {
             }
         })
     }
+    
+
+    /**
+      * Get project details.
+      * @method
+      * @name read
+      * @param {Object} req - request data.
+      * @param {String} req.params._id - project Id.
+      * @returns {JSON} project details
+     */
+
+    async read(req) {
+            return new Promise(async (resolve, reject) => {
+                try {
+      
+                    const projectDetails = await userProjectsHelper.read(
+                        req.params._id
+                    );
+    
+                    return resolve({
+                        status: projectDetails.status,
+                        message: projectDetails.message,
+                        result: projectDetails.data
+                    });
+    
+                } catch (error) {
+                    return reject({
+                        status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                        message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                        errorObject: error
+                    });
+                }
+            })
+        }
 
 };

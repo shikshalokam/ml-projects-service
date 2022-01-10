@@ -61,7 +61,7 @@ module.exports = async function (req, res, next, token = "") {
     return;
   }
 
-  let internalAccessApiPaths = ["/templates/bulkCreate"];
+  let internalAccessApiPaths = ["/templates/bulkCreate","/userProjects/read"];
   let performInternalAccessTokenCheck = false;
   await Promise.all(internalAccessApiPaths.map(async function (path) {
     if (req.path.includes(path)) {
@@ -69,12 +69,17 @@ module.exports = async function (req, res, next, token = "") {
     }
   }));
 
+  console.log("performInternalAccessTokenCheck",performInternalAccessTokenCheck);
   if (performInternalAccessTokenCheck) {
     if (req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
       rspObj.errCode = CONSTANTS.apiResponses.TOKEN_MISSING_CODE;
       rspObj.errMsg = CONSTANTS.apiResponses.TOKEN_MISSING_MESSAGE;
       rspObj.responseCode = HTTP_STATUS_CODE['unauthorized'].status;
       return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(respUtil(rspObj));
+    }
+    if(!token){
+      next();
+      return;
     }
   }
 
