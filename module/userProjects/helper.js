@@ -807,15 +807,61 @@ module.exports = class UserProjectsHelper {
             try {
 
                 let update = {};
+                let tasksUpdated;
 
-                update["tasks.$." + "submissions"] = updatedData
-
-                const tasksUpdated =
-                    await projectQueries.findOneAndUpdate({
+                let projectDocument = await projectQueries.projectDocument(
+                    {
                         _id: projectId,
                         "tasks._id": taskId
-                    }, { $push: update });
+                    }, [
+                    "tasks.$.submissions"
+                ]);
 
+                let tasks = projectDocument[0].tasks;
+                if ( tasks && tasks.length >  0 ) {
+                    tasks = projectDocument[0].tasks[0];
+                }
+
+                let submissions = tasks.submissions;
+                let pushToSubmissionArray =  false; 
+
+                if ( !submissions && !submissions.length > 0 ){
+                    pushToSubmissionArray  = true;
+                }
+
+                let checkSubmissionExist = submissions.filter(submission => submission._id == updatedData._id);
+
+                if ( !checkSubmissionExist.length > 0 ) {
+                    pushToSubmissionArray  = true;
+                }
+
+                if ( pushToSubmissionArray === true ) {
+
+                    update["tasks.$." + "submissions"] = updatedData;
+
+                    tasksUpdated =
+                        await projectQueries.findOneAndUpdate({
+                            _id: projectId,
+                            "tasks._id": taskId
+                        }, { $push: update });
+
+                } else {
+
+                    const index = submissions.indexOf(checkSubmissionExist[0]);
+
+                    if ( submissions[index].status !== CONSTANTS.common.COMPLETED_STATUS ) {
+                        submissions[index] = updatedData;
+                    }
+                    
+                    update["tasks.$." + "submissions"] = submissions;
+                    tasksUpdated =
+                        await projectQueries.findOneAndUpdate({
+                            _id: projectId,
+                            "tasks._id": taskId
+                        }, { $set: update });
+
+                }
+                
                 return resolve(tasksUpdated);
 
             } catch (error) {
