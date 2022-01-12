@@ -806,15 +806,46 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let update = {};
+                let updateSubmission = [];
 
-                update["tasks.$." + "submissions"] = updatedData
-
-                const tasksUpdated =
-                    await projectQueries.findOneAndUpdate({
+                let projectDocument = await projectQueries.projectDocument(
+                    {
                         _id: projectId,
                         "tasks._id": taskId
-                    }, { $push: update });
+                    }, [
+                    "tasks"
+                ]);
+
+                let currentTask = projectDocument[0].tasks.find(task => task._id == taskId);
+                let submissions = currentTask.submissions && currentTask.submissions.length > 0 ? currentTask.submissions : [] ;
+                
+                // if submission array is empty
+                if ( !submissions && !submissions.length > 0 ) {
+                    updateSubmission.push(updatedData);
+                }
+                
+                // submission not exist
+                let checkSubmissionExist = submissions.findIndex(submission => submission._id == updatedData._id);
+
+                if ( checkSubmissionExist == -1 ) {
+
+                    updateSubmission = submissions;
+                    updateSubmission.push(updatedData);
+
+                } else {
+                    //submission exist
+                    submissions[checkSubmissionExist] = updatedData;
+                    updateSubmission = submissions;
+                }
+
+                let tasksUpdated = await projectQueries.findOneAndUpdate({
+                        "_id": projectId,
+                        "tasks._id": taskId
+                    }, {
+                        $set: {
+                            "tasks.$.submissions": updateSubmission
+                        }
+                    });
 
                 return resolve(tasksUpdated);
 
