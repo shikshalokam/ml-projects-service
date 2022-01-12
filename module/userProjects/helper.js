@@ -1981,6 +1981,46 @@ module.exports = class UserProjectsHelper {
         })
     }
 
+      /**
+      * get project details.
+      * @method
+      * @name userProject 
+      * @param {String} projectId - project id.
+      * @returns {Object} Project details.
+     */
+
+       static userProject(projectId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const projectDetails = await projectQueries.projectDocument({
+                    _id: projectId,
+                }, "all");
+
+                if (!projectDetails.length > 0) {
+
+                    throw {
+                        status: HTTP_STATUS_CODE["bad_request"].status,
+                        message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
+                    }
+                }
+                 
+                return resolve( { 
+                    success: true,
+                    message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
+                    data: projectDetails[0] 
+                });
+
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
 };
 
 /**
