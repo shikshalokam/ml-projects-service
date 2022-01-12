@@ -25,10 +25,6 @@ module.exports = (req) => {
         },
         share : function () {
             req.checkParams('_id').exists().withMessage("required project id");
-        },
-        read : function () {
-            req.checkParams('_id').exists().withMessage("required project id")
-            .isMongoId().withMessage("Invalid project id");
         }
     }
 

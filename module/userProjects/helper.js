@@ -1953,12 +1953,12 @@ module.exports = class UserProjectsHelper {
       /**
       * get project details.
       * @method
-      * @name read 
+      * @name userProject 
       * @param {String} projectId - project id.
       * @returns {Object} Project details.
      */
 
-       static read(projectId) {
+       static userProject(projectId) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -1972,7 +1972,8 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE["bad_request"].status,
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                     }
-                } 
+                }
+                 
                 return resolve( { 
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
