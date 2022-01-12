@@ -1,16 +1,15 @@
 /**
- * name : userProjects.js
- * author : Aman
+ * name : dataPipeline.js
+ * author : Rakesh
  * created-date : 20-July-2020
- * Description : User Projects related information.
+ * Description : DataPipeline related information.
  */
 
 // Dependencies
-const csv = require('csvtojson');
 const dataPipelineHelper = require(MODULES_BASE_PATH + "/dataPipeline/helper");
 
  /**
-    * UserProjects
+    * DataPipeline
     * @class
 */
 
@@ -27,10 +26,6 @@ module.exports = class DataPipeline {
      * @apiSuccess {String} status 200
      * @apiSuccess {String} result Data
      */
-    
-    // constructor() {
-    //     super("projects");
-    // }
 
     static get name() {
         return "dataPipeline";
@@ -49,7 +44,6 @@ module.exports = class DataPipeline {
             return new Promise(async (resolve, reject) => {
                 try {
       
-                    console.log("req.params._id",req.params._id);
                     const projectDetails = await dataPipelineHelper.userProject(
                         req.params._id
                     );
