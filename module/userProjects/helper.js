@@ -806,62 +806,47 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let update = {};
-                let tasksUpdated;
+                let updateSubmission = [];
 
                 let projectDocument = await projectQueries.projectDocument(
                     {
                         _id: projectId,
                         "tasks._id": taskId
                     }, [
-                    "tasks.$.submissions"
+                    "tasks"
                 ]);
 
-                let tasks = projectDocument[0].tasks;
-                if ( tasks && tasks.length >  0 ) {
-                    tasks = projectDocument[0].tasks[0];
-                }
-
-                let submissions = tasks.submissions;
-                let pushToSubmissionArray =  false; 
-
-                if ( !submissions && !submissions.length > 0 ){
-                    pushToSubmissionArray  = true;
-                }
-
-                let checkSubmissionExist = submissions.filter(submission => submission._id == updatedData._id);
-
-                if ( !checkSubmissionExist.length > 0 ) {
-                    pushToSubmissionArray  = true;
-                }
-
-                if ( pushToSubmissionArray === true ) {
-
-                    update["tasks.$." + "submissions"] = updatedData;
-
-                    tasksUpdated =
-                        await projectQueries.findOneAndUpdate({
-                            _id: projectId,
-                            "tasks._id": taskId
-                        }, { $push: update });
-
-                } else {
-
-                    const index = submissions.indexOf(checkSubmissionExist[0]);
-
-                    if ( submissions[index].status !== CONSTANTS.common.COMPLETED_STATUS ) {
-                        submissions[index] = updatedData;
-                    }
-                    
-                    update["tasks.$." + "submissions"] = submissions;
-                    tasksUpdated =
-                        await projectQueries.findOneAndUpdate({
-                            _id: projectId,
-                            "tasks._id": taskId
-                        }, { $set: update });
-
+                let currentTask = projectDocument[0].tasks.find(task => task._id == taskId);
+                let submissions = currentTask.submissions && currentTask.submissions.length > 0 ? currentTask.submissions : [] ;
+                
+                // if submission array is empty
+                if ( !submissions && !submissions.length > 0 ) {
+                    updateSubmission.push(updatedData);
                 }
                 
+                // submission not exist
+                let checkSubmissionExist = submissions.findIndex(submission => submission._id == updatedData._id);
+
+                if ( checkSubmissionExist == -1 ) {
+
+                    updateSubmission = submissions;
+                    updateSubmission.push(updatedData);
+
+                } else {
+                    //submission exist
+                    submissions[checkSubmissionExist] = updatedData;
+                    updateSubmission = submissions;
+                }
+
+                let tasksUpdated = await projectQueries.findOneAndUpdate({
+                        "_id": projectId,
+                        "tasks._id": taskId
+                    }, {
+                        $set: {
+                            "tasks.$.submissions": updateSubmission
+                        }
+                    });
+
                 return resolve(tasksUpdated);
 
             } catch (error) {
