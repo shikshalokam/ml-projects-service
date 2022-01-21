@@ -32,6 +32,7 @@ module.exports = class ProjectTemplates extends Abstract {
     constructor() {
         super("project-templates");
     }
+   
 
     /**
     * @api {post} /improvement-project/api/v1/project/templates/bulkCreate 
@@ -666,12 +667,16 @@ module.exports = class ProjectTemplates extends Abstract {
 
        async details(req) {
         return new Promise(async (resolve, reject) => {
+            
             try {
-
+                (req.params._id) ? req.params._id=req.params._id : req.params._id="";
+                (req.query.link) ? req.query.link=req.query.link : req.query.link="";
+                let userId="";
+                //req.userDetails.userInformation.userId
                 let projectTemplatesDetails = 
                 await projectTemplatesHelper.details(
-                    req.params._id,
-                    req.userDetails.userInformation.userId
+                    req.params._id,req.query.link,
+                    userId
                 );
 
                 projectTemplatesDetails.result = projectTemplatesDetails.data;

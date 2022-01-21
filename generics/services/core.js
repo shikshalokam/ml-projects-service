@@ -721,6 +721,68 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
     })
 }
 
+/**
+  * List of solutions.
+  * @function
+  * @name solutionsDocument
+  * @param {Object} filterData - Filter data.
+  * @param {Array} projection - Projected data. 
+  * @param {Array} skipFields - Field to skip.  
+  * @returns {JSON} - List of solutions.
+*/
+
+const solutionsDocuments = function ( 
+    filterData =  "all",
+    projection = "all",
+    skipFields = "none"
+) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = ML_CORE_URL + CONSTANTS.endpoints.GET_LIST_SOLUTION;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                },
+                json : {
+                    query : filterData,
+                    projection : projection,
+                    skipFields : skipFields
+                }
+            };
+
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+
+                    let response = data.body;
+
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     entityTypesDocuments : entityTypesDocuments,
     rolesDocuments : rolesDocuments,
@@ -734,6 +796,7 @@ module.exports = {
     createSolution: createSolution,
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
-    getDownloadableUrl : getDownloadableUrl
+    getDownloadableUrl : getDownloadableUrl,
+    solutionsDocuments  :  solutionsDocuments 
 };
 
