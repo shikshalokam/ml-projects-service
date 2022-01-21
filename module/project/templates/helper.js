@@ -972,68 +972,7 @@ module.exports = class ProjectTemplatesHelper {
                         message:CONSTANTS.apiResponses.PROJECT_TEMPLATE_FETCH_ERROR
                     }
                 }
-                //getting template data when templateId(req.params_id) is provided
-                if(templateId){
-                    let findQuery = {};
-
-                    let validateTemplateId = UTILS.isValidMongoId(templateId);
-                    if( validateTemplateId ) {
-                      findQuery["_id"] = templateId;
-                    } else {
-                      findQuery["externalId"] = templateId;
-                    }
-                    let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
-                    [
-                        "ratings",
-                        "noOfRatings",
-                        "averageRating",
-                        "parentTemplateId",
-                        "userId",
-                        "createdBy",
-                        "updatedBy",
-                        "createdAt",
-                        "updatedAt",
-                        "__v"
-                    ]);
-    
-                    if ( !templateData.length > 0 ) {
-                        throw {
-                            status : HTTP_STATUS_CODE.bad_request.status,
-                            message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
-                        }
-                    }
-    
-                    if (templateData[0].tasks && templateData[0].tasks.length > 0) {
-                        templateData[0].tasks = 
-                        await this.tasksAndSubTasks(templateData[0]._id);
-                    }
-    
-                    let result = await _templateInformation(templateData[0])
-                    if( !result.success ) {
-                        return resolve(result);
-                    }
-    
-                    if( !templateData[0].isReusable ) {
-                        
-                        templateData[0].projectId = "";
-    
-                        let project = await projectQueries.projectDocument({
-                            userId : userId,
-                            projectTemplateId : templateData[0]._id
-                        },["_id"]);
-    
-                        if(project && project.length > 0){
-                            templateData[0].projectId = project[0]._id;
-                        }
-                    }
-    
-                    return resolve({
-                        success : false,
-                        data : result.data,
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_DETAILS_FETCHED
-                    });
-                }
-
+                let findQuery = {};
                 //get data when link is given
                 if(link){
                     
@@ -1051,9 +990,8 @@ module.exports = class ProjectTemplatesHelper {
                             "externalId",
                             "projectTemplateId",
                             "link"
-                        ],
-                        "none"
-                        );
+                        ]
+                    );
 
                     if( !solutionDocument.success || solutionDocument.data.length===0 ) {
                         throw {
@@ -1063,80 +1001,134 @@ module.exports = class ProjectTemplatesHelper {
                     }
                     
                     let solutiondata=solutionDocument.data;
-                    let templateId=solutiondata.map(function(id){
-                        return id.projectTemplateId
-                    });
-                    templateId=templateId.toString();
+                    let templateId=solutiondata[0].projectTemplateId
                     if( !templateId ){
                         return resolve({
                             success : false,
                             data : solutiondata,
-                            message : CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID
+                            message : CONSTANTS.apiResponses.GOT_SOLUTIONS_NO_TEMPLATE_ID
                         });   
                     }
-                    //for templateId: is available
-                    let findQuery = {};
-
+                }
+                if(templateId){
                     let validateTemplateId = UTILS.isValidMongoId(templateId);
                     if( validateTemplateId ) {
-                        findQuery["_id"] = templateId;
-                    }else {
-                        findQuery["externalId"] = templateId;
+                      findQuery["_id"] = templateId;
+                    } else {
+                      findQuery["externalId"] = templateId;
                     }
-                    let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
-                    [
-                        "ratings",
-                        "noOfRatings",
-                        "averageRating",
-                        "parentTemplateId",
-                        "userId",
-                        "createdBy",
-                        "updatedBy",
-                        "createdAt",
-                        "updatedAt",
-                        "__v"
-                    ]);
-    
-                    if ( !templateData.length > 0 ) {
-                        throw {
-                            status : HTTP_STATUS_CODE.bad_request.status,
-                            message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
-                        }
-                        
-                    }
-    
-                    if (templateData[0].tasks && templateData[0].tasks.length > 0) {
-                        templateData[0].tasks = 
-                        await this.tasksAndSubTasks(templateData[0]._id);
-                    }
-    
-                    let result = await _templateInformation(templateData[0])
-                    if( !result.success ) {
-                        return resolve(result);
-                    }
-    
-                    if( !templateData[0].isReusable ) {
-                        
-                        templateData[0].projectId = "";
-    
-                        let project = await projectQueries.projectDocument({
-                            userId : userId,
-                            projectTemplateId : templateData[0]._id
-                        },["_id"]);
-    
-                        if(project && project.length > 0){
-                            templateData[0].projectId = project[0]._id;
-                        }
-                    }
-                    result.sdata=solutiondata;
-                    return resolve({
-                        success : false,
-                        data : result,
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_DETAILS_FETCHED
-                    });                        
-
-
                 }
+                    //for templateId: is available
+                    
+                    // let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
+                    // [
+                    //     "ratings",
+                    //     "noOfRatings",
+                    //     "averageRating",
+                    //     "parentTemplateId",
+                    //     "userId",
+                    //     "createdBy",
+                    //     "updatedBy",
+                    //     "createdAt",
+                    //     "updatedAt",
+                    //     "__v"
+                    // ]);
+    
+                    // if ( !templateData.length > 0 ) {
+                    //     throw {
+                    //         status : HTTP_STATUS_CODE.bad_request.status,
+                    //         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
+                    //     }
+                        
+                    // }
+    
+                    // if (templateData[0].tasks && templateData[0].tasks.length > 0) {
+                    //     templateData[0].tasks = 
+                    //     await this.tasksAndSubTasks(templateData[0]._id);
+                    // }
+    
+                    // let result = await _templateInformation(templateData[0])
+                    // if( !result.success ) {
+                    //     return resolve(result);
+                    // }
+    
+                    // if( !templateData[0].isReusable ) {
+                        
+                    //     templateData[0].projectId = "";
+    
+                    //     let project = await projectQueries.projectDocument({
+                    //         userId : userId,
+                    //         projectTemplateId : templateData[0]._id
+                    //     },["_id"]);
+    
+                    //     if(project && project.length > 0){
+                    //         templateData[0].projectId = project[0]._id;
+                    //     }
+                    // }
+                    // result.sdata=solutiondata;
+                    // return resolve({
+                    //     success : false,
+                    //     data : result,
+                    //     message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_DETAILS_FETCHED
+                    // });                        
+
+
+                
+                //getting template data when templateId(req.params_id) is provided
+                
+                //     let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
+                //     [
+                //         "ratings",
+                //         "noOfRatings",
+                //         "averageRating",
+                //         "parentTemplateId",
+                //         "userId",
+                //         "createdBy",
+                //         "updatedBy",
+                //         "createdAt",
+                //         "updatedAt",
+                //         "__v"
+                //     ]);
+    
+                //     if ( !templateData.length > 0 ) {
+                //         throw {
+                //             status : HTTP_STATUS_CODE.bad_request.status,
+                //             message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
+                //         }
+                //     }
+    
+                //     if (templateData[0].tasks && templateData[0].tasks.length > 0) {
+                //         templateData[0].tasks = 
+                //         await this.tasksAndSubTasks(templateData[0]._id);
+                //     }
+    
+                //     let result = await _templateInformation(templateData[0])
+                //     if( !result.success ) {
+                //         return resolve(result);
+                //     }
+    
+                //     if( !templateData[0].isReusable ) {
+                        
+                //         templateData[0].projectId = "";
+    
+                //         let project = await projectQueries.projectDocument({
+                //             userId : userId,
+                //             projectTemplateId : templateData[0]._id
+                //         },["_id"]);
+    
+                //         if(project && project.length > 0){
+                //             templateData[0].projectId = project[0]._id;
+                //         }
+                //     }
+    
+                //     return resolve({
+                //         success : false,
+                //         data : result.data,
+                //         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_DETAILS_FETCHED
+                //     });
+                // }
+
+                
                 
                 
             } catch (error) {
