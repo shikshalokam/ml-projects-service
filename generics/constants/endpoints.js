@@ -44,5 +44,5 @@ module.exports = {
     LIST_ENTITIES_BY_LOCATION_IDS : "/v1/entities/listByLocationIds",
     CREATE_IMPROVEMENT_PROJECT_SOLUTION : "/v1/solutions/create",
     PROJECT_AND_TASK_REPORT : "/v1/improvement-project/projectAndTaskReport",
-    GET_LIST_SOLUTION   :   "/v1/solutions/getList"
+    GET_LIST_SOLUTION : "/v1/solutions/getList"
 };

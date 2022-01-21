@@ -121,5 +121,5 @@ module.exports = {
     "TEMPLATE_TASK_NOT_UPDATED": "Could not updated template task",
     "PROJECT_TEMPLATE_UPDATED" : "Successfully updated project template",
     "PROJECT_TEMPLATE_TASK_UPDATED" : "Successfully updated project template task",
-    "PROJECT_TEMPLATE_FETCH_ERROR"  :   "Faild to fetch data due to invalid input",
+    "PROJECT_TEMPLATE_FETCH_ERROR" : "TemplateId or Link either one is required",
 };

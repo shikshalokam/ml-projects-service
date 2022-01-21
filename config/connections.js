@@ -24,9 +24,9 @@ const mongodb_connect = function () {
   * @name kafka_connect
 */
 
-//const kafka_connect = function() {
-  //global.kafkaClient = require("./kafka")();
-//};
+// const kafka_connect = function() {
+//   global.kafkaClient = require("./kafka")();
+// };
 
 // Configuration data.
 

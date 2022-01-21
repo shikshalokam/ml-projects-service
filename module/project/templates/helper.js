@@ -962,9 +962,10 @@ module.exports = class ProjectTemplatesHelper {
       * @returns {Array} Project templates data.
      */
 
-    static details( templateId,link,userId ) {
+    static details( templateId="",link="",userId="" ) {
         return new Promise(async (resolve, reject) => {
             try {
+                
                 if(templateId==="" && link===""){
                     throw{
                         status:HTTP_STATUS_CODE.bad_request.status,
@@ -1036,8 +1037,8 @@ module.exports = class ProjectTemplatesHelper {
                 //get data when link is given
                 if(link){
                     
-                    let queryData={};
-                    queryData["link"]=link;
+                    let queryData = {};
+                    queryData["link"] =link;
 
                     let solutionDocument = 
                     await coreService.solutionsDocuments(
@@ -1066,12 +1067,7 @@ module.exports = class ProjectTemplatesHelper {
                         return id.projectTemplateId
                     });
                     templateId=templateId.toString();
-                    if(!templateId){
-                        // throw {
-                        //     message : CONSTANTS.apiResponses.MISSING_PROJECT_TEMPLATE_ID,
-                        //     status : HTTP_STATUS_CODE['bad_request'].status,
-                        //     result:"checking"
-                        // }
+                    if( !templateId ){
                         return resolve({
                             success : false,
                             data : solutiondata,
