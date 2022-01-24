@@ -1068,10 +1068,10 @@ module.exports = class ProjectTemplatesHelper {
                         templateData[0].projectId = project[0]._id;
                     }
                 }
-                result.slnData=solutionsResult;    
+                result.data=solutionsResult;    
                 return resolve({
                     success : false,
-                    data : result,
+                    data : result.data,
                     message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_DETAILS_FETCHED
                 });                        
                 
