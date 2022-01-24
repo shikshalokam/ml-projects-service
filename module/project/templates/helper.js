@@ -966,7 +966,7 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
                 let solutionsResult = {};
-                if(templateId==="" && link===""){
+                if(templateId == "" && link == ""){
                     throw{
                         status:HTTP_STATUS_CODE.bad_request.status,
                         message:CONSTANTS.apiResponses.PROJECT_TEMPLATE_FETCH_ERROR
@@ -993,7 +993,7 @@ module.exports = class ProjectTemplatesHelper {
                         ]
                     );
 
-                    if( !solutionDocument.success || solutionDocument.data.length===0 ) {
+                    if( !solutionDocument.success || solutionDocument.data.length === 0 ) {
                         throw {
                             message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
                             status : HTTP_STATUS_CODE['bad_request'].status
@@ -1006,7 +1006,7 @@ module.exports = class ProjectTemplatesHelper {
                         return resolve({
                             success : false,
                             data : solutiondata,
-                            message : CONSTANTS.apiResponses.GOT_SOLUTIONS_NO_TEMPLATE_ID
+                            message : CONSTANTS.apiResponses.TEMPLATE_ID_NOT_FOUND_IN_SOLUTION
                         });   
                     }
                     solutionsResult = solutiondata;

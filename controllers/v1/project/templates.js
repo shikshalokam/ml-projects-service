@@ -669,15 +669,12 @@ module.exports = class ProjectTemplates extends Abstract {
         return new Promise(async (resolve, reject) => {
             
             try {
-                //req.userDetails.userInformation.userId?req.userDetails.userInformation.userId:"";
-                //console.log(req.userDetails,"checking the condition");
-                //req.userDetails.userInformation.userId
-                //let userId = "";
+                
                 let projectTemplatesDetails = 
                 await projectTemplatesHelper.details(
-                    req.params._id?req.params._id:"",
-                    req.query.link?req.query.link:"",
-                    req.userDetails && req.userDetails.userInformation && req.userDetails.userInformation.userId?req.userDetails.userInformation.userId:""
+                    req.params._id ? req.params._id : "",
+                    req.query.link ? req.query.link : "",
+                    req.userDetails && req.userDetails.userInformation && req.userDetails.userInformation.userId ? req.userDetails.userInformation.userId : ""
                 );
 
                 projectTemplatesDetails.result = projectTemplatesDetails.data;

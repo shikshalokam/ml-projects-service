@@ -122,5 +122,5 @@ module.exports = {
     "PROJECT_TEMPLATE_UPDATED" : "Successfully updated project template",
     "PROJECT_TEMPLATE_TASK_UPDATED" : "Successfully updated project template task",
     "PROJECT_TEMPLATE_FETCH_ERROR" : "TemplateId or Link either one is required",
-    "GOT_SOLUTIONS_NO_TEMPLATE_ID" : "Solution fetched successfully. But projectTemplateId is empty"
+    "TEMPLATE_ID_NOT_FOUND_IN_SOLUTION" : "Could not found templateId in solution"
 };
