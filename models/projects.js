@@ -30,7 +30,7 @@ module.exports = {
         },
         status : {
             type : String,
-            default : "notStarted",
+            default : "started",
             index: true
         },
         lastDownloadedAt : Date,

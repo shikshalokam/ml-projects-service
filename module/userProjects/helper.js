@@ -322,6 +322,8 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
+                updateProject.status = UTILS.convertProjectStatus(data.status);
+
                 let projectUpdated =
                     await projectQueries.findOneAndUpdate(
                         {
@@ -1160,7 +1162,7 @@ module.exports = class UserProjectsHelper {
     
                     }
     
-                    projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                    projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
@@ -1176,6 +1178,11 @@ module.exports = class UserProjectsHelper {
                 projectId, 
                 userId,
                 userRoleInformation
+            );
+
+            projectDetails.data.status = _checkAppVersionAndConvertProjectStatus( 
+                appVersion,
+                projectDetails.data.status
             );
 
             return resolve({
@@ -1390,7 +1397,6 @@ module.exports = class UserProjectsHelper {
                 let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
 
 
-
                 Object.keys(data).forEach(updateData => {
                     if (
                         !createProject[updateData] &&
@@ -1424,6 +1430,8 @@ module.exports = class UserProjectsHelper {
                 if (data.profileInformation) {
                     createProject.userRoleInformation = data.profileInformation;
                 }
+
+                createProject.status = UTILS.convertProjectStatus(data.status);
 
                 let userProject = await projectQueries.createProject(
                     createProject
@@ -1936,7 +1944,7 @@ module.exports = class UserProjectsHelper {
 
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
-                libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                libraryProjects.data.status = CONSTANTS.common.STARTED;
 
                 if (requestedData.startDate) {
                     libraryProjects.data.startDate = requestedData.startDate;
@@ -1952,7 +1960,7 @@ module.exports = class UserProjectsHelper {
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
-
+                
                 await kafkaProducersHelper.pushProjectToKafka(projectCreation);
 
                 if (requestedData.rating && requestedData.rating > 0) {
@@ -2686,6 +2694,28 @@ function _projectData(data) {
     })
 }
 
+/**
+   * Check App Version and return status
+   * @method
+   * @name _checkAppVersionAndConvertProjectStatus 
+   * @param {String} appVersion - app Version.
+   * @param {String} status - project status.
+   * @returns {String} - project status
+*/
+
+function _checkAppVersionAndConvertProjectStatus( appVersion = "", status ) {
+
+    let convertedStatus;
+    let appVersionNo = Number(appVersion.split('.',2).join('.'));
+
+    if ( !isNaN(appVersionNo) && appVersionNo < 4.7 ) {
+        convertedStatus = UTILS.revertProjectStatus(status);
+    } else {
+        convertedStatus = UTILS.convertProjectStatus(status);
+    }
+
+    return convertedStatus;
+}
 
 
 

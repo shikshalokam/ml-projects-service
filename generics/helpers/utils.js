@@ -170,6 +170,50 @@ function epochTime() {
   return currentDate;
 }
 
+/**
+  * Convert Project Status
+  * @function
+  * @name convertProjectStatus
+  * @returns {String} returns converted project status
+  */
+
+function convertProjectStatus(status) {
+
+    let convertedStatus;
+ 
+    if ( status == CONSTANTS.common.NOT_STARTED_STATUS ) {
+        convertedStatus = CONSTANTS.common.STARTED;
+    } else if ( status == CONSTANTS.common.COMPLETED_STATUS ) {
+        convertedStatus = CONSTANTS.common.SUBMITTED_STATUS;
+    } else {
+        convertedStatus = status;
+    } 
+    
+    return convertedStatus;
+}
+
+/**
+  * Revert Project Status For Older App
+  * @function
+  * @name revertProjectStatus
+  * @returns {String} returns reverted project status
+  */
+
+function revertProjectStatus(status) {
+
+    let revertedStatus;
+ 
+    if ( status == CONSTANTS.common.STARTED ) {
+        revertedStatus = CONSTANTS.common.NOT_STARTED_STATUS;
+    } else if ( status == CONSTANTS.common.SUBMITTED_STATUS ) {
+        revertedStatus = CONSTANTS.common.COMPLETED_STATUS;
+    } else {
+        revertedStatus = status;
+    } 
+    
+    return revertedStatus;
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -179,5 +223,7 @@ module.exports = {
   convertStringToBoolean : convertStringToBoolean,
   getAllBooleanDataFromModels : getAllBooleanDataFromModels,
   epochTime : epochTime,
-  isValidMongoId : isValidMongoId
+  isValidMongoId : isValidMongoId,
+  convertProjectStatus : convertProjectStatus,
+  revertProjectStatus : revertProjectStatus
 };

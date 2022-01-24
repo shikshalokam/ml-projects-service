@@ -21,6 +21,7 @@ module.exports = {
     "COMPLETED_STATUS" : "completed",
     "INPROGRESS_STATUS" : "inProgress",
     "NOT_STARTED_STATUS" : "notStarted",
+    "SUBMITTED_STATUS" : "submitted",
     "OBSERVATION" : "observation",
     "PUBLISHED_STATUS" : "published",
     "LEAD_ASSESSOR" : "LEAD_ASSESSOR",
