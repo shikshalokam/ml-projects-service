@@ -797,6 +797,6 @@ module.exports = {
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
     getDownloadableUrl : getDownloadableUrl,
-    solutionsDocuments  :  solutionsDocuments 
+    solutionsDocuments : solutionsDocuments 
 };
 
