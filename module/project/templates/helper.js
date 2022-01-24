@@ -962,7 +962,7 @@ module.exports = class ProjectTemplatesHelper {
       * @returns {Array} Project templates data.
      */
 
-    static details( templateId="",link="",userId="" ) {
+    static details( templateId="", link="", userId="" ) {
         return new Promise(async (resolve, reject) => {
             try {
                 let solutionsResult = {};
@@ -1001,7 +1001,7 @@ module.exports = class ProjectTemplatesHelper {
                     }
                     
                     let solutiondata = solutionDocument.data;
-                    templateId=solutiondata[0].projectTemplateId
+                    templateId = solutiondata[0].projectTemplateId;
                     if( !templateId ){
                         return resolve({
                             success : false,
