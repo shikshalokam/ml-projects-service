@@ -969,12 +969,12 @@ module.exports = class ProjectTemplatesHelper {
                 if(templateId == "" && link == ""){
                     throw{
                         status:HTTP_STATUS_CODE.bad_request.status,
-                        message:CONSTANTS.apiResponses.PROJECT_TEMPLATE_FETCH_ERROR
+                        message:CONSTANTS.apiResponses.TEMPLATE_ID_OR_LINK_REQUIRED
                     }
                 }
                 let findQuery = {};
                 //get data when link is given
-                if(link){
+                if( link ){
                     
                     let queryData = {};
                     queryData["link"] =link;
@@ -1000,7 +1000,7 @@ module.exports = class ProjectTemplatesHelper {
                         }
                     }
                     
-                    let solutiondata=solutionDocument.data;
+                    let solutiondata = solutionDocument.data;
                     templateId=solutiondata[0].projectTemplateId
                     if( !templateId ){
                         return resolve({
