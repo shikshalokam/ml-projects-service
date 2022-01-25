@@ -987,7 +987,6 @@ module.exports = class ProjectTemplatesHelper {
                             "name",
                             "programId",
                             "programName",
-                            "externalId",
                             "projectTemplateId",
                             "link"
                         ]
@@ -1049,7 +1048,6 @@ module.exports = class ProjectTemplatesHelper {
                     templateData[0].tasks = 
                     await this.tasksAndSubTasks(templateData[0]._id);
                 }
-    
                 let result = await _templateInformation(templateData[0])
                 if( !result.success ) {
                     return resolve(result);
@@ -1068,7 +1066,17 @@ module.exports = class ProjectTemplatesHelper {
                         templateData[0].projectId = project[0]._id;
                     }
                 }
-                result.data=solutionsResult;    
+                if( !result.data.programInformation ){
+                    result.data.programInformation = {
+                        programId : solutionsResult.programId,
+                        programName : solutionsResult.programName
+                    }
+                }
+                result.data.solutionInformation = {
+                    _id : solutionsResult._id,
+                    name : solutionsResult.name,
+                    link : solutionsResult.link     
+                } 
                 return resolve({
                     success : false,
                     data : result.data,
@@ -1267,7 +1275,6 @@ function _templateInformation(project) {
                     project[projectMetaKey] = project.metaInformation[projectMetaKey];
                 });
             }
-
             delete project.metaInformation;
             delete project.__v;
 
