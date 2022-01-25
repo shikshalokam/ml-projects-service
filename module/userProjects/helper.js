@@ -1473,7 +1473,7 @@ module.exports = class UserProjectsHelper {
        * @returns {Object} Downloadable pdf url.
      */
 
-    static share(projectId = "", taskIds = [], userToken) {
+    static share(projectId = "", taskIds = [], userToken,appVersion) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -1563,7 +1563,12 @@ module.exports = class UserProjectsHelper {
                 delete projectDocument.categories;
                 delete projectDocument.metaInformation;
                 delete projectDocument.programInformation;
-               
+
+                
+                if (UTILS.revertStatusorNot(appVersion)) {
+                    projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
+                }
+                
                 let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {
