@@ -121,5 +121,7 @@ module.exports = {
     "TEMPLATE_TASK_NOT_UPDATED": "Could not updated template task",
     "PROJECT_TEMPLATE_UPDATED" : "Successfully updated project template",
     "PROJECT_TEMPLATE_TASK_UPDATED" : "Successfully updated project template task",
-
+    "TEMPLATE_ID_OR_LINK_REQUIRED" : "TemplateId or Link either one is required",
+    "TEMPLATE_ID_NOT_FOUND_IN_SOLUTION" : "Could not found templateId in solution",
+    "FAILED_TO_SYNC_PROJECT_ALREADY_SUBMITTED" : "Failed to sync, Project is already Submitted"
 };

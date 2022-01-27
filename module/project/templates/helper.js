@@ -21,6 +21,8 @@ const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates")
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
+const solutionsQueries = require(DB_QUERY_BASE_PATH + "/solutions");
+
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -957,74 +959,120 @@ module.exports = class ProjectTemplatesHelper {
       * @name details
       * @param {String} templateId - Project template id.
       * @param {String} userId - logged in user id.
+      * @params {String} link - solution link.
       * @returns {Array} Project templates data.
      */
 
-    static details( templateId,userId ) {
+    static details( templateId="", link="", userId="" ) {
         return new Promise(async (resolve, reject) => {
             try {
-
+                let solutionsResult = {};
                 let findQuery = {};
+                //get data when link is given
+                if( link ){
+                    
+                    let queryData = {};
+                    queryData["link"] =link;
 
-                let validateTemplateId = UTILS.isValidMongoId(templateId);
-
-                if( validateTemplateId ) {
-                  findQuery["_id"] = templateId;
-                } else {
-                  findQuery["externalId"] = templateId;
+                    let solutionDocument = await solutionsQueries.solutionsDocument(queryData,
+                        [
+                            "_id",
+                            "name",
+                            "programId",
+                            "programName",
+                            "projectTemplateId",
+                            "link"
+                        ]
+                    );
+                    if( !solutionDocument.length > 0 ) {
+                        throw {
+                            message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                            status : HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
+                    let solutiondata = solutionDocument;
+                    templateId = solutiondata[0].projectTemplateId;
+                    if( !templateId ){
+                        return resolve({
+                            success : false,
+                            data : solutiondata,
+                            message : CONSTANTS.apiResponses.TEMPLATE_ID_NOT_FOUND_IN_SOLUTION
+                        });   
+                    }
+                    solutionsResult = solutiondata;
+                }
+                
+                if( templateId ){
+                    let validateTemplateId = UTILS.isValidMongoId(templateId);
+                    if( validateTemplateId ) {
+                      findQuery["_id"] = templateId;
+                    } else {
+                      findQuery["externalId"] = templateId;
+                    }
                 }
 
-                let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
-                [
-                    "ratings",
-                    "noOfRatings",
-                    "averageRating",
-                    "parentTemplateId",
-                    "userId",
-                    "createdBy",
-                    "updatedBy",
-                    "createdAt",
-                    "updatedAt",
-                    "__v"
-                ]);
+                //getting template data using templateId
 
+                let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
+                    [
+                        "ratings",
+                        "noOfRatings",
+                        "averageRating",
+                        "parentTemplateId",
+                        "userId",
+                        "createdBy",
+                        "updatedBy",
+                        "createdAt",
+                        "updatedAt",
+                        "__v"
+                    ]
+                );
+                
                 if ( !templateData.length > 0 ) {
                     throw {
                         status : HTTP_STATUS_CODE.bad_request.status,
-                        message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
-                    }
+                        message :CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
+                    }    
                 }
 
                 if (templateData[0].tasks && templateData[0].tasks.length > 0) {
                     templateData[0].tasks = 
                     await this.tasksAndSubTasks(templateData[0]._id);
                 }
-
                 let result = await _templateInformation(templateData[0])
-
                 if( !result.success ) {
                     return resolve(result);
                 }
-
-                if( !templateData[0].isReusable ) {
-                    
+    
+                if( !templateData[0].isReusable && userId !== "") {
+                        
                     templateData[0].projectId = "";
-
+    
                     let project = await projectQueries.projectDocument({
                         userId : userId,
                         projectTemplateId : templateData[0]._id
                     },["_id"]);
-
+    
                     if(project && project.length > 0){
                         templateData[0].projectId = project[0]._id;
                     }
                 }
-
+                if( !result.data.programInformation ){
+                    result.data.programInformation = {
+                        programId : solutionsResult.programId,
+                        programName : solutionsResult.programName
+                    }
+                }
+                result.data.solutionInformation = {
+                    _id : solutionsResult._id,
+                    name : solutionsResult.name,
+                    link : solutionsResult.link     
+                } 
                 return resolve({
                     success : false,
                     data : result.data,
                     message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_DETAILS_FETCHED
-                });
+                });                        
                 
             } catch (error) {
                 return reject(error);
@@ -1218,7 +1266,6 @@ function _templateInformation(project) {
                     project[projectMetaKey] = project.metaInformation[projectMetaKey];
                 });
             }
-
             delete project.metaInformation;
             delete project.__v;
 
