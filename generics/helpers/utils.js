@@ -171,6 +171,28 @@ function epochTime() {
 }
 
 /**
+  * Convert Project Status
+  * @function
+  * @name convertProjectStatus
+  * @returns {String} returns converted project status
+  */
+
+function convertProjectStatus(status) {
+
+    let convertedStatus;
+ 
+    if ( status == CONSTANTS.common.NOT_STARTED_STATUS ) {
+        convertedStatus = CONSTANTS.common.STARTED;
+    } else if ( status == CONSTANTS.common.COMPLETED_STATUS ) {
+        convertedStatus = CONSTANTS.common.SUBMITTED_STATUS;
+    } else {
+        convertedStatus = status;
+    } 
+    
+    return convertedStatus;
+}
+
+/**
   * Revert Project Status For Older App
   * @function
   * @name revertProjectStatus
@@ -200,7 +222,7 @@ function epochTime() {
    * @returns {Boolean} - true or false
 */
 
-function revertStatusorNot( appVersion) {
+function revertStatusorNot( appVersion ) {
 
   let appVersionNo = Number(appVersion.split('.',2).join('.'));
 
@@ -221,6 +243,7 @@ module.exports = {
   getAllBooleanDataFromModels : getAllBooleanDataFromModels,
   epochTime : epochTime,
   isValidMongoId : isValidMongoId,
+  convertProjectStatus : convertProjectStatus,
   revertProjectStatus:revertProjectStatus,
   revertStatusorNot:revertStatusorNot
 };

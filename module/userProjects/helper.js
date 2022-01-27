@@ -330,6 +330,12 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
+                updateProject.status = UTILS.convertProjectStatus(data.status);
+                
+                if ( data.status == CONSTANTS.common.COMPLETED_STATUS || data.status == CONSTANTS.common.SUBMITTED_STATUS ) {
+                    updateProject.completedDate = new Date();
+                }
+
                 let projectUpdated =
                     await projectQueries.findOneAndUpdate(
                         {
@@ -1168,7 +1174,7 @@ module.exports = class UserProjectsHelper {
     
                     }
     
-                    projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                    projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
@@ -1185,7 +1191,14 @@ module.exports = class UserProjectsHelper {
                 userId,
                 userRoleInformation
             );
-
+            
+            let revertStatusorNot = UTILS.revertStatusorNot(appVersion);
+            if ( revertStatusorNot ) {
+                projectDetails.data.status = UTILS.revertProjectStatus(projectDetails.data.status);
+            } else {
+                projectDetails.data.status = UTILS.convertProjectStatus(projectDetails.data.status);
+            }
+            
             return resolve({
                 success: true,
                 message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -1398,7 +1411,6 @@ module.exports = class UserProjectsHelper {
                 let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
 
 
-
                 Object.keys(data).forEach(updateData => {
                     if (
                         !createProject[updateData] &&
@@ -1432,6 +1444,8 @@ module.exports = class UserProjectsHelper {
                 if (data.profileInformation) {
                     createProject.userRoleInformation = data.profileInformation;
                 }
+
+                createProject.status = UTILS.convertProjectStatus(data.status);
 
                 let userProject = await projectQueries.createProject(
                     createProject
@@ -1949,7 +1963,7 @@ module.exports = class UserProjectsHelper {
 
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
-                libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                libraryProjects.data.status = CONSTANTS.common.STARTED;
 
                 if (requestedData.startDate) {
                     libraryProjects.data.startDate = requestedData.startDate;
@@ -1965,7 +1979,7 @@ module.exports = class UserProjectsHelper {
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
-
+                
                 await kafkaProducersHelper.pushProjectToKafka(projectCreation);
 
                 if (requestedData.rating && requestedData.rating > 0) {
@@ -2698,7 +2712,6 @@ function _projectData(data) {
         }
     })
 }
-
 
 
 
