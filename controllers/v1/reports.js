@@ -78,6 +78,7 @@ module.exports = class Reports {
                     req.query.reportType,
                     req.query.programId ? req.query.programId : "",
                     req.query.requestPdf ? (req.query.requestPdf).toLowerCase() =="true" ? true :false : false,
+                    req.headers['x-app-ver']
                 );
                 
                 return resolve({
@@ -94,6 +95,8 @@ module.exports = class Reports {
             }
         })
     }
+
+    
 
     /**
     * @api {post} /improvement-project/api/v1/reports/getProgramsByEntity/:_id
