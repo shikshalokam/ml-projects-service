@@ -967,14 +967,6 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
                 let solutionsResult = {};
-                if(templateId == "" && link == ""){
-                    throw{
-                        status:HTTP_STATUS_CODE.bad_request.status,
-                        message:CONSTANTS.apiResponses.TEMPLATE_ID_OR_LINK_REQUIRED
-                    }
-                }
-
-
                 let findQuery = {};
                 //get data when link is given
                 if( link ){

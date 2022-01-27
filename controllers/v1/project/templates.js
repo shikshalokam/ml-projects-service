@@ -669,6 +669,12 @@ module.exports = class ProjectTemplates extends Abstract {
         return new Promise(async (resolve, reject) => {
             
             try {
+                if( !req.params._id && !req.query.link ) {
+                    throw{
+                        status:HTTP_STATUS_CODE.bad_request.status,
+                        message:CONSTANTS.apiResponses.TEMPLATE_ID_OR_LINK_REQUIRED
+                    }
+                }
                 
                 let projectTemplatesDetails = 
                 await projectTemplatesHelper.details(
