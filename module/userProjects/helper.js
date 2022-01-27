@@ -11,6 +11,7 @@ const coreService = require(GENERICS_FILES_PATH + "/services/core");
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
+const { util } = require('chai');
 const { v4: uuidv4 } = require('uuid');
 const surveyService = require(GENERICS_FILES_PATH + "/services/survey");
 const reportService = require(GENERICS_FILES_PATH + "/services/report");
@@ -1187,12 +1188,14 @@ module.exports = class UserProjectsHelper {
                 userId,
                 userRoleInformation
             );
-
-            projectDetails.data.status = _checkAppVersionAndConvertProjectStatus( 
-                appVersion,
-                projectDetails.data.status
-            );
-
+            
+            let revertStatusorNot = UTILS.revertStatusorNot(appVersion);
+            if ( revertStatusorNot ) {
+                projectDetails.data.status = UTILS.revertProjectStatus(projectDetails.data.status);
+            } else {
+                projectDetails.data.status = UTILS.convertProjectStatus(projectDetails.data.status);
+            }
+            
             return resolve({
                 success: true,
                 message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -2705,29 +2708,6 @@ function _projectData(data) {
             });
         }
     })
-}
-
-/**
-   * Check App Version and return status
-   * @method
-   * @name _checkAppVersionAndConvertProjectStatus 
-   * @param {String} appVersion - app Version.
-   * @param {String} status - project status.
-   * @returns {String} - project status
-*/
-
-function _checkAppVersionAndConvertProjectStatus( appVersion = "", status ) {
-
-    let convertedStatus;
-    let appVersionNo = Number(appVersion.split('.',2).join('.'));
-
-    if ( !isNaN(appVersionNo) && appVersionNo < 4.7 ) {
-        convertedStatus = UTILS.revertProjectStatus(status);
-    } else {
-        convertedStatus = UTILS.convertProjectStatus(status);
-    }
-
-    return convertedStatus;
 }
 
 
