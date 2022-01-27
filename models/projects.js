@@ -125,5 +125,6 @@ module.exports = {
             type : Array,
             default : []
         },
+        completedDate: Date
     }
 };
