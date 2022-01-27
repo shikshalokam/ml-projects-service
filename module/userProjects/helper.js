@@ -111,7 +111,8 @@ module.exports = class UserProjectsHelper {
                     "solutionInformation.externalId",
                     "entityInformation._id",
                     "lastDownloadedAt",
-                    "appInformation"
+                    "appInformation",
+                    "status"
                 ]);
 
                 if (!userProject.length > 0) {
@@ -126,6 +127,13 @@ module.exports = class UserProjectsHelper {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_ALREADY_SYNC
+                    };
+                }
+
+                if ( userProject[0].status == CONSTANTS.common.SUBMITTED_STATUS ) {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.FAILED_TO_SYNC_PROJECT_ALREADY_SUBMITTED
                     };
                 }
 
@@ -1481,7 +1489,7 @@ module.exports = class UserProjectsHelper {
        * @returns {Object} Downloadable pdf url.
      */
 
-    static share(projectId = "", taskIds = [], userToken) {
+    static share(projectId = "", taskIds = [], userToken,appVersion) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -1571,7 +1579,12 @@ module.exports = class UserProjectsHelper {
                 delete projectDocument.categories;
                 delete projectDocument.metaInformation;
                 delete projectDocument.programInformation;
-               
+
+                
+                if (UTILS.revertStatusorNot(appVersion)) {
+                    projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
+                }
+                
                 let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {

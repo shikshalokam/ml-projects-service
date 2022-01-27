@@ -34,7 +34,7 @@ module.exports = class ReportsHelper {
     * @param {Boolean} getPdf - pdf true or false
     * @returns {Object} Entity report.
    */
-    static entity(entityId = "", userId, userToken, userName, reportType, programId = "", getPdf) {
+    static entity(entityId = "", userId, userToken, userName, reportType, programId = "", getPdf,appVersion) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -88,9 +88,9 @@ module.exports = class ReportsHelper {
                     "total": 0,
                     "overdue": 0,
                 };
-                projectReport[CONSTANTS.common.COMPLETED_STATUS] = 0;
+                projectReport[CONSTANTS.common.SUBMITTED_STATUS] = 0;
                 projectReport[CONSTANTS.common.INPROGRESS_STATUS] = 0;
-                projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = 0;
+                projectReport[CONSTANTS.common.STARTED] = 0;
 
 
                 let types = await this.types();
@@ -100,8 +100,12 @@ module.exports = class ReportsHelper {
                     }
                 });
 
+
+
+
                 if (!projectDetails.length > 0) {
 
+                  
                     if (getPdf == true) {
 
                         let reportTaskData = {};
@@ -123,7 +127,7 @@ module.exports = class ReportsHelper {
                             projects: projectReport,
 
                         }
-
+                        
                         let response = await reportService.entityReport(userToken, pdfRequest);
 
                         if (response && response.success == true) {
@@ -146,6 +150,8 @@ module.exports = class ReportsHelper {
                         }
 
                     } else {
+
+                        
                         return resolve({
                             message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,
                             data: {
@@ -185,9 +191,10 @@ module.exports = class ReportsHelper {
 
                     let todayDate = moment(project.endDate, "DD.MM.YYYY");
                     let endDate = moment().format();
-                    if (project.status == CONSTANTS.common.COMPLETED_STATUS) {
 
-                        projectReport[CONSTANTS.common.COMPLETED_STATUS] = projectReport[CONSTANTS.common.COMPLETED_STATUS] + 1;
+                    if (project.status == CONSTANTS.common.SUBMITTED_STATUS) {
+
+                        projectReport[CONSTANTS.common.SUBMITTED_STATUS] = projectReport[CONSTANTS.common.SUBMITTED_STATUS] + 1;
 
                     } else if (project.status == CONSTANTS.common.INPROGRESS_STATUS) {
 
@@ -197,17 +204,17 @@ module.exports = class ReportsHelper {
                             projectReport[CONSTANTS.common.INPROGRESS_STATUS] = projectReport[CONSTANTS.common.INPROGRESS_STATUS] + 1;
                         }
 
-                    } else if (project.status == CONSTANTS.common.NOT_STARTED_STATUS) {
+                    } else if (project.status == CONSTANTS.common.STARTED) {
 
                         if (todayDate.diff(endDate, 'days') < 1) {
                             projectReport['overdue'] = projectReport['overdue'] + 1;
                         } else {
-                            projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = projectReport[CONSTANTS.common.NOT_STARTED_STATUS] + 1;
+                            projectReport[CONSTANTS.common.STARTED] = projectReport[CONSTANTS.common.STARTED] + 1;
                         }
                     }
-                    projectReport["total"] = projectReport[CONSTANTS.common.NOT_STARTED_STATUS] + 
+                    projectReport["total"] = projectReport[CONSTANTS.common.STARTED] + 
                     projectReport['overdue'] + projectReport[CONSTANTS.common.INPROGRESS_STATUS] +
-                    projectReport[CONSTANTS.common.COMPLETED_STATUS];
+                    projectReport[CONSTANTS.common.SUBMITTED_STATUS];
 
                     if (project.taskReport) {
                         let keys = Object.keys(project.taskReport);
@@ -236,8 +243,16 @@ module.exports = class ReportsHelper {
 
                 }));
 
-                if (getPdf == true) {
+                if (UTILS.revertStatusorNot(appVersion)) {
 
+                    projectReport[CONSTANTS.common.COMPLETED_STATUS] = projectReport[CONSTANTS.common.SUBMITTED_STATUS];
+                    projectReport[CONSTANTS.common.NOT_STARTED_STATUS] = projectReport[CONSTANTS.common.STARTED];
+                    delete projectReport[CONSTANTS.common.SUBMITTED_STATUS];
+                    delete projectReport[CONSTANTS.common.STARTED];
+                }
+
+                if (getPdf == true) {
+                   
                     let reportTaskData = {};
                     Object.keys(tasksReport).map(taskData => {
                         reportTaskData[UTILS.camelCaseToTitleCase(taskData)] = tasksReport[taskData];
@@ -269,6 +284,7 @@ module.exports = class ReportsHelper {
                     if (entityId != "") {
                         pdfRequest['entityName'] = projectDetails[0].entityInformation.name;
                     }
+                   
 
                     let response = await reportService.entityReport(userToken, pdfRequest);
                     if (response && response.success == true) {
@@ -310,6 +326,7 @@ module.exports = class ReportsHelper {
             }
         })
     }
+
 
 
     /**
@@ -595,9 +612,9 @@ module.exports = class ReportsHelper {
                                     }
 
                                     let color = "";
-                                    if (status == CONSTANTS.common.NOT_STARTED_STATUS) {
+                                    if (status == CONSTANTS.common.STARTED) {
                                         color = "#f5f5f5";
-                                    } else if (status == CONSTANTS.common.COMPLETED_STATUS) {
+                                    } else if (status == CONSTANTS.common.SUBMITTED_STATUS ) {
                                         color = "#20ba8d";
                                     } else if (status == CONSTANTS.common.INPROGRESS_STATUS) {
                                         color = "#ef8c2b";
@@ -635,6 +652,7 @@ module.exports = class ReportsHelper {
             }
         });
     }
+
     
 }
 
