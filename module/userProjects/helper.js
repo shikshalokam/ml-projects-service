@@ -111,7 +111,8 @@ module.exports = class UserProjectsHelper {
                     "solutionInformation.externalId",
                     "entityInformation._id",
                     "lastDownloadedAt",
-                    "appInformation"
+                    "appInformation",
+                    "status"
                 ]);
 
                 if (!userProject.length > 0) {
@@ -126,6 +127,13 @@ module.exports = class UserProjectsHelper {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_ALREADY_SYNC
+                    };
+                }
+
+                if ( userProject[0].status == CONSTANTS.common.SUBMITTED_STATUS ) {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.FAILED_TO_SYNC_PROJECT_ALREADY_SUBMITTED
                     };
                 }
 
