@@ -21,6 +21,7 @@ const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates")
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
+const solutionsQueries = require(DB_QUERY_BASE_PATH + "/solutions");
 
 
 module.exports = class ProjectTemplatesHelper {
@@ -972,6 +973,8 @@ module.exports = class ProjectTemplatesHelper {
                         message:CONSTANTS.apiResponses.TEMPLATE_ID_OR_LINK_REQUIRED
                     }
                 }
+
+
                 let findQuery = {};
                 //get data when link is given
                 if( link ){
@@ -979,9 +982,7 @@ module.exports = class ProjectTemplatesHelper {
                     let queryData = {};
                     queryData["link"] =link;
 
-                    let solutionDocument = 
-                    await coreService.solutionsDocuments(
-                        queryData,
+                    let solutionDocument = await solutionsQueries.solutionsDocument(queryData,
                         [
                             "_id",
                             "name",
@@ -991,15 +992,13 @@ module.exports = class ProjectTemplatesHelper {
                             "link"
                         ]
                     );
-
-                    if( !solutionDocument.success || solutionDocument.data.length === 0 ) {
+                    if( !solutionDocument.length > 0 ) {
                         throw {
                             message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
                             status : HTTP_STATUS_CODE['bad_request'].status
                         }
                     }
-                    
-                    let solutiondata = solutionDocument.data;
+                    let solutiondata = solutionDocument;
                     templateId = solutiondata[0].projectTemplateId;
                     if( !templateId ){
                         return resolve({
