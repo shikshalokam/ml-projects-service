@@ -11,7 +11,6 @@ const coreService = require(GENERICS_FILES_PATH + "/services/core");
 const libraryCategoriesHelper = require(MODULES_BASE_PATH + "/library/categories/helper");
 const projectTemplatesHelper = require(MODULES_BASE_PATH + "/project/templates/helper");
 const projectTemplateTasksHelper = require(MODULES_BASE_PATH + "/project/templateTasks/helper");
-const { util } = require('chai');
 const { v4: uuidv4 } = require('uuid');
 const surveyService = require(GENERICS_FILES_PATH + "/services/survey");
 const reportService = require(GENERICS_FILES_PATH + "/services/report");
@@ -332,6 +331,10 @@ module.exports = class UserProjectsHelper {
                 }
 
                 updateProject.status = UTILS.convertProjectStatus(data.status);
+                
+                if ( data.status == CONSTANTS.common.COMPLETED_STATUS || data.status == CONSTANTS.common.SUBMITTED_STATUS ) {
+                    updateProject.completedDate = new Date();
+                }
 
                 let projectUpdated =
                     await projectQueries.findOneAndUpdate(
