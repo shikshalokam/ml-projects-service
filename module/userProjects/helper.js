@@ -2072,38 +2072,12 @@ function _projectInformation(project) {
                 project.programId = project.programInformation._id;
                 project.programName = project.programInformation.name;
             }
-            //order task based on task sequence
-            if (project.taskSequence && project.taskSequence.length > 0) {
-
-                let tasks = [];
-                let taskSequence = project.taskSequence ? project.taskSequence : [];
-                let projectTasks = project.tasks;
-
-                for (let taskCounter = 0; taskCounter < taskSequence.length; taskCounter++) {
-
-                    let eachTask = projectTasks.find(item => item.externalId == taskSequence[taskCounter]);
-                    if (eachTask && Object.keys(eachTask).length > 0) {
-                        
-                        let childTasks = [];
-                        if (eachTask.children && eachTask.children.length > 0) {
-
-                            let childTaskSequence = eachTask.taskSequence;
-                            for (let childTaskPointer = 0; childTaskPointer < childTaskSequence.length; childTaskPointer++) {
-                                let eachChildTask = eachTask.children.find(childItem => childItem.externalId == childTaskSequence[childTaskPointer]);
-                                childTasks.push(eachChildTask);
-                            }
-
-                            eachTask.children = childTasks;
-                        }
-
-                        tasks.push(eachTask);
-                    }
-                }
-
-                project.tasks = tasks;
-            }
 
             if (project.tasks && project.tasks.length > 0) {
+                //order task based on task sequence
+                if ( project.taskSequence && project.taskSequence.length > 0 ) {
+                    project.tasks = taskArrayBySequence(project.tasks, project.taskSequence, 'externalId');
+                }
 
                 let attachments = [];
                 let mapTaskIdToAttachment = {};
@@ -2200,6 +2174,12 @@ function _projectInformation(project) {
         }
     })
 }
+
+function taskArrayBySequence (taskArray, sequenceArray, key) {
+  var map = sequenceArray.reduce((acc, value, index) => (acc[value] = index + 1, acc), {})
+  const sortedTaskArray = taskArray.sort((a, b) => (map[a[key]] || Infinity) - (map[b[key]] || Infinity))
+  return sortedTaskArray
+};
 
 /**
   * Task of project.
