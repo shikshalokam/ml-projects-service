@@ -111,7 +111,8 @@ module.exports = class UserProjectsHelper {
                     "solutionInformation.externalId",
                     "entityInformation._id",
                     "lastDownloadedAt",
-                    "appInformation"
+                    "appInformation",
+                    "status"
                 ]);
 
                 if (!userProject.length > 0) {
@@ -126,6 +127,13 @@ module.exports = class UserProjectsHelper {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_ALREADY_SYNC
+                    };
+                }
+
+                if ( userProject[0].status == CONSTANTS.common.SUBMITTED_STATUS ) {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.FAILED_TO_SYNC_PROJECT_ALREADY_SUBMITTED
                     };
                 }
 
@@ -320,6 +328,12 @@ module.exports = class UserProjectsHelper {
                     if (appVersion !== "") {
                         updateProject["appInformation"]["appVersion"] = appVersion;
                     }
+                }
+
+                updateProject.status = UTILS.convertProjectStatus(data.status);
+                
+                if ( data.status == CONSTANTS.common.COMPLETED_STATUS || data.status == CONSTANTS.common.SUBMITTED_STATUS ) {
+                    updateProject.completedDate = new Date();
                 }
 
                 let projectUpdated =
@@ -1161,7 +1175,7 @@ module.exports = class UserProjectsHelper {
     
                     }
     
-                    projectCreation.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                    projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
@@ -1178,8 +1192,13 @@ module.exports = class UserProjectsHelper {
                 userId,
                 userRoleInformation
             );
-
-            console.log("Here project final details",projectDetails);
+            
+            let revertStatusorNot = UTILS.revertStatusorNot(appVersion);
+            if ( revertStatusorNot ) {
+                projectDetails.data.status = UTILS.revertProjectStatus(projectDetails.data.status);
+            } else {
+                projectDetails.data.status = UTILS.convertProjectStatus(projectDetails.data.status);
+            }
 
             return resolve({
                 success: true,
@@ -1393,7 +1412,6 @@ module.exports = class UserProjectsHelper {
                 let mongooseIdData = this.mongooseIdData(schemas["projects"].schema);
 
 
-
                 Object.keys(data).forEach(updateData => {
                     if (
                         !createProject[updateData] &&
@@ -1427,6 +1445,8 @@ module.exports = class UserProjectsHelper {
                 if (data.profileInformation) {
                     createProject.userRoleInformation = data.profileInformation;
                 }
+
+                createProject.status = UTILS.convertProjectStatus(data.status);
 
                 let userProject = await projectQueries.createProject(
                     createProject
@@ -1476,7 +1496,7 @@ module.exports = class UserProjectsHelper {
        * @returns {Object} Downloadable pdf url.
      */
 
-    static share(projectId = "", taskIds = [], userToken) {
+    static share(projectId = "", taskIds = [], userToken,appVersion) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -1566,7 +1586,12 @@ module.exports = class UserProjectsHelper {
                 delete projectDocument.categories;
                 delete projectDocument.metaInformation;
                 delete projectDocument.programInformation;
-               
+
+                
+                if (UTILS.revertStatusorNot(appVersion)) {
+                    projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
+                }
+                
                 let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {
@@ -1939,7 +1964,7 @@ module.exports = class UserProjectsHelper {
 
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
-                libraryProjects.data.status = CONSTANTS.common.NOT_STARTED_STATUS;
+                libraryProjects.data.status = CONSTANTS.common.STARTED;
 
                 if (requestedData.startDate) {
                     libraryProjects.data.startDate = requestedData.startDate;
@@ -1955,7 +1980,7 @@ module.exports = class UserProjectsHelper {
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
-
+                
                 await kafkaProducersHelper.pushProjectToKafka(projectCreation);
 
                 if (requestedData.rating && requestedData.rating > 0) {
@@ -2048,38 +2073,12 @@ function _projectInformation(project) {
                 project.programId = project.programInformation._id;
                 project.programName = project.programInformation.name;
             }
-            //order task based on task sequence
-            if (project.taskSequence && project.taskSequence.length > 0) {
-
-                let tasks = [];
-                let taskSequence = project.taskSequence ? project.taskSequence : [];
-                let projectTasks = project.tasks;
-
-                for (let taskCounter = 0; taskCounter < taskSequence.length; taskCounter++) {
-
-                    let eachTask = projectTasks.find(item => item.externalId == taskSequence[taskCounter]);
-                    if (eachTask && Object.keys(eachTask).length > 0) {
-                        
-                        let childTasks = [];
-                        if (eachTask.children && eachTask.children.length > 0) {
-
-                            let childTaskSequence = eachTask.taskSequence;
-                            for (let childTaskPointer = 0; childTaskPointer < childTaskSequence.length; childTaskPointer++) {
-                                let eachChildTask = eachTask.children.find(childItem => childItem.externalId == childTaskSequence[childTaskPointer]);
-                                childTasks.push(eachChildTask);
-                            }
-
-                            eachTask.children = childTasks;
-                        }
-
-                        tasks.push(eachTask);
-                    }
-                }
-
-                project.tasks = tasks;
-            }
 
             if (project.tasks && project.tasks.length > 0) {
+                //order task based on task sequence
+                if ( project.taskSequence && project.taskSequence.length > 0 ) {
+                    project.tasks = taskArrayBySequence(project.tasks, project.taskSequence, 'externalId');
+                }
 
                 let attachments = [];
                 let mapTaskIdToAttachment = {};
@@ -2178,6 +2177,12 @@ function _projectInformation(project) {
         }
     })
 }
+
+function taskArrayBySequence (taskArray, sequenceArray, key) {
+  var map = sequenceArray.reduce((acc, value, index) => (acc[value] = index + 1, acc), {})
+  const sortedTaskArray = taskArray.sort((a, b) => (map[a[key]] || Infinity) - (map[b[key]] || Infinity))
+  return sortedTaskArray
+};
 
 /**
   * Task of project.
@@ -2690,7 +2695,6 @@ function _projectData(data) {
         }
     })
 }
-
 
 
 
