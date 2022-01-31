@@ -535,6 +535,7 @@ module.exports = class UserProjectsHelper {
                     return resolve(result);
                 }
 
+                console.log("Project information is",result);
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -1198,7 +1199,7 @@ module.exports = class UserProjectsHelper {
             } else {
                 projectDetails.data.status = UTILS.convertProjectStatus(projectDetails.data.status);
             }
-            
+
             return resolve({
                 success: true,
                 message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -2157,6 +2158,8 @@ function _projectInformation(project) {
             delete project.entityInformation;
             delete project.solutionInformation;
             delete project.programInformation;
+
+            console.log("project data is",project);
 
             return resolve({
                 success: true,
