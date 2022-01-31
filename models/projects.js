@@ -125,6 +125,10 @@ module.exports = {
             type : Array,
             default : []
         },
-        completedDate: Date
+        completedDate: Date,
+        recommendedFor : {
+            type : Array,
+            default : [] 
+        }
     }
 };
