@@ -75,7 +75,7 @@ var _sendToKafkaConsumers = function (topic,host) {
 
       console.log("-------Kafka log starts here------------------");
       console.log("Topic Name: ", topic);
-      console.log("Message: ", JSON.stringify(message));
+      console.log(JSON.stringify(message));
       console.log("-------Kafka log ends here------------------");
 
       if (message && message.topic === SUBMISSION_TOPIC) {
