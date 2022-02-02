@@ -74,6 +74,7 @@ var _sendToKafkaConsumers = function (topic,host) {
     consumer.on('message', async function (message) {
 
       console.log("-------Kafka log starts here------------------");
+      console.log("Topic Name: ", topic);
       console.log("Message: ", JSON.stringify(message));
       console.log("-------Kafka log ends here------------------");
   
