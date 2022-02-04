@@ -56,7 +56,7 @@ module.exports = async function (req, res, next, token = "") {
     }
   }));
   
-  if(guestAccess==true) {
+  if( guestAccess == true && !token ) {
     next();
     return;
   }
