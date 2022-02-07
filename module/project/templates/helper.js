@@ -984,6 +984,7 @@ module.exports = class ProjectTemplatesHelper {
                             "link"
                         ]
                     );
+                    
                     if( !solutionDocument.length > 0 ) {
                         throw {
                             message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
@@ -1000,17 +1001,20 @@ module.exports = class ProjectTemplatesHelper {
                         });   
                     }
                     solutionsResult = solutiondata;
+                    templateId=templateId.toString();
                 }
                 
                 if( templateId ){
-                    let validateTemplateId = UTILS.isValidMongoId(templateId);
+                    let validateTemplateId =await UTILS.isValidMongoId(templateId);
+                    
                     if( validateTemplateId ) {
                       findQuery["_id"] = templateId;
                     } else {
                       findQuery["externalId"] = templateId;
                     }
-                }
 
+                }
+                
                 //getting template data using templateId
 
                 let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
