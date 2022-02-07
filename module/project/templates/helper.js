@@ -1005,8 +1005,7 @@ module.exports = class ProjectTemplatesHelper {
                 }
                 
                 if( templateId ){
-                    let validateTemplateId =await UTILS.isValidMongoId(templateId);
-                    
+                    let validateTemplateId = UTILS.isValidMongoId(templateId);
                     if( validateTemplateId ) {
                       findQuery["_id"] = templateId;
                     } else {
@@ -1014,7 +1013,6 @@ module.exports = class ProjectTemplatesHelper {
                     }
 
                 }
-                
                 //getting template data using templateId
 
                 let templateData = await projectTemplateQueries.templateDocument(findQuery,"all",
