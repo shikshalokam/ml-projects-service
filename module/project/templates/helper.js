@@ -811,80 +811,92 @@ module.exports = class ProjectTemplatesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let newProjectTemplateTask, duplicateTemplateTask,newProjectTemplateChildTask,duplicateChildTemplateTask;
                 let newTaskId = [];
 
-                await Promise.all(taskIds.map(async taskId => {
-
+                for ( let pointerToTask = 0; pointerToTask < taskIds.length; pointerToTask++ ) {
+                    
+                    let taskId = taskIds[pointerToTask];
                     let taskData = await projectTemplateTaskQueries.taskDocuments(
                         {
-                            _id : taskId
+                            _id : taskId,
+                            parentId : { $exists : false }
                         });
 
-                    if(taskData && taskData.length > 0){
+                    if( taskData && taskData.length > 0 ) {
                         taskData = taskData[0];
                     }
 
-                        if(taskData){
-                            //duplicate task
-                            newProjectTemplateTask = {...taskData};
-                            newProjectTemplateTask.projectTemplateId = duplicateTemplateId;
-                            newProjectTemplateTask.projectTemplateExternalId = duplicateTemplateExternalId;
-                            newProjectTemplateTask.externalId = taskData.externalId +"-"+ UTILS.epochTime();
-                            duplicateTemplateTask = 
-                                await projectTemplateTaskQueries.createTemplateTask(
-                                  _.omit(newProjectTemplateTask, ["_id"])
-                                );
-                            newTaskId.push(duplicateTemplateTask._id);
-                            //duplicate child task
-                            if(duplicateTemplateTask.children && duplicateTemplateTask.children.length > 0){
-                                let childTaskIdArray = [];
-                                let childTaskIds = duplicateTemplateTask.children;
-                          
-                                if(childTaskIds && childTaskIds.length > 0){
-                                    await Promise.all(childTaskIds.map(async childtaskId => {
-                                        let childTaskData = await projectTemplateTaskQueries.taskDocuments(
-                                            {
-                                                _id : childtaskId
-                                            });
-                                        
-                                        if(childTaskData && childTaskData.length > 0){
-                                            childTaskData = childTaskData[0];
-                                        }
-                                        
-                                        if(childTaskData){
-                                            newProjectTemplateChildTask = {...childTaskData};
-                                            newProjectTemplateChildTask.projectTemplateId = duplicateTemplateId;
-                                            newProjectTemplateChildTask.projectTemplateExternalId = duplicateTemplateExternalId;
-                                            newProjectTemplateChildTask.parentId = duplicateTemplateTask._id;
-                                            newProjectTemplateChildTask.externalId = childTaskData.externalId +"-"+ UTILS.epochTime();
-                                            duplicateChildTemplateTask = 
-                                                await projectTemplateTaskQueries.createTemplateTask(
-                                                  _.omit(newProjectTemplateChildTask, ["_id"])
-                                                );
+                    if ( taskData && Object.keys(taskData).length > 0 ) {
 
-                                            childTaskIdArray.push(duplicateChildTemplateTask._id);
-                                        }
-                                    }))
+                        //duplicate parent task
+                        let newProjectTemplateTask = {...taskData};
+                        newProjectTemplateTask.projectTemplateId = duplicateTemplateId;
+                        newProjectTemplateTask.projectTemplateExternalId = duplicateTemplateExternalId;
+                        newProjectTemplateTask.externalId = taskData.externalId +"-"+ UTILS.epochTime();
 
-                                    if(childTaskIdArray && childTaskIdArray.length > 0){
-                                        let updateTaskData = projectTemplateTaskQueries.updateTaskDocument(
+                        let duplicateTemplateTask = 
+                            await database.models.projectTemplateTasks.create(
+                              _.omit(newProjectTemplateTask, ["_id"])
+                            );
+
+                        newTaskId.push(duplicateTemplateTask._id);
+
+                        //duplicate child task
+                        if ( duplicateTemplateTask.children && duplicateTemplateTask.children.length > 0 ) {
+
+                            let childTaskIdArray = [];
+                            let childTaskIds = duplicateTemplateTask.children;
+
+                            if ( childTaskIds && childTaskIds.length > 0 ) {
+
+                                for ( let pointerToChild = 0 ; pointerToChild < childTaskIds.length ; pointerToChild++ ) {
+
+                                    let childtaskId = childTaskIds[pointerToChild];
+                                    let childTaskData = await projectTemplateTaskQueries.taskDocuments(
                                         {
-                                            _id : duplicateTemplateTask._id
-                                        },
-                                        {
-                                            $set : {
-                                                    children : childTaskIdArray
-                                            }
-                                        })
+                                            _id : childtaskId
+                                        });
+
+                                    if ( childTaskData && childTaskData.length > 0 ) {
+                                        childTaskData = childTaskData[0];
                                     }
+
+                                    if ( childTaskData && Object.keys(childTaskData).length > 0 ) {
+
+                                        let newProjectTemplateChildTask = {...childTaskData};
+                                        newProjectTemplateChildTask.projectTemplateId = duplicateTemplateId;
+                                        newProjectTemplateChildTask.projectTemplateExternalId = duplicateTemplateExternalId;
+                                        newProjectTemplateChildTask.parentId = duplicateTemplateTask._id;
+                                        newProjectTemplateChildTask.externalId = childTaskData.externalId +"-"+ UTILS.epochTime();
+                                        
+                                        let duplicateChildTemplateTask = 
+                                            await database.models.projectTemplateTasks.create(
+                                              _.omit(newProjectTemplateChildTask, ["_id"])
+                                            );
+
+                                        childTaskIdArray.push(duplicateChildTemplateTask._id);
+                                        newTaskId.push(duplicateChildTemplateTask._id);
+                                    }
+                                }
+                                //update new subtask ids to parent task 
+                                if(childTaskIdArray && childTaskIdArray.length > 0){
+                                    let updateTaskData = await projectTemplateTaskQueries.updateTaskDocument(
+                                    {
+                                        _id : duplicateTemplateTask._id
+                                    },
+                                    {
+                                        $set : {
+                                                children : childTaskIdArray
+                                        }
+                                    })
                                 }
                             }
                         }
-                }))
+                    }
+                }
 
                 let updateDuplicateTemplate;
-
+                //adding duplicate tasj to duplicate template
                 if(newTaskId && newTaskId.length > 0){
 
                     updateDuplicateTemplate = await projectTemplateQueries.findOneAndUpdate(
@@ -902,7 +914,6 @@ module.exports = class ProjectTemplatesHelper {
                    updateDuplicateTemplate
                 );
                 
-
             } catch (error) {
                 return reject(error);
             }
