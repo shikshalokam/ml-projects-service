@@ -530,12 +530,11 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let result = await _projectInformation(projectDetails[0]);
-
+                
                 if (!result.success) {
                     return resolve(result);
                 }
 
-                console.log("Project information is",result);
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -2082,6 +2081,7 @@ function _projectInformation(project) {
 
                 let attachments = [];
                 let mapTaskIdToAttachment = {};
+                let mapLinkAttachment = {};
 
                 for (let task = 0; task < project.tasks.length; task++) {
 
@@ -2094,13 +2094,21 @@ function _projectInformation(project) {
                             attachment++
                         ) {
                             let currentAttachment = currentTask.attachments[attachment];
-                            attachments.push(currentAttachment.sourcePath);
 
-                            if (!mapTaskIdToAttachment[currentAttachment.sourcePath]) {
+                            //remove link attachment from attachments
+                            if (currentAttachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
+                                if (!Array.isArray(mapLinkAttachment[currentTask._id]) || !mapLinkAttachment[currentTask._id].length ) {
+                                    mapLinkAttachment[currentTask._id] = [];
+                                }
+                                mapLinkAttachment[currentTask._id].push(currentAttachment);
+                            } else {
+                                attachments.push(currentAttachment.sourcePath);
+                            }
+                            
+                            if (!mapTaskIdToAttachment[currentAttachment.sourcePath] && currentAttachment.type != CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
                                 mapTaskIdToAttachment[currentAttachment.sourcePath] = {
                                     taskId: currentTask._id
                                 };
-
                             }
                         }
                     }
@@ -2142,6 +2150,17 @@ function _projectInformation(project) {
 
                 }
 
+                //add link attachment to attachments
+                if ( mapLinkAttachment && Object.keys(mapLinkAttachment).length > 0 ) {
+
+                    Object.keys(mapLinkAttachment).forEach(eachTaskId => {
+
+                        let taskIdIndex = project.tasks.findIndex(task => task._id === eachTaskId);
+                        if ( taskIdIndex > -1 ) {
+                            project.tasks[taskIdIndex].attachments.concat(mapLinkAttachment[eachTaskId]);
+                        }
+                    })
+                }
             }
 
             project.status =
@@ -2158,8 +2177,6 @@ function _projectInformation(project) {
             delete project.entityInformation;
             delete project.solutionInformation;
             delete project.programInformation;
-
-            console.log("project data is",project);
 
             return resolve({
                 success: true,
