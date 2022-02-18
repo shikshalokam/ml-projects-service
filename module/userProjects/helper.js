@@ -2095,7 +2095,7 @@ function _projectInformation(project) {
                         ) {
                             let currentAttachment = currentTask.attachments[attachment];
 
-                            //remove link attachment from attachments
+                            //remove link attachment from task attachments
                             if (currentAttachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
                                 if (!Array.isArray(mapLinkAttachment[currentTask._id]) || !mapLinkAttachment[currentTask._id].length ) {
                                     mapLinkAttachment[currentTask._id] = [];
@@ -2150,7 +2150,7 @@ function _projectInformation(project) {
 
                 }
 
-                //add link attachment to attachments
+                //add link attachment to task attachments
                 if ( mapLinkAttachment && Object.keys(mapLinkAttachment).length > 0 ) {
 
                     Object.keys(mapLinkAttachment).forEach(eachTaskId => {
@@ -2160,6 +2160,59 @@ function _projectInformation(project) {
                             project.tasks[taskIdIndex].attachments.concat(mapLinkAttachment[eachTaskId]);
                         }
                     })
+                }
+            }
+
+            //project attachments
+            if ( project.attachments && project.attachments.length > 0 ) {
+
+                let projectLinkAttachments = [];
+                let projectAttachments = [];
+
+                for (
+                    let pointerToAttachment = 0;
+                    pointerToAttachment < project.attachments.length;
+                    pointerToAttachment++
+                ) {
+
+                    let currentProjectAttachment = project.attachments[pointerToAttachment];
+                    if ( currentProjectAttachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
+                        projectLinkAttachments.push(currentProjectAttachment);
+                    } else {
+                        projectAttachments.push(currentProjectAttachment.sourcePath);
+                    }
+                }
+
+                if ( projectAttachments && projectAttachments.length > 0 ) {
+
+                    let projectAttachmentsUrl =
+                        await coreService.getDownloadableUrl(
+                            {
+                                filePaths: projectAttachments
+                            }
+                        );
+
+                    if (!projectAttachmentsUrl.success) {
+                        throw {
+                            status: HTTP_STATUS_CODE['bad_request'].status,
+                            message: CONSTANTS.apiResponses.ATTACHMENTS_URL_NOT_FOUND
+                        }
+                    }
+
+                    if (projectAttachmentsUrl.data.length > 0) {
+                        projectAttachmentsUrl.data.forEach(eachAttachment => {
+                            let projectAttachmentIndex =
+                                project.attachments.findIndex(attachmentData => attachmentData.sourcePath == eachAttachment.filePath);
+                                console.log(projectAttachmentIndex,"projectAttachmentIndex")
+                            if (projectAttachmentIndex > -1) {
+                                project.attachments[projectAttachmentIndex].url = eachAttachment.url;
+                            }
+                        })
+                    }
+                }
+
+                if ( projectLinkAttachments && projectLinkAttachments.length > 0 ) {
+                    project.attachments.concat(projectLinkAttachments);
                 }
             }
 
