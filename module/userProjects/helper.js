@@ -758,7 +758,14 @@ module.exports = class UserProjectsHelper {
 
                         data["submissionStatus"] = CONSTANTS.common.STARTED;
 
-                        let submissionDetails = currentTask.observationInformation ? currentTask.observationInformation : {};
+                        // For 4.7 Urgent fix, need to check why observationInformation is not present at task level.
+                        let submissionDetails =  {};
+                        if(currentTask.observationInformation) {
+                            submissionDetails = currentTask.observationInformation
+                        } else if (currentTask.submissionDetails) {
+                            submissionDetails = currentTask.submissionDetails
+                        }
+
                         data["submissionDetails"] = submissionDetails;
                       
                         if ( currentTask.submissions && currentTask.submissions.length > 0 ) {
