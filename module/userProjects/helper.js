@@ -1766,7 +1766,7 @@ module.exports = class UserProjectsHelper {
 
             let filterQuery = {
                 userId : userId,
-                referenceFrom : { $exists : true,$eq : CONSTANTS.common.OBSERVATION_REFERENCE_KEY },
+                // referenceFrom : { $exists : true,$eq : CONSTANTS.common.OBSERVATION_REFERENCE_KEY }, - Commented as this filter is not useful. - 4.7 Sprint - 25Feb2022
                 isDeleted: false
             };
 
