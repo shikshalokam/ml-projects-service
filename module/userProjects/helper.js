@@ -275,6 +275,10 @@ module.exports = class UserProjectsHelper {
                                 if (userProject[0].tasks[taskIndex].submissions) {
                                     task.submissions = userProject[0].tasks[taskIndex].submissions;
                                 }
+
+                                if (userProject[0].tasks[taskIndex].observationInformation) {
+                                    task.observationInformation = userProject[0].tasks[taskIndex].observationInformation;
+                                }
                                
                                 userProject[0].tasks[taskIndex] = task;
                             }
