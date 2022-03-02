@@ -279,6 +279,10 @@ module.exports = class UserProjectsHelper {
                                 if (userProject[0].tasks[taskIndex].observationInformation) {
                                     task.observationInformation = userProject[0].tasks[taskIndex].observationInformation;
                                 }
+
+                                if (userProject[0].tasks[taskIndex].submissionDetails) {
+                                    delete userProject[0].tasks[taskIndex].submissionDetails;
+                                }
                                
                                 userProject[0].tasks[taskIndex] = task;
                             }
@@ -2238,6 +2242,10 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
                     task._id = parentTaskId;
                 });
             }
+        }
+
+        if (singleTask.submissionDetails) {
+            delete singleTask.submissionDetails;
         }
 
         if (singleTask.children) {
