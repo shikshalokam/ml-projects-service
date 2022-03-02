@@ -2243,9 +2243,11 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
             }
         }
 
-        if (singleTask.submissionDetails) {
+        let removeFieldsFromRequest = ["submissionDetails"];
+        
+        removeFieldsFromRequest.forEach((removeField) => {
             delete singleTask.submissionDetails;
-        }
+        });
 
         if (singleTask.children) {
             _projectTask(
