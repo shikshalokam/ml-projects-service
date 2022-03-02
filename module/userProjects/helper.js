@@ -271,18 +271,17 @@ module.exports = class UserProjectsHelper {
                                     task
                                 );
                             } else {
+
+                                let removeFieldsFromRequest = ["submissionDetails"];
+                                let keepFieldsFromTask = ["observationInformation", "submissions"];
                                 
-                                if (userProject[0].tasks[taskIndex].submissions) {
-                                    task.submissions = userProject[0].tasks[taskIndex].submissions;
-                                }
+                                removeFieldsFromRequest.forEach((removeField) => {
+                                    delete userProject[0].tasks[taskIndex][removeField];
+                                });
 
-                                if (userProject[0].tasks[taskIndex].observationInformation) {
-                                    task.observationInformation = userProject[0].tasks[taskIndex].observationInformation;
-                                }
-
-                                if (userProject[0].tasks[taskIndex].submissionDetails) {
-                                    delete userProject[0].tasks[taskIndex].submissionDetails;
-                                }
+                                keepFieldsFromTask.forEach((field) => {
+                                    task.field = userProject[0].tasks[taskIndex][field] ? userProject[0].tasks[taskIndex][field] : null;
+                                });
                                
                                 userProject[0].tasks[taskIndex] = task;
                             }
