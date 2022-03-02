@@ -248,10 +248,7 @@ module.exports = class UserProjectsHelper {
                     let taskReport = {};
 
                     updateProject.tasks = await _projectTask(
-                        data.tasks,
-                        false,
-                        "",
-                        removeFieldsFromRequest
+                        data.tasks
                     );
 
                     if (
@@ -2209,7 +2206,7 @@ function taskArrayBySequence (taskArray, sequenceArray, key) {
   * @returns {Object} Project task.
 */
 
-function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "", removeFieldsFromRequest = []) {
+function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
 
     tasks.forEach(singleTask => {
 
@@ -2245,12 +2242,9 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "", r
             }
         }
         
-        if ( removeFieldsFromRequest && removeFieldsFromRequest.length > 0 ) {
-
-            removeFieldsFromRequest.forEach((removeField) => {
-                delete singleTask[removeField];
-            });
-        }
+        removeFieldsFromRequest.forEach((removeField) => {
+            delete singleTask[removeField];
+        });
         
         if (singleTask.children) {
             _projectTask(
