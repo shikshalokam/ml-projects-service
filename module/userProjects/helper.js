@@ -137,6 +137,8 @@ module.exports = class UserProjectsHelper {
                     };
                 }
 
+                let removeFieldsFromRequest = ["submissionDetails"];
+
                 const projectsModel = Object.keys(schemas["projects"].schema);
 
                 let updateProject = {};
@@ -248,7 +250,10 @@ module.exports = class UserProjectsHelper {
                     let taskReport = {};
 
                     updateProject.tasks = await _projectTask(
-                        data.tasks
+                        data.tasks,
+                        false,
+                        "",
+                        removeFieldsFromRequest
                     );
 
                     if (
@@ -272,7 +277,6 @@ module.exports = class UserProjectsHelper {
                                 );
                             } else {
 
-                                let removeFieldsFromRequest = ["submissionDetails"];
                                 let keepFieldsFromTask = ["observationInformation", "submissions"];
                                 
                                 removeFieldsFromRequest.forEach((removeField) => {
@@ -2207,7 +2211,7 @@ function taskArrayBySequence (taskArray, sequenceArray, key) {
   * @returns {Object} Project task.
 */
 
-function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
+function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "", removeFieldsFromRequest = []) {
 
     tasks.forEach(singleTask => {
 
@@ -2242,13 +2246,14 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
                 });
             }
         }
-
-        let removeFieldsFromRequest = ["submissionDetails"];
         
-        removeFieldsFromRequest.forEach((removeField) => {
-            delete singleTask.submissionDetails;
-        });
+        if ( removeFieldsFromRequest && removeFieldsFromRequest.length > 0 ) {
 
+            removeFieldsFromRequest.forEach((removeField) => {
+                delete singleTask[removeField];
+            });
+        }
+        
         if (singleTask.children) {
             _projectTask(
                 singleTask.children,
