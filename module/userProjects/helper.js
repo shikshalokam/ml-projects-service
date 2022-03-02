@@ -18,8 +18,8 @@ const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
-
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
+const removeFieldsFromRequest = ["submissionDetails"];
 
 /**
     * UserProjectsHelper
@@ -136,8 +136,6 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.FAILED_TO_SYNC_PROJECT_ALREADY_SUBMITTED
                     };
                 }
-
-                let removeFieldsFromRequest = ["submissionDetails"];
 
                 const projectsModel = Object.keys(schemas["projects"].schema);
 
