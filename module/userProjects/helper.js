@@ -18,8 +18,8 @@ const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
-
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
+const removeFieldsFromRequest = ["submissionDetails"];
 
 /**
     * UserProjectsHelper
@@ -271,10 +271,16 @@ module.exports = class UserProjectsHelper {
                                     task
                                 );
                             } else {
+
+                                let keepFieldsFromTask = ["observationInformation", "submissions"];
                                 
-                                if (userProject[0].tasks[taskIndex].submissions) {
-                                    task.submissions = userProject[0].tasks[taskIndex].submissions;
-                                }
+                                removeFieldsFromRequest.forEach((removeField) => {
+                                    delete userProject[0].tasks[taskIndex][removeField];
+                                });
+
+                                keepFieldsFromTask.forEach((field) => {
+                                    task.field = userProject[0].tasks[taskIndex][field] ? userProject[0].tasks[taskIndex][field] : null;
+                                });
                                
                                 userProject[0].tasks[taskIndex] = task;
                             }
@@ -2235,7 +2241,11 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
                 });
             }
         }
-
+        
+        removeFieldsFromRequest.forEach((removeField) => {
+            delete singleTask[removeField];
+        });
+        
         if (singleTask.children) {
             _projectTask(
                 singleTask.children,
