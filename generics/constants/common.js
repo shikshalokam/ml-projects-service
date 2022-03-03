@@ -42,6 +42,7 @@ module.exports = {
     "DEFAULT_SUBMISSION_REQUIRED" : 1,
     "TASK_SEQUENCE" : "taskSequence",
     "CHILDREN" : "children",
-
-
+    "ATTACHMENT_TYPE_LINK" : "link",
+    "PROJECT_ATTACHMENT" : "project",
+    "TASK_ATTACHMENT" : "task"
 };
