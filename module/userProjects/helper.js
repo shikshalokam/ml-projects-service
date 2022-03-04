@@ -535,7 +535,7 @@ module.exports = class UserProjectsHelper {
                     return resolve(result);
                 }
 
-                console.log("Project information is",result);
+                
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -1352,7 +1352,7 @@ module.exports = class UserProjectsHelper {
                 let createNewProgramAndSolution = false;
 
                 if (data.programId && data.programId !== "") {
-                    createNewProgramAndSolution = true;
+                    createNewProgramAndSolution = false;
                 }
                 else if (data.programName) {
                     createNewProgramAndSolution = true;
@@ -1467,7 +1467,7 @@ module.exports = class UserProjectsHelper {
                     data: {
                         programId:
                         userProject.programInformation && userProject.programInformation._id ?
-                        userProject.programInformation._id : "",
+                        userProject.programInformation._id : data.programId,
                         projectId: userProject._id,
                         lastDownloadedAt: userProject.lastDownloadedAt,
                         hasAcceptedTAndC : userProject.hasAcceptedTAndC ? userProject.hasAcceptedTAndC : false
@@ -2159,7 +2159,7 @@ function _projectInformation(project) {
             delete project.solutionInformation;
             delete project.programInformation;
 
-            console.log("project data is",project);
+            
 
             return resolve({
                 success: true,
