@@ -1364,7 +1364,7 @@ module.exports = class UserProjectsHelper {
                 let createNewProgramAndSolution = false;
 
                 if (data.programId && data.programId !== "") {
-                    createNewProgramAndSolution = true;
+                    createNewProgramAndSolution = false;
                 }
                 else if (data.programName) {
                     createNewProgramAndSolution = true;
@@ -1479,7 +1479,7 @@ module.exports = class UserProjectsHelper {
                     data: {
                         programId:
                         userProject.programInformation && userProject.programInformation._id ?
-                        userProject.programInformation._id : "",
+                        userProject.programInformation._id : data.programId,
                         projectId: userProject._id,
                         lastDownloadedAt: userProject.lastDownloadedAt,
                         hasAcceptedTAndC : userProject.hasAcceptedTAndC ? userProject.hasAcceptedTAndC : false
