@@ -18,6 +18,7 @@ const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
+const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 
@@ -1385,7 +1386,29 @@ module.exports = class UserProjectsHelper {
 
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
+                }else {
+                    let queryData = {};
+                    queryData["_id"] = data.programId;
+                    let programDetails = await programsQueries.programsDocument(queryData,
+                            [
+                                "_id",
+                                "name",
+                                "description",
+                                "isAPrivateProgram"
+                            ]
+                    );
+                    if( !programDetails.length > 0 ){
+                        throw {
+                            status: HTTP_STATUS_CODE['bad_request'].status,
+                            message: CONSTANTS.apiResponses.PROGRAM_NOT_FOUND
+                        };
+                    } 
+                    let programInformationData = {};
+                    programInformationData["programInformation"] = programDetails[0];
+                    createProject =
+                        _.merge(createProject, programInformationData);
                 }
+                
 
                 if (data.tasks) {
 
