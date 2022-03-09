@@ -815,7 +815,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 if( !taskUpdatedData._id ) {
                     throw {
-                      message : constants.apiResponses.TEMPLATE_TASK_NOT_UPDATED
+                      message : CONSTANTS.apiResponses.TEMPLATE_TASK_NOT_UPDATED
                     }
                 }
 

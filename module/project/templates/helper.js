@@ -442,7 +442,7 @@ module.exports = class ProjectTemplatesHelper {
 
                         if ( !(template.length > 0 && template[0]._id) ) {
                             currentData["UPDATE_STATUS"] = 
-                            constants.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
+                            CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND;
                         } else {
                                 
                             let templateData = await this.templateData(
@@ -468,7 +468,7 @@ module.exports = class ProjectTemplatesHelper {
 
                             if( !projectTemplateUpdated || !projectTemplateUpdated._id ) {
                                 currentData["UPDATE_STATUS"] = 
-                                constants.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED;
+                                CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED;
                             }
 
                             // Add projects count to categories
@@ -1199,7 +1199,7 @@ module.exports = class ProjectTemplatesHelper {
 
                 if( !templateUpdatedData._id ) {
                     throw {
-                      message : constants.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED
+                      message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_UPDATED
                     }
                 }
 

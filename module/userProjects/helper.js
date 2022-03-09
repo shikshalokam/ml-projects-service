@@ -18,9 +18,11 @@ const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
+
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
+const removeFieldsFromRequest = ["submissionDetails"];
 
 /**
     * UserProjectsHelper
@@ -272,10 +274,16 @@ module.exports = class UserProjectsHelper {
                                     task
                                 );
                             } else {
+
+                                let keepFieldsFromTask = ["observationInformation", "submissions"];
                                 
-                                if (userProject[0].tasks[taskIndex].submissions) {
-                                    task.submissions = userProject[0].tasks[taskIndex].submissions;
-                                }
+                                removeFieldsFromRequest.forEach((removeField) => {
+                                    delete userProject[0].tasks[taskIndex][removeField];
+                                });
+
+                                keepFieldsFromTask.forEach((field) => {
+                                    task.field = userProject[0].tasks[taskIndex][field] ? userProject[0].tasks[taskIndex][field] : null;
+                                });
                                
                                 userProject[0].tasks[taskIndex] = task;
                             }
@@ -759,7 +767,14 @@ module.exports = class UserProjectsHelper {
 
                         data["submissionStatus"] = CONSTANTS.common.STARTED;
 
-                        let submissionDetails = currentTask.observationInformation ? currentTask.observationInformation : {};
+                        // For 4.7 Urgent fix, need to check why observationInformation is not present at task level.
+                        let submissionDetails =  {};
+                        if(currentTask.observationInformation) {
+                            submissionDetails = currentTask.observationInformation
+                        } else if (currentTask.submissionDetails) {
+                            submissionDetails = currentTask.submissionDetails
+                        }
+
                         data["submissionDetails"] = submissionDetails;
                       
                         if ( currentTask.submissions && currentTask.submissions.length > 0 ) {
@@ -1782,7 +1797,7 @@ module.exports = class UserProjectsHelper {
 
             let filterQuery = {
                 userId : userId,
-                referenceFrom : { $exists : true,$eq : CONSTANTS.common.OBSERVATION_REFERENCE_KEY },
+                // referenceFrom : { $exists : true,$eq : CONSTANTS.common.OBSERVATION_REFERENCE_KEY }, - Commented as this filter is not useful. - 4.7 Sprint - 25Feb2022
                 isDeleted: false
             };
 
@@ -2251,7 +2266,11 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
                 });
             }
         }
-
+        
+        removeFieldsFromRequest.forEach((removeField) => {
+            delete singleTask[removeField];
+        });
+        
         if (singleTask.children) {
             _projectTask(
                 singleTask.children,
