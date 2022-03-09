@@ -20,6 +20,7 @@ const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates")
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
+const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 
 /**
     * UserProjectsHelper
@@ -99,7 +100,7 @@ module.exports = class UserProjectsHelper {
     static sync(projectId, lastDownloadedAt, data, userId, userToken, appName = "", appVersion = "") {
         return new Promise(async (resolve, reject) => {
             try {
-
+                
                 const userProject = await projectQueries.projectDocument({
                     _id: projectId,
                     userId: userId
@@ -114,7 +115,7 @@ module.exports = class UserProjectsHelper {
                     "appInformation",
                     "status"
                 ]);
-
+                
                 if (!userProject.length > 0) {
 
                     throw {
@@ -144,16 +145,14 @@ module.exports = class UserProjectsHelper {
                 if (projectData && projectData.success == true) {
                     updateProject = _.merge(updateProject, projectData.data);
                 }
-
                 let createNewProgramAndSolution = false;
                 let solutionExists = false;
 
                 if (data.programId && data.programId !== "") {
 
                     // Check if program already existed in project and if its not an existing program.
-
                     if (!userProject[0].programInformation) {
-                        createNewProgramAndSolution = true;
+                        createNewProgramAndSolution = true; 
                     } else if (
                         userProject[0].programInformation &&
                         userProject[0].programInformation._id &&
@@ -161,7 +160,7 @@ module.exports = class UserProjectsHelper {
                     ) {
                         // Not an existing program.
 
-                        solutionExists = true;
+                        solutionExists = true; 
                     }
 
                 } else if (data.programName) {
@@ -202,9 +201,9 @@ module.exports = class UserProjectsHelper {
                     updateProject["entityInformation"] = entityInformation.data[0];
                     updateProject.entityId = entityInformation.data[0]._id;
                 }
-
+                
                 if (createNewProgramAndSolution || solutionExists) {
-
+                    
                     let programAndSolutionInformation =
                         await this.createProgramAndSolution(
                             data.programId,
@@ -1369,7 +1368,7 @@ module.exports = class UserProjectsHelper {
                 else if (data.programName) {
                     createNewProgramAndSolution = true;
                 }
-
+                
                 if (data.entityId) {
                     let entityInformation =
                         await _entitiesInformation([data.entityId]);
@@ -1394,9 +1393,29 @@ module.exports = class UserProjectsHelper {
                     if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
                     }
-
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
+                } else {
+                    let queryData = {};
+                    queryData["_id"] = data.programId;
+                    let programDetails = await programsQueries.programsDocument(queryData,
+                            [
+                                "_id",
+                                "name",
+                                "description",
+                                "isAPrivateProgram"
+                            ]
+                    );
+                    if( !programDetails.length > 0 ){
+                        throw {
+                            status: HTTP_STATUS_CODE['bad_request'].status,
+                            message: CONSTANTS.apiResponses.PROGRAM_NOT_FOUND
+                        };
+                    } 
+                    let programInformationData = {};
+                    programInformationData["programInformation"] = programDetails[0];
+                    createProject =
+                        _.merge(createProject, programInformationData);
                 }
 
                 if (data.tasks) {
@@ -1459,11 +1478,10 @@ module.exports = class UserProjectsHelper {
                 }
 
                 createProject.status = UTILS.convertProjectStatus(data.status);
-
                 let userProject = await projectQueries.createProject(
                     createProject
                 );
-
+                
                 await kafkaProducersHelper.pushProjectToKafka(userProject);
 
                 if (!userProject._id) {
