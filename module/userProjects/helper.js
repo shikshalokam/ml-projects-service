@@ -1386,7 +1386,8 @@ module.exports = class UserProjectsHelper {
 
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
-                }else {
+                } 
+                if (data.programId && data.programId !== "") {
                     let queryData = {};
                     queryData["_id"] = data.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,
