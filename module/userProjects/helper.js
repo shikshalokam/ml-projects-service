@@ -282,7 +282,9 @@ module.exports = class UserProjectsHelper {
                                 });
 
                                 keepFieldsFromTask.forEach((field) => {
-                                    task.field = userProject[0].tasks[taskIndex][field] ? userProject[0].tasks[taskIndex][field] : null;
+                                    if ( userProject[0].tasks[taskIndex][field] ){
+                                        task[field] = userProject[0].tasks[taskIndex][field];
+                                    }
                                 });
                                
                                 userProject[0].tasks[taskIndex] = task;
