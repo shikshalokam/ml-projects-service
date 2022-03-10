@@ -282,7 +282,9 @@ module.exports = class UserProjectsHelper {
                                 });
 
                                 keepFieldsFromTask.forEach((field) => {
-                                    task.field = userProject[0].tasks[taskIndex][field] ? userProject[0].tasks[taskIndex][field] : null;
+                                    if ( userProject[0].tasks[taskIndex][field] ){
+                                        task[field] = userProject[0].tasks[taskIndex][field];
+                                    }
                                 });
                                
                                 userProject[0].tasks[taskIndex] = task;
@@ -1401,7 +1403,8 @@ module.exports = class UserProjectsHelper {
 
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
-                }else {
+                } 
+                if (data.programId && data.programId !== "") {
                     let queryData = {};
                     queryData["_id"] = data.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,
