@@ -83,7 +83,7 @@ module.exports = {
             default : []
         },
         entityId : {
-            type : "ObjectId",
+            type : String,
             index : true
         },
         programId : {
