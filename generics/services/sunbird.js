@@ -16,14 +16,17 @@ const sunbirdBaseUrl = process.env.SUNBIRD_SERVICE_URL;
   * @function
   * @name learnerLocationSearch
   * @param {String} bearerToken - autherization token.
-  * @param {object} bodyData -  bodydata .
+  * @param {object} filterData -  bodydata .
   * @returns {Promise} returns a promise.
 */
 
-const learnerLocationSearch = function ( bodyData ) {
+const learnerLocationSearch = function ( filterData ) {
   return new Promise(async (resolve, reject) => {
       try {
           
+        let bodyData={};
+        bodyData["request"] = {};
+        bodyData["request"]["filters"] = filterData;
         const url = 
         sunbirdBaseUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
         const options = {

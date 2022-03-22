@@ -39,18 +39,13 @@ module.exports = class ReportsHelper {
             try {
 
                 let query = { };
-                //eG code
+                
                 if (entityId) {
                     query["entityId"] = entityId;
                 } else {
                     query["userId"] = userId
                 }
 
-                // if (entityId) {
-                //     query["entityId"] = ObjectId(entityId);
-                // } else {
-                //     query["userId"] = userId
-                // }
 
                 let dateRange = await _getDateRangeofReport(reportType);
                 let endOf = dateRange.endOf;
@@ -71,14 +66,14 @@ module.exports = class ReportsHelper {
                     { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
-                console.log("Query : ",query)
+                
                 const projectDetails = await projectQueries.projectDocument(
                     query,
                     ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories"],
                     []
                 );
 
-                console.log("projectDetails : ",projectDetails)
+                
                 let tasksReport = {
                     "total": 0,
                     "overdue": 0
@@ -498,12 +493,7 @@ module.exports = class ReportsHelper {
                     query["userId"] = userId
                 }
 
-                // if (entityId) {
-                //     query["entityId"] = ObjectId(entityId);
-                // } else {
-                //     query["userId"] = userId
-                // }
-
+               
                 let chartObject = [];
                 let dateRange = await _getDateRangeofReport(reportType);
                 let endOf = dateRange.endOf;
