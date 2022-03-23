@@ -16,7 +16,7 @@ const sunbirdBaseUrl = process.env.SUNBIRD_SERVICE_URL;
   * @function
   * @name learnerLocationSearch
   * @param {String} bearerToken - autherization token.
-  * @param {object} filterData -  bodydata .
+  * @param {object} bodyData -  bodydata .
   * @returns {Promise} returns a promise.
 */
 
@@ -39,12 +39,13 @@ const learnerLocationSearch = function ( filterData ) {
 
         request.post(url,options,kendraCallback);
 
+        let result = {
+            success : true
+        };
+
         function kendraCallback(err, data) {
 
-            let result = {
-                success : true
-            };
-
+            
             if (err) {
                 result.success = false;
             } else {
@@ -61,9 +62,10 @@ const learnerLocationSearch = function ( filterData ) {
         }
 
         setTimeout(function () {
-           return reject (CONSTANTS.common.TIMEOUT_ERROR)
+            return reject (result = {
+                success : false
+             });
         }, CONSTANTS.common.SUNBIRD_SERVER_TIMEOUT);
-
 
       } catch (error) {
           return reject(error);

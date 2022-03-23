@@ -2483,15 +2483,15 @@ function _entitiesInformation(entityIds) {
            
         
             let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
-        
-            let entities = entityDetails.data.response;
 
-            if (!entities.length > 0) {
+            if (!entityDetails.success || !entityDetails.data.response.length > 0) {
                 throw {
                     status: HTTP_STATUS_CODE['bad_request'].status,
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
                 }
             }
+        
+            let entities = entityDetails.data.response;
             let entityResult = [];
             //formating response
             entities.map(entityData => {
