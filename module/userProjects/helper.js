@@ -1698,11 +1698,11 @@ module.exports = class UserProjectsHelper {
 
             if ( filter && filter !== "" ) {
                 if( filter === CONSTANTS.common.CREATED_BY_ME ) {
-                    query["isAPrivateProgram"] = {
-                        $ne : false
-                    };
                     query["referenceFrom"] = {
                         $ne : CONSTANTS.common.LINK
+                    };
+                    query["isAPrivateProgram"] = {
+                        $ne : false
                     };
                 } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
                     query["isAPrivateProgram"] = false;
@@ -1733,7 +1733,7 @@ module.exports = class UserProjectsHelper {
             let totalCount = 0;
             let data = [];
             
-            if( projects.success && projects.data ) {
+            if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
                 totalCount = projects.data.count;
                 data = projects.data.data;
@@ -1741,6 +1741,7 @@ module.exports = class UserProjectsHelper {
                 if( data.length > 0 ) {
                     data.forEach( projectData => {
                         projectData.name = projectData.title;
+
 
                         if (projectData.programInformation) {
                             projectData.programName = projectData.programInformation.name;
@@ -1753,7 +1754,6 @@ module.exports = class UserProjectsHelper {
                         }
 
                         projectData.type = CONSTANTS.common.IMPROVEMENT_PROJECT;
-
                         delete projectData.title;
                     });
                 }

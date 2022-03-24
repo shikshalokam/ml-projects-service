@@ -8,8 +8,14 @@
 module.exports = {
     name: "projects",
     schema: {
-        title : String,
-        description : String,
+        title : {
+            type : String,
+            index: true
+        },
+        description : {
+            type : String,
+            index: true
+        },
         taskReport : {
             type : Object,
             default : {}
@@ -46,7 +52,8 @@ module.exports = {
         },
         createdBy : {
             type : String,
-            default : "SYSTEM"
+            default : "SYSTEM",
+            index: true
         },
         tasks : {
             type : Array,
