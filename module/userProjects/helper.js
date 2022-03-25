@@ -21,7 +21,6 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
-const observationQueries = require(DB_QUERY_BASE_PATH + "/observations");
 
 /**
     * UserProjectsHelper
@@ -1201,19 +1200,18 @@ module.exports = class UserProjectsHelper {
                     // fetch userRoleInformation from observation if referenecFrom is observation
                     if ( getUserProfileFromObservation ){
 
-                        let observationDocument = await observationQueries.observationDocument({
-                                _id: bodyData.submissions.observationId
-                            },
-                            [
-                                "userRoleInformation"
-                            ]);
-                        
-                        if( observationDocument.length > 0 && 
-                            observationDocument[0].userRoleInformation &&
-                            Object.keys(observationDocument[0].userRoleInformation).length > 0
-                            ) {
+                        let observationDetails = await surveyService.observationDetails(
+                            userToken,
+                            bodyData.submissions.observationId
+                        );
 
-                            userRoleInformation = observationDocument[0].userRoleInformation;
+                        if( observationDetails.data &&
+                            Object.keys(observationDetails.data).length > 0 && 
+                            observationDetails.data.userRoleInformation &&
+                            Object.keys(observationDetails.data.userRoleInformation).length > 0
+                        ) {
+
+                            userRoleInformation = observationDetails.data.userRoleInformation;
                         }
                     }
 
