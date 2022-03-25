@@ -21,6 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+const observationQueries = require(DB_QUERY_BASE_PATH + "/observations");
 
 /**
     * UserProjectsHelper
@@ -1080,6 +1081,7 @@ module.exports = class UserProjectsHelper {
                         solutionDetails = solutionDetails.data;
 
                     } else {
+                        
                         solutionDetails =
                         await surveyService.listSolutions([solutionExternalId]);
                         if( !solutionDetails.success ) {
@@ -1147,6 +1149,8 @@ module.exports = class UserProjectsHelper {
                     if( appVersion !== "" ) {
                         projectCreation.data["appInformation"]["appVersion"] = appVersion;
                     }
+
+                    let getUserProfileFromObservation = false;
     
                     if( bodyData && Object.keys(bodyData).length > 0 ) {
     
@@ -1158,6 +1162,9 @@ module.exports = class UserProjectsHelper {
                             projectCreation.data.referenceFrom = bodyData.referenceFrom;
                             
                             if( bodyData.submissions ) {
+                                if ( bodyData.submissions.observationId && bodyData.submissions.observationId != "" ) {
+                                    getUserProfileFromObservation = true;
+                                }
                                 projectCreation.data.submissions = bodyData.submissions;
                             }
                         }
@@ -1190,6 +1197,26 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
+
+                    // fetch userRoleInformation from observation if referenecFrom is observation
+                    if ( getUserProfileFromObservation ){
+
+                        let observationDocument = await observationQueries.observationDocument({
+                                _id: bodyData.submissions.observationId
+                            },
+                            [
+                                "userRoleInformation"
+                            ]);
+                        
+                        if( observationDocument.length > 0 && 
+                            observationDocument[0].userRoleInformation &&
+                            Object.keys(observationDocument[0].userRoleInformation).length > 0
+                            ) {
+
+                            userRoleInformation = observationDocument[0].userRoleInformation;
+                        }
+                    }
+
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);

@@ -23,7 +23,6 @@ module.exports = {
       concepts: ["json"],
       imageCompression: {},
       components: ["json"],
-      components: ["json"],
       isAPrivateProgram : {
         default : false,
         type : Boolean
