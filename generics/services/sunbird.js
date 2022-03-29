@@ -37,13 +37,13 @@ const learnerLocationSearch = function ( filterData ) {
             json : bodyData
         };
 
-        request.post(url,options,kendraCallback);
+        request.post(url,options,learnerSearchCallback);
 
         let result = {
             success : true
         };
 
-        function kendraCallback(err, data) {
+        function learnerSearchCallback(err, data) {
 
             
             if (err) {
