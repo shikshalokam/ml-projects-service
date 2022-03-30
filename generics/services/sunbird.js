@@ -10,7 +10,7 @@
 
 const request = require('request');
 const sunbirdBaseUrl = process.env.SUNBIRD_SERVICE_URL;
-
+const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(  process.env.SUNBIRD_SERVER_TIMEOUT ) : 5000;
 /**
   * 
   * @function
@@ -65,7 +65,7 @@ const learnerLocationSearch = function ( filterData ) {
             return reject (result = {
                 success : false
              });
-        }, CONSTANTS.common.SUNBIRD_SERVER_TIMEOUT);
+        }, serverTimeout);
 
       } catch (error) {
           return reject(error);

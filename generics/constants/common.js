@@ -45,6 +45,5 @@ module.exports = {
     "ATTACHMENT_TYPE_LINK" : "link",
     "PROJECT_ATTACHMENT" : "project",
     "TASK_ATTACHMENT" : "task",
-    "SUNBIRD_SERVER_TIMEOUT" : 5000,
     "OK" : "OK"
 };

@@ -35,6 +35,10 @@ let enviromentVariables = {
   "KAFKA_URL" : {
     "message" : "Required",
     "optional" : false
+  },
+  "SUNBIRD_SERVICE_URL" : {
+    "message" : "Required sunbird service url",
+    "optional" : false
   }
 }
 

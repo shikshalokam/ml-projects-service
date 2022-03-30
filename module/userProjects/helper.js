@@ -2484,7 +2484,7 @@ function _entitiesInformation(entityIds) {
         
             let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
 
-            if (!entityDetails.success || !entityDetails.data.response.length > 0) {
+            if (!entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0) {
                 throw {
                     status: HTTP_STATUS_CODE['bad_request'].status,
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
