@@ -136,6 +136,11 @@ module.exports = {
         recommendedFor : {
             type : Array,
             default : [] 
-        }
+        },
+        attachments : {
+            type : Array,
+            default : [] 
+        },
+        remarks : String
     }
 };

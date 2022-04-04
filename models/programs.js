@@ -4,7 +4,7 @@
  * created-date : 09-Mar-2022.
  * Description : Schema for programs.
  */
- module.exports = {
+module.exports = {
     name: "programs",
     schema: {
       externalId: String,
@@ -22,7 +22,6 @@
       keywords: [String],
       concepts: ["json"],
       imageCompression: {},
-      components: ["json"],
       components: ["json"],
       isAPrivateProgram : {
         default : false,

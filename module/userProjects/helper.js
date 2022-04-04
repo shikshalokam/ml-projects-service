@@ -23,6 +23,7 @@ const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
+const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 
 /**
     * UserProjectsHelper
@@ -102,7 +103,7 @@ module.exports = class UserProjectsHelper {
     static sync(projectId, lastDownloadedAt, data, userId, userToken, appName = "", appVersion = "") {
         return new Promise(async (resolve, reject) => {
             try {
-
+                
                 const userProject = await projectQueries.projectDocument({
                     _id: projectId,
                     userId: userId
@@ -117,7 +118,7 @@ module.exports = class UserProjectsHelper {
                     "appInformation",
                     "status"
                 ]);
-
+                
                 if (!userProject.length > 0) {
 
                     throw {
@@ -147,16 +148,14 @@ module.exports = class UserProjectsHelper {
                 if (projectData && projectData.success == true) {
                     updateProject = _.merge(updateProject, projectData.data);
                 }
-
                 let createNewProgramAndSolution = false;
                 let solutionExists = false;
 
                 if (data.programId && data.programId !== "") {
 
                     // Check if program already existed in project and if its not an existing program.
-
                     if (!userProject[0].programInformation) {
-                        createNewProgramAndSolution = true;
+                        createNewProgramAndSolution = true; 
                     } else if (
                         userProject[0].programInformation &&
                         userProject[0].programInformation._id &&
@@ -164,7 +163,7 @@ module.exports = class UserProjectsHelper {
                     ) {
                         // Not an existing program.
 
-                        solutionExists = true;
+                        solutionExists = true; 
                     }
 
                 } else if (data.programName) {
@@ -205,9 +204,9 @@ module.exports = class UserProjectsHelper {
                     updateProject["entityInformation"] = entityInformation.data[0];
                     updateProject.entityId = entityInformation.data[0]._id;
                 }
-
+                
                 if (createNewProgramAndSolution || solutionExists) {
-
+                    
                     let programAndSolutionInformation =
                         await this.createProgramAndSolution(
                             data.programId,
@@ -541,12 +540,12 @@ module.exports = class UserProjectsHelper {
                 }
 
                 let result = await _projectInformation(projectDetails[0]);
-
+                
                 if (!result.success) {
                     return resolve(result);
                 }
 
-                
+
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_DETAILS_FETCHED,
@@ -1085,6 +1084,7 @@ module.exports = class UserProjectsHelper {
                         solutionDetails = solutionDetails.data;
 
                     } else {
+                        
                         solutionDetails =
                         await surveyService.listSolutions([solutionExternalId]);
                         if( !solutionDetails.success ) {
@@ -1152,6 +1152,8 @@ module.exports = class UserProjectsHelper {
                     if( appVersion !== "" ) {
                         projectCreation.data["appInformation"]["appVersion"] = appVersion;
                     }
+
+                    let getUserProfileFromObservation = false;
     
                     if( bodyData && Object.keys(bodyData).length > 0 ) {
     
@@ -1163,6 +1165,9 @@ module.exports = class UserProjectsHelper {
                             projectCreation.data.referenceFrom = bodyData.referenceFrom;
                             
                             if( bodyData.submissions ) {
+                                if ( bodyData.submissions.observationId && bodyData.submissions.observationId != "" ) {
+                                    getUserProfileFromObservation = true;
+                                }
                                 projectCreation.data.submissions = bodyData.submissions;
                             }
                         }
@@ -1195,6 +1200,25 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
+
+                    // fetch userRoleInformation from observation if referenecFrom is observation
+                    if ( getUserProfileFromObservation ){
+
+                        let observationDetails = await surveyService.observationDetails(
+                            userToken,
+                            bodyData.submissions.observationId
+                        );
+
+                        if( observationDetails.data &&
+                            Object.keys(observationDetails.data).length > 0 && 
+                            observationDetails.data.userRoleInformation &&
+                            Object.keys(observationDetails.data.userRoleInformation).length > 0
+                        ) {
+
+                            userRoleInformation = observationDetails.data.userRoleInformation;
+                        }
+                    }
+
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
@@ -1375,7 +1399,7 @@ module.exports = class UserProjectsHelper {
                 else if (data.programName) {
                     createNewProgramAndSolution = true;
                 }
-
+                
                 if (data.entityId) {
                     let entityInformation =
                         await _entitiesInformation([data.entityId]);
@@ -1400,11 +1424,12 @@ module.exports = class UserProjectsHelper {
                     if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
                     }
-
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
                 } 
+
                 if (data.programId && data.programId !== "") {
+
                     let queryData = {};
                     queryData["_id"] = data.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,
@@ -1488,11 +1513,10 @@ module.exports = class UserProjectsHelper {
                 }
 
                 createProject.status = UTILS.convertProjectStatus(data.status);
-
                 let userProject = await projectQueries.createProject(
                     createProject
                 );
-
+                
                 await kafkaProducersHelper.pushProjectToKafka(userProject);
 
                 if (!userProject._id) {
@@ -2115,6 +2139,34 @@ function _projectInformation(project) {
                 project.programName = project.programInformation.name;
             }
 
+            //project attachments
+            if ( project.attachments && project.attachments.length > 0 ) {
+                
+                let projectLinkAttachments = [];
+                let projectAttachments = [];
+
+                for (
+                    let pointerToAttachment = 0;
+                    pointerToAttachment < project.attachments.length;
+                    pointerToAttachment++
+                ) {
+
+                    let currentProjectAttachment = project.attachments[pointerToAttachment];
+                    if ( currentProjectAttachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
+                        projectLinkAttachments.push(currentProjectAttachment);
+                    } else {
+                        projectAttachments.push(currentProjectAttachment.sourcePath);
+                    }
+                }
+
+                let projectAttachmentsUrl = await _attachmentInformation(projectAttachments, projectLinkAttachments, project.attachments, CONSTANTS.common.PROJECT_ATTACHMENT);
+                if ( projectAttachmentsUrl.data && projectAttachmentsUrl.data.length > 0 ) {
+                    project.attachments = projectAttachmentsUrl.data;
+                }
+               
+            }
+
+            //task attachments
             if (project.tasks && project.tasks.length > 0) {
                 //order task based on task sequence
                 if ( project.taskSequence && project.taskSequence.length > 0 ) {
@@ -2123,6 +2175,7 @@ function _projectInformation(project) {
 
                 let attachments = [];
                 let mapTaskIdToAttachment = {};
+                let mapLinkAttachment = {};
 
                 for (let task = 0; task < project.tasks.length; task++) {
 
@@ -2135,54 +2188,29 @@ function _projectInformation(project) {
                             attachment++
                         ) {
                             let currentAttachment = currentTask.attachments[attachment];
-                            attachments.push(currentAttachment.sourcePath);
 
-                            if (!mapTaskIdToAttachment[currentAttachment.sourcePath]) {
+                             if (currentAttachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
+                                if (!Array.isArray(mapLinkAttachment[currentTask._id]) || !mapLinkAttachment[currentTask._id].length ) {
+                                    mapLinkAttachment[currentTask._id] = [];
+                                }
+                                mapLinkAttachment[currentTask._id].push(currentAttachment);
+                            } else {
+                                attachments.push(currentAttachment.sourcePath);
+                            }
+                            
+                            if (!mapTaskIdToAttachment[currentAttachment.sourcePath] && currentAttachment.type != CONSTANTS.common.ATTACHMENT_TYPE_LINK ) {
                                 mapTaskIdToAttachment[currentAttachment.sourcePath] = {
                                     taskId: currentTask._id
                                 };
-
                             }
                         }
                     }
-
                 }
 
-                if (attachments.length > 0) {
-
-                    let attachmentsUrl =
-                        await coreService.getDownloadableUrl(
-                            {
-                                filePaths: attachments
-                            }
-                        );
-
-                    if (!attachmentsUrl.success) {
-                        throw {
-                            status: HTTP_STATUS_CODE['bad_request'].status,
-                            message: CONSTANTS.apiResponses.ATTACHMENTS_URL_NOT_FOUND
-                        }
-                    }
-
-                    if (attachmentsUrl.data.length > 0) {
-                        attachmentsUrl.data.forEach(attachmentUrl => {
-
-                            let taskIndex =
-                                project.tasks.findIndex(task => task._id === mapTaskIdToAttachment[attachmentUrl.filePath].taskId);
-
-                            if (taskIndex > -1) {
-                                let attachmentIndex =
-                                    project.tasks[taskIndex].attachments.findIndex(attachment => attachment.sourcePath === attachmentUrl.filePath);
-
-                                if (attachmentIndex > -1) {
-                                    project.tasks[taskIndex].attachments[attachmentIndex].url = attachmentUrl.url;
-                                }
-                            }
-                        })
-                    }
-
+                let taskAttachmentsUrl = await _attachmentInformation(attachments, mapLinkAttachment, [], CONSTANTS.common.TASK_ATTACHMENT, mapTaskIdToAttachment, project.tasks);
+                if ( taskAttachmentsUrl.data && taskAttachmentsUrl.data.length > 0 ) {
+                    project.tasks = taskAttachmentsUrl.data;
                 }
-
             }
 
             project.status =
@@ -2200,7 +2228,6 @@ function _projectInformation(project) {
             delete project.solutionInformation;
             delete project.programInformation;
 
-            
 
             return resolve({
                 success: true,
@@ -2224,6 +2251,110 @@ function taskArrayBySequence (taskArray, sequenceArray, key) {
   const sortedTaskArray = taskArray.sort((a, b) => (map[a[key]] || Infinity) - (map[b[key]] || Infinity))
   return sortedTaskArray
 };
+
+/**
+  * Attachment information of project.
+  * @method
+  * @name _attachmentInformation
+  * @param {Array} attachments - attachments data.
+  * @param {String} type - project or task attachement.
+  * @returns {Object} Project attachments.
+*/
+function _attachmentInformation ( attachmentWithSourcePath = [], linkAttachments = [], attachments = [] , type, mapTaskIdToAttachment = {}, tasks = []) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let attachmentOrTask = [];
+
+            if ( attachmentWithSourcePath && attachmentWithSourcePath.length > 0 ) {
+
+                let attachmentsUrl =
+                await coreService.getDownloadableUrl(
+                    {
+                        filePaths: attachmentWithSourcePath
+                    }
+                );
+
+                if (!attachmentsUrl.success) {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.ATTACHMENTS_URL_NOT_FOUND
+                    }
+                }
+
+                if ( attachmentsUrl.data && attachmentsUrl.data.length > 0) {
+
+                    if (type === CONSTANTS.common.PROJECT_ATTACHMENT ) { 
+
+                        attachmentsUrl.data.forEach(eachAttachment => {
+                            
+                            let projectAttachmentIndex =
+                                attachments.findIndex(attachmentData => attachmentData.sourcePath == eachAttachment.filePath);
+                            
+                            if (projectAttachmentIndex > -1) {
+                                attachments[projectAttachmentIndex].url = eachAttachment.url;
+                            }
+                        })
+
+                    } else {
+
+                        attachmentsUrl.data.forEach(taskAttachments => {
+
+                            let taskIndex =
+                            tasks.findIndex(task => task._id === mapTaskIdToAttachment[taskAttachments.filePath].taskId);
+
+                            if (taskIndex > -1) {
+                                
+                                let attachmentIndex =
+                                    tasks[taskIndex].attachments.findIndex(attachment => attachment.sourcePath === taskAttachments.filePath);
+
+                                if (attachmentIndex > -1) {
+                                    tasks[taskIndex].attachments[attachmentIndex].url = taskAttachments.url;
+                                }
+                            }
+                        })
+                    }     
+                }
+            }
+
+            if ( linkAttachments && linkAttachments.length > 0 ) {
+
+                if (type === CONSTANTS.common.PROJECT_ATTACHMENT ) {
+                    attachments.concat(linkAttachments);
+
+                } else {
+
+                    Object.keys(linkAttachments).forEach(eachTaskId => {
+
+                        let taskIdIndex = tasks.findIndex(task => task._id === eachTaskId);
+                        if ( taskIdIndex > -1 ) {
+                            tasks[taskIdIndex].attachments.concat(linkAttachments[eachTaskId]);
+                        }
+                    })
+
+                } 
+            }
+
+            attachmentOrTask = (type === CONSTANTS.common.PROJECT_ATTACHMENT) ? attachments : tasks
+
+            return resolve({
+                success: true,
+                data: attachmentOrTask
+            });
+
+    } catch (error) {
+
+        return resolve({
+            message: error.message,
+            success: false,
+            status:
+                error.status ?
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status
+        })
+    }
+
+    })
+}
 
 /**
   * Task of project.

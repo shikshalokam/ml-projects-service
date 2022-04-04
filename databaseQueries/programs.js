@@ -51,9 +51,7 @@ module.exports= class Programs{
                    queryObject, 
                    projection
                ).lean();
-
                return resolve(programsDoc);
-
            } catch (error) {
                return reject(error);
            }
