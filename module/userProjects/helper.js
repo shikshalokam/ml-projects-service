@@ -18,6 +18,9 @@ const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const projectTemplateQueries = require(DB_QUERY_BASE_PATH + "/projectTemplates");
 const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplateTask");
+
+const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
@@ -541,6 +544,7 @@ module.exports = class UserProjectsHelper {
                 if (!result.success) {
                     return resolve(result);
                 }
+
 
                 return resolve({
                     success: true,
@@ -1423,7 +1427,9 @@ module.exports = class UserProjectsHelper {
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
                 } 
-                if( data.programId && data.programId !== "" ){
+
+                if (data.programId && data.programId !== "") {
+
                     let queryData = {};
                     queryData["_id"] = data.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,
@@ -1445,6 +1451,7 @@ module.exports = class UserProjectsHelper {
                     createProject =
                         _.merge(createProject, programInformationData);
                 }
+                
 
                 if (data.tasks) {
 
@@ -1715,11 +1722,11 @@ module.exports = class UserProjectsHelper {
 
             if ( filter && filter !== "" ) {
                 if( filter === CONSTANTS.common.CREATED_BY_ME ) {
-                    query["isAPrivateProgram"] = {
-                        $ne : false
-                    };
                     query["referenceFrom"] = {
                         $ne : CONSTANTS.common.LINK
+                    };
+                    query["isAPrivateProgram"] = {
+                        $ne : false
                     };
                 } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
                     query["isAPrivateProgram"] = false;
@@ -1750,7 +1757,7 @@ module.exports = class UserProjectsHelper {
             let totalCount = 0;
             let data = [];
             
-            if( projects.success && projects.data ) {
+            if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
                 totalCount = projects.data.count;
                 data = projects.data.data;
@@ -1758,6 +1765,7 @@ module.exports = class UserProjectsHelper {
                 if( data.length > 0 ) {
                     data.forEach( projectData => {
                         projectData.name = projectData.title;
+
 
                         if (projectData.programInformation) {
                             projectData.programName = projectData.programInformation.name;
@@ -1770,7 +1778,6 @@ module.exports = class UserProjectsHelper {
                         }
 
                         projectData.type = CONSTANTS.common.IMPROVEMENT_PROJECT;
-
                         delete projectData.title;
                     });
                 }
@@ -2220,6 +2227,7 @@ function _projectInformation(project) {
             delete project.entityInformation;
             delete project.solutionInformation;
             delete project.programInformation;
+
 
             return resolve({
                 success: true,
