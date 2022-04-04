@@ -1080,6 +1080,7 @@ module.exports = class UserProjectsHelper {
                         solutionDetails = solutionDetails.data;
 
                     } else {
+                        
                         solutionDetails =
                         await surveyService.listSolutions([solutionExternalId]);
                         if( !solutionDetails.success ) {
@@ -1147,6 +1148,8 @@ module.exports = class UserProjectsHelper {
                     if( appVersion !== "" ) {
                         projectCreation.data["appInformation"]["appVersion"] = appVersion;
                     }
+
+                    let getUserProfileFromObservation = false;
     
                     if( bodyData && Object.keys(bodyData).length > 0 ) {
     
@@ -1158,6 +1161,9 @@ module.exports = class UserProjectsHelper {
                             projectCreation.data.referenceFrom = bodyData.referenceFrom;
                             
                             if( bodyData.submissions ) {
+                                if ( bodyData.submissions.observationId && bodyData.submissions.observationId != "" ) {
+                                    getUserProfileFromObservation = true;
+                                }
                                 projectCreation.data.submissions = bodyData.submissions;
                             }
                         }
@@ -1190,6 +1196,25 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
+
+                    // fetch userRoleInformation from observation if referenecFrom is observation
+                    if ( getUserProfileFromObservation ){
+
+                        let observationDetails = await surveyService.observationDetails(
+                            userToken,
+                            bodyData.submissions.observationId
+                        );
+
+                        if( observationDetails.data &&
+                            Object.keys(observationDetails.data).length > 0 && 
+                            observationDetails.data.userRoleInformation &&
+                            Object.keys(observationDetails.data.userRoleInformation).length > 0
+                        ) {
+
+                            userRoleInformation = observationDetails.data.userRoleInformation;
+                        }
+                    }
+
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
