@@ -21,6 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
 
 /**
     * UserProjectsHelper
@@ -1047,7 +1048,23 @@ module.exports = class UserProjectsHelper {
                 solutionExternalId = templateDocuments[0].solutionExternalId;
             }
 
-            let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
+            let userRoleInformation = {};
+            if ( userId !== "" && userToken !== "" ) {
+                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                
+                if (!userProfile.success || 
+                    !userProfile.data ||
+                    !userProfile.data.response
+                ) {
+                    userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
+                } else {
+                    let userProfileDoc = userProfile.data.response;
+                    let userProfileDetails = await _formatProfileData( userProfileDoc );
+                    userRoleInformation = userProfileDetails;
+                    
+                }                    
+            }
+
             if (projectId === "") {
                 
                 const projectDetails = await projectQueries.projectDocument({
@@ -1197,7 +1214,7 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
 
-                    // fetch userRoleInformation from observation if referenecFrom is observation
+                    // fetch userRoleInformation from observation if referenceFrom is observation
                     if ( getUserProfileFromObservation ){
 
                         let observationDetails = await surveyService.observationDetails(
@@ -1500,10 +1517,24 @@ module.exports = class UserProjectsHelper {
                 }
 
                 createProject["lastDownloadedAt"] = new Date();
-
-                if (data.profileInformation) {
-                    createProject.userRoleInformation = data.profileInformation;
+                
+                if ( userId !== "" && userToken !== "" ) {
+                    let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                    
+                    if (!userProfile.success || 
+                        !userProfile.data ||
+                        !userProfile.data.response
+                    ) {
+                        if (data.profileInformation) {
+                            createProject.userRoleInformation = data.profileInformation;
+                        }
+                    } else {
+                        let userProfileDoc = userProfile.data.response;
+                        let userProfileDetails = await _formatProfileData( userProfileDoc );
+                        createProject.userRoleInformation = userProfileDetails;
+                    }                    
                 }
+
 
                 createProject.status = UTILS.convertProjectStatus(data.status);
                 let userProject = await projectQueries.createProject(
@@ -2862,7 +2893,43 @@ function _projectData(data) {
             });
         }
     })
+
+
+    
 }
 
+/**
+     * @method
+     * @name formatProfileData
+     * @param {Object} profileDoc - user profile informations.
+     * @return {Object} profileData - formated user profile data.
+*/
 
+function _formatProfileData( profileDoc ) {
+    return new Promise(async (resolve, reject) => {
+        try{
+            
+            const profileData = {};
+              for (const location of profileDoc["userLocations"]) {
+                profileData[location.type] = location.id;
+              }
+              for (const org of profileDoc["organisations"]) {
+                if (org.isSchool) {
+                    profileData["school"] = org.externalId;
+                }
+              }
+              const roles = [];
+              for (const userRole of profileDoc['profileUserTypes']) {
+               userRole.subType ? roles.push(userRole.subType.toUpperCase()) : roles.push(userRole.type.toUpperCase());
+              }
+              profileData['role'] = roles.toString();
+            
+              return resolve(profileData);
+
+        } catch(error) {
+            return reject(error)
+        }
+
+    });
+}
 

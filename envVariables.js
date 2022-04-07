@@ -35,7 +35,11 @@ let enviromentVariables = {
   "KAFKA_URL" : {
     "message" : "Required",
     "optional" : false
-  }
+  },
+  "LEARNER_SERVICE_URL" : {
+    "message" : "Required learner-service url",
+    "optional" : false
+  },
 }
 
 let success = true;
