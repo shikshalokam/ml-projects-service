@@ -36,7 +36,7 @@ let enviromentVariables = {
     "message" : "Required",
     "optional" : false
   },
-  "LEARNER_SERVICE_URL" : {
+  "USER_SERVICE_URL" : {
     "message" : "Required learner-service url",
     "optional" : false
   },
