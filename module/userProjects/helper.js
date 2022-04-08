@@ -1049,21 +1049,18 @@ module.exports = class UserProjectsHelper {
             }
 
             let userRoleInformation = {};
-            if ( userId !== "" && userToken !== "" ) {
-                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+            let userProfile = await sunbirdUserProfile.profile(userToken, userId);
                 
-                if (!userProfile.success || 
-                    !userProfile.data ||
-                    !userProfile.data.response
-                ) {
-                    userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
-                } else {
-                    let userProfileDoc = userProfile.data.response;
-                    let userProfileDetails = await _formatProfileData( userProfileDoc );
-                    userRoleInformation = userProfileDetails;
-                    
-                }                    
-            }
+            if ( userProfile.success || 
+                 userProfile.data ||
+                 userProfile.data.response
+            ) {
+                let userProfileDoc = userProfile.data.response;
+                let userProfileDetails = await _formatProfileData( userProfileDoc );
+                userRoleInformation = userProfileDetails;
+            } else {
+                userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
+            }    
 
             if (projectId === "") {
                 
@@ -1229,7 +1226,7 @@ module.exports = class UserProjectsHelper {
                         ) {
 
                             userRoleInformation = observationDetails.data.userRoleInformation;
-                        }
+                        } 
                     }
 
                     projectCreation.data.userRoleInformation = userRoleInformation;
@@ -1518,23 +1515,20 @@ module.exports = class UserProjectsHelper {
 
                 createProject["lastDownloadedAt"] = new Date();
                 
-                if ( userId !== "" && userToken !== "" ) {
-                    let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
                     
-                    if (!userProfile.success || 
-                        !userProfile.data ||
-                        !userProfile.data.response
-                    ) {
-                        if (data.profileInformation) {
-                            createProject.userRoleInformation = data.profileInformation;
-                        }
-                    } else {
-                        let userProfileDoc = userProfile.data.response;
-                        let userProfileDetails = await _formatProfileData( userProfileDoc );
-                        createProject.userRoleInformation = userProfileDetails;
-                    }                    
-                }
-
+                if ( userProfile.success || 
+                     userProfile.data ||
+                     userProfile.data.response
+                ) {
+                    let userProfileDoc = userProfile.data.response;
+                    let userProfileDetails = await _formatProfileData( userProfileDoc );
+                    createProject.userRoleInformation = userProfileDetails;
+                } else {
+                    if (data.profileInformation) {
+                        createProject.userRoleInformation = data.profileInformation;
+                    }                  
+                }   
 
                 createProject.status = UTILS.convertProjectStatus(data.status);
                 let userProject = await projectQueries.createProject(
