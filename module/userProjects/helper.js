@@ -494,10 +494,13 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name details 
      * @param {String} projectId - project id.
+     * @param {String} userId - user id.
+     * @param {Object} userRoleInformation - user information.
+     * @param {String} userToken - user token.
      * @returns {Object} 
     */
 
-    static details(projectId, userId,userRoleInformation = {}) {
+    static details( projectId, userId, userRoleInformation = {}, userToken="" ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -515,7 +518,8 @@ module.exports = class UserProjectsHelper {
                         "createdAt",
                         "updatedAt",
                         "userRoleInformation",
-                        "__v"
+                        "__v",
+                        "referenceFrom"
                     ]);
 
                 if (!projectDetails.length > 0) {
@@ -525,16 +529,21 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                     }
                 }
-
+                
                 if (Object.keys(userRoleInformation).length > 0) {
-
-                    if (!projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0) {
-                        await projectQueries.findOneAndUpdate({
-                            _id: projectId
-                        },{
-                            $set: {userRoleInformation: userRoleInformation}
-                        });
+                    
+                    if ( !projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0  &&
+                         ( projectDetails[0].referenceFrom  && projectDetails[0].referenceFrom == constants.common.OBSERVATION && projectDetails[0].submissions.observationId) ) {
+                            userRoleInformation = await _getUserProfileFromObservation( userToken, projectDetails[0].submissions.observationId )
+                    } else if (!projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0) {
+                        userRoleInformation = userRoleInformation;
                     }
+        
+                    await projectQueries.findOneAndUpdate({
+                        _id: projectId
+                    },{
+                        $set: {userRoleInformation: userRoleInformation}
+                    });
                 }
 
                 let result = await _projectInformation(projectDetails[0]);
@@ -1025,7 +1034,7 @@ module.exports = class UserProjectsHelper {
    static detailsV2( projectId,solutionId,userId,userToken,bodyData,appName = "",appVersion = "",templateId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
-
+        
             let solutionExternalId = "";
             
             if( templateId !== "" ) {
@@ -1209,19 +1218,8 @@ module.exports = class UserProjectsHelper {
                     // fetch userRoleInformation from observation if referenceFrom is observation
                     if ( getUserProfileFromObservation ){
 
-                        let observationDetails = await surveyService.observationDetails(
-                            userToken,
-                            bodyData.submissions.observationId
-                        );
+                        userRoleInformation = await _getUserProfileFromObservation( userToken, bodyData.submissions.observationId )
 
-                        if( observationDetails.data &&
-                            Object.keys(observationDetails.data).length > 0 && 
-                            observationDetails.data.userRoleInformation &&
-                            Object.keys(observationDetails.data.userRoleInformation).length > 0
-                        ) {
-
-                            userRoleInformation = observationDetails.data.userRoleInformation;
-                        } 
                     }
 
                     projectCreation.data.userRoleInformation = userRoleInformation;
@@ -1237,7 +1235,8 @@ module.exports = class UserProjectsHelper {
             let projectDetails = await this.details(
                 projectId, 
                 userId,
-                userRoleInformation
+                userRoleInformation,
+                userToken
             );
             
             let revertStatusorNot = UTILS.revertStatusorNot(appVersion);
@@ -2940,6 +2939,39 @@ function _userProfileInformation( userToken, userId ) {
                 userProfileDetails = userProfileDetails;
             }
             return resolve(userProfileDetails);
+
+        } catch(error) {
+            return reject(error)
+        }
+
+    });
+}
+
+/**
+     * @method
+     * @name _userProfileInformation
+     * @param {String} userToken - user token.
+     * @return {String} observationId - observation Id.
+*/
+
+function _getUserProfileFromObservation( userToken, observationId ) {
+    return new Promise(async (resolve, reject) => {
+        try{
+            let userRoleInformation = {};
+            let observationDetails = await surveyService.observationDetails(
+                userToken,
+                observationId
+            );
+
+            if( observationDetails.data &&
+                Object.keys(observationDetails.data).length > 0 && 
+                observationDetails.data.userRoleInformation &&
+                Object.keys(observationDetails.data.userRoleInformation).length > 0
+            ) {
+
+                userRoleInformation = observationDetails.data.userRoleInformation;
+            } 
+            return resolve(userRoleInformation);
 
         } catch(error) {
             return reject(error)
