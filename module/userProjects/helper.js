@@ -2935,8 +2935,6 @@ function _userProfileInformation( userToken, userId ) {
             ) {
                 let userProfileDoc = userProfile.data.response;
                 userProfileDetails = await _formatProfileData( userProfileDoc );
-            } else {
-                userProfileDetails = userProfileDetails;
             }
             return resolve(userProfileDetails);
 
@@ -2949,7 +2947,7 @@ function _userProfileInformation( userToken, userId ) {
 
 /**
      * @method
-     * @name _userProfileInformation
+     * @name _getUserProfileFromObservation
      * @param {String} userToken - user token.
      * @return {String} observationId - observation Id.
 */
