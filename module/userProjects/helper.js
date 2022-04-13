@@ -21,6 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
 
 /**
     * UserProjectsHelper
@@ -493,10 +494,13 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name details 
      * @param {String} projectId - project id.
+     * @param {String} userId - user id.
+     * @param {Object} userRoleInformation - user information.
+     * @param {String} userToken - user token.
      * @returns {Object} 
     */
 
-    static details(projectId, userId,userRoleInformation = {}) {
+    static details( projectId, userId, userRoleInformation = {}, userToken="" ) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -514,7 +518,8 @@ module.exports = class UserProjectsHelper {
                         "createdAt",
                         "updatedAt",
                         "userRoleInformation",
-                        "__v"
+                        "__v",
+                        "referenceFrom"
                     ]);
 
                 if (!projectDetails.length > 0) {
@@ -524,16 +529,21 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                     }
                 }
-
+                
                 if (Object.keys(userRoleInformation).length > 0) {
-
-                    if (!projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0) {
-                        await projectQueries.findOneAndUpdate({
-                            _id: projectId
-                        },{
-                            $set: {userRoleInformation: userRoleInformation}
-                        });
+                    
+                    if ( !projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0  &&
+                         ( projectDetails[0].referenceFrom  && projectDetails[0].referenceFrom == constants.common.OBSERVATION && projectDetails[0].submissions.observationId) ) {
+                            userRoleInformation = await _getUserProfileFromObservation( userToken, projectDetails[0].submissions.observationId )
+                    } else if (!projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0) {
+                        userRoleInformation = userRoleInformation;
                     }
+        
+                    await projectQueries.findOneAndUpdate({
+                        _id: projectId
+                    },{
+                        $set: {userRoleInformation: userRoleInformation}
+                    });
                 }
 
                 let result = await _projectInformation(projectDetails[0]);
@@ -1024,7 +1034,7 @@ module.exports = class UserProjectsHelper {
    static detailsV2( projectId,solutionId,userId,userToken,bodyData,appName = "",appVersion = "",templateId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
-
+        
             let solutionExternalId = "";
             
             if( templateId !== "" ) {
@@ -1047,7 +1057,15 @@ module.exports = class UserProjectsHelper {
                 solutionExternalId = templateDocuments[0].solutionExternalId;
             }
 
-            let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
+            let userRoleInformation = {};
+            let userProfileDetails = await _userProfileInformation( userToken, userId );
+            if ( Object.keys(userProfileDetails).length > 0 ) {
+                userRoleInformation = userProfileDetails;
+            } else { 
+                userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
+            }
+            
+
             if (projectId === "") {
                 
                 const projectDetails = await projectQueries.projectDocument({
@@ -1197,22 +1215,11 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
 
-                    // fetch userRoleInformation from observation if referenecFrom is observation
+                    // fetch userRoleInformation from observation if referenceFrom is observation
                     if ( getUserProfileFromObservation ){
 
-                        let observationDetails = await surveyService.observationDetails(
-                            userToken,
-                            bodyData.submissions.observationId
-                        );
+                        userRoleInformation = await _getUserProfileFromObservation( userToken, bodyData.submissions.observationId )
 
-                        if( observationDetails.data &&
-                            Object.keys(observationDetails.data).length > 0 && 
-                            observationDetails.data.userRoleInformation &&
-                            Object.keys(observationDetails.data.userRoleInformation).length > 0
-                        ) {
-
-                            userRoleInformation = observationDetails.data.userRoleInformation;
-                        }
                     }
 
                     projectCreation.data.userRoleInformation = userRoleInformation;
@@ -1228,7 +1235,8 @@ module.exports = class UserProjectsHelper {
             let projectDetails = await this.details(
                 projectId, 
                 userId,
-                userRoleInformation
+                userRoleInformation,
+                userToken
             );
             
             let revertStatusorNot = UTILS.revertStatusorNot(appVersion);
@@ -1500,8 +1508,13 @@ module.exports = class UserProjectsHelper {
                 }
 
                 createProject["lastDownloadedAt"] = new Date();
+                
+                
 
-                if (data.profileInformation) {
+                let userProfileData = await _userProfileInformation(userToken, userId);
+                if ( Object.keys(userProfileData).length > 0 ) {
+                    createProject.userRoleInformation = userProfileData;
+                } else if (data.profileInformation) {
                     createProject.userRoleInformation = data.profileInformation;
                 }
 
@@ -1533,6 +1546,7 @@ module.exports = class UserProjectsHelper {
                 });
 
             } catch (error) {
+                
                 return resolve({
                     status:
                         error.status ?
@@ -2862,7 +2876,105 @@ function _projectData(data) {
             });
         }
     })
+
+
+    
 }
 
+/**
+     * @method
+     * @name formatProfileData
+     * @param {Object} profileDoc - user profile informations.
+     * @return {Object} profileData - formated user profile data.
+*/
 
+function _formatProfileData( profileDoc ) {
+    return new Promise(async (resolve, reject) => {
+        try{
+            
+            const profileData = {};
+              for (const location of profileDoc["userLocations"]) {
+                profileData[location.type] = location.id;
+              }
+              for (const org of profileDoc["organisations"]) {
+                if (org.isSchool) {
+                    profileData["school"] = org.externalId;
+                }
+              }
+              const roles = [];
+              for (const userRole of profileDoc['profileUserTypes']) {
+               userRole.subType ? roles.push(userRole.subType.toUpperCase()) : roles.push(userRole.type.toUpperCase());
+              }
+              profileData['role'] = roles.toString();
+            
+              return resolve(profileData);
+
+        } catch(error) {
+            return reject(error)
+        }
+
+    });
+}
+
+/**
+     * @method
+     * @name _userProfileInformation
+     * @param {String} userToken - user token.
+     * @return {String} userId - user Id.
+*/
+
+function _userProfileInformation( userToken, userId ) {
+    return new Promise(async (resolve, reject) => {
+        try{
+
+            let userProfileDetails = {};
+            let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+            if ( userProfile.success && 
+                 userProfile.data &&
+                 userProfile.data.response
+            ) {
+                let userProfileDoc = userProfile.data.response;
+                userProfileDetails = await _formatProfileData( userProfileDoc );
+            }
+            return resolve(userProfileDetails);
+
+        } catch(error) {
+            return reject(error)
+        }
+
+    });
+}
+
+/**
+     * @method
+     * @name _getUserProfileFromObservation
+     * @param {String} userToken - user token.
+     * @return {String} observationId - observation Id.
+*/
+
+function _getUserProfileFromObservation( userToken, observationId ) {
+    return new Promise(async (resolve, reject) => {
+        try{
+            let userRoleInformation = {};
+            let observationDetails = await surveyService.observationDetails(
+                userToken,
+                observationId
+            );
+
+            if( observationDetails.data &&
+                Object.keys(observationDetails.data).length > 0 && 
+                observationDetails.data.userRoleInformation &&
+                Object.keys(observationDetails.data.userRoleInformation).length > 0
+            ) {
+
+                userRoleInformation = observationDetails.data.userRoleInformation;
+            } 
+            return resolve(userRoleInformation);
+
+        } catch(error) {
+            return reject(error)
+        }
+
+    });
+}
 
