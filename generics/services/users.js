@@ -46,7 +46,7 @@ const profile = function ( token,userId = "" ) {
                     }
 
                 }
-                console.log("result : ",result.data.response)
+                
                 return resolve(result);
             }
             setTimeout(function () {
