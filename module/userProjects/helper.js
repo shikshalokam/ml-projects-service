@@ -21,6 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
 
 /**
     * UserProjectsHelper
@@ -1196,7 +1197,7 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
-
+                    
                     // fetch userRoleInformation from observation if referenecFrom is observation
                     if ( getUserProfileFromObservation ){
 
@@ -1212,6 +1213,27 @@ module.exports = class UserProjectsHelper {
                         ) {
 
                             userRoleInformation = observationDetails.data.userRoleInformation;
+                            
+                        }
+
+                        if( observationDetails.data &&
+                            Object.keys(observationDetails.data).length > 0 && 
+                            observationDetails.data.userProfile &&
+                            Object.keys(observationDetails.data.userProfile).length > 0
+                        ) {
+
+                            projectCreation.data.userProfile = observationDetails.data.userProfile;
+                            
+                        } else {
+                            //Fetch user profile information by calling sunbird's user read api.
+
+                            let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                            if ( userProfile.success && 
+                                 userProfile.data &&
+                                 userProfile.data.response
+                            ) {
+                                   createProject.userProfile = userProfile.data.response;
+                            } 
                         }
                     }
 
@@ -1381,6 +1403,18 @@ module.exports = class UserProjectsHelper {
                 let createProject = {};
 
                 createProject["userId"] = createProject["createdBy"] = createProject["updatedBy"] = userId;
+
+                //Fetch user profile information by calling sunbird's user read api.
+
+                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                if ( userProfile.success && 
+                     userProfile.data &&
+                     userProfile.data.response
+                ) {
+                    createProject.userProfile = userProfile.data.response;
+                } 
+
+                
 
                 let projectData = await _projectData(data);
                 if (projectData && projectData.success == true) {
