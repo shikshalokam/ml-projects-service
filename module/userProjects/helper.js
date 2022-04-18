@@ -1956,8 +1956,9 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
                         status: HTTP_STATUS_CODE['bad_request'].status
                     };
+                    
                 }
-
+                
                 let taskReport = {};
 
                 if (
@@ -2053,7 +2054,16 @@ module.exports = class UserProjectsHelper {
                     )
 
                 }
+                //Fetch user profile information by calling sunbird's user read api.
 
+                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                if ( userProfile.success && 
+                     userProfile.data &&
+                     userProfile.data.response
+                ) {
+                    libraryProjects.data.userProfile = userProfile.data.response;
+                } 
+    
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
                 libraryProjects.data.status = CONSTANTS.common.STARTED;
