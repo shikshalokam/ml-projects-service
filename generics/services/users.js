@@ -23,8 +23,7 @@ const profile = function ( token,userId = "" ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    "x-authenticated-user-token" : token,
-                    "Authorization" : "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJSbTBGOTlnMnd4SmZKelJwa2YzTnRlaE5CYlJnZXRCaCJ9.CjDN6GufxylpAM5J_6j9fD0wq7S2qr1F6FOzAZtQ6XU"
+                    "x-authenticated-user-token" : token
                 }
             };
             
