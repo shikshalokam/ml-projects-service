@@ -2976,6 +2976,7 @@ function _addReportInformationInSolution(solutionId = "", userProfile = {}) {
                     }
                 }
 
+                solutionDocument = solutionDocument[0];
                 let reportInformation = solutionDocument.reportInformation ? solutionDocument.reportInformation : {};
                 if ( reportInformation ) {
                     reportInformation["districts"] = [];
