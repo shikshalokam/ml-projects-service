@@ -1247,7 +1247,6 @@ module.exports = class UserProjectsHelper {
 
                     if ( addReportInfoToSolution && project.solutionId ) {
                         await _addReportInformationInSolution(
-                            project._id,
                             project.solutionId,
                             project.userProfile
                         );
@@ -2099,7 +2098,6 @@ module.exports = class UserProjectsHelper {
                 if ( addReportInfoToSolution && projectCreation._doc.solutionId ) {
 
                     await _addReportInformationInSolution(
-                        projectCreation._doc._id,
                         projectCreation._doc.solutionId,
                         projectCreation._doc.userProfile
                     );
@@ -2931,75 +2929,80 @@ function _projectData(data) {
 }
 
 /**
-  * Entities information for project.
+  * Update Report Information In Solutions.
   * @method
   * @name _addReportInformationInSolution 
-  * @param {String} entityIds - entity id.
-  * @returns {Object} Project entity information.
+  * @param {String} solutionId - solution id.
+  * @param {Object} userProfile - user read response
+  * @returns {Object} Solution information.
 */
 
-function _addReportInformationInSolution(projectId, solutionId, userProfile = {}) {
+function _addReportInformationInSolution(solutionId = "", userProfile = {}) {
     return new Promise(async (resolve, reject) => {
         try {
 
-            let district = {};
-            let organisation = [];
+            if ( userProfile && solutionId ) {
 
-            for (const location of userProfile["userLocations"]) {
-                if ( location.type == CONSTANTS.common.DISTRICT ) {
-                    district["locationId"] = location.id;
-                    district["name"] = location.name;
+                let district = {};
+                let organisation = [];
+
+                for (const location of userProfile["userLocations"]) {
+                    if ( location.type == CONSTANTS.common.DISTRICT ) {
+                        district["locationId"] = location.id;
+                        district["name"] = location.name;
+                    }
                 }
-            }
 
-            for (const org of userProfile["organisations"]) {
-                let orgData = {};
-                orgData.orgName = org.orgName;
-                orgData.organisationId = org.organisationId;
-                organisation.push(orgData);
-            }
-
-            let solutionDocument = await solutionsQueries.solutionsDocument({
-                _id: solutionId
-            },
-                [
-                    "_id",
-                    "reportInformation"
-                ]
-            );
-            
-            if( !solutionDocument.length > 0 ) {
-                throw {
-                    message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
-                    status : HTTP_STATUS_CODE['bad_request'].status
+                for (const org of userProfile["organisations"]) {
+                    let orgData = {};
+                    orgData.orgName = org.orgName;
+                    orgData.organisationId = org.organisationId;
+                    organisation.push(orgData);
                 }
-            }
 
-            let reportInformation = solutionDocument.reportInformation ? solutionDocument.reportInformation : {};
-            if ( reportInformation ) {
-                reportInformation["districts"] = [];
-                reportInformation["districts"].push(district);
-                reportInformation["organisations"] = organisation;
-            } else {
+                let solutionDocument = await solutionsQueries.solutionsDocument({
+                    _id: solutionId
+                },
+                    [
+                        "_id",
+                        "reportInformation"
+                    ]
+                );
+                
+                if( !solutionDocument.length > 0 ) {
+                    throw {
+                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                        status : HTTP_STATUS_CODE['bad_request'].status
+                    }
+                }
 
-                const checkDistrictExist = reportInformation["districts"].some(eachDistrict => {
-                  if (eachDistrict.locationId == district["locationId"]) {
-                    return true;
-                  }
-                });
-
-                if ( !checkDistrictExist ) {
+                let reportInformation = solutionDocument.reportInformation ? solutionDocument.reportInformation : {};
+                if ( reportInformation ) {
+                    reportInformation["districts"] = [];
                     reportInformation["districts"].push(district);
+                    reportInformation["organisations"] = organisation;
+                } else {
+
+                    const checkDistrictExist = reportInformation["districts"].some(eachDistrict => {
+                      if (eachDistrict.locationId == district["locationId"]) {
+                        return true;
+                      }
+                    });
+
+                    if ( !checkDistrictExist ) {
+                        reportInformation["districts"].push(district);
+                    }
+
+                    reportInformation["organisations"].concat(organisation);
                 }
 
-                reportInformation["organisations"].concat(organisation);
+                await solutionsQueries.updateSolutionDocument
+                (
+                    { _id : solutionId },
+                    { $set : { reportInformation: reportInformation } }
+                )
             }
-
-            await solutionsQueries.updateSolutionDocument
-            (
-                { _id : solutionId },
-                { $set : { reportInformation: reportInformation } }
-            )
+            
 
             return resolve({
                 success: true,
