@@ -97,6 +97,7 @@ module.exports = {
       minNoOfSubmissionsRequired: {
         type: Number,
         default: 1
-    }
+      },
+      reportInformation : Object
     }
   };

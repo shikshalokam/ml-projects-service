@@ -44,5 +44,6 @@ module.exports = {
     "CHILDREN" : "children",
     "ATTACHMENT_TYPE_LINK" : "link",
     "PROJECT_ATTACHMENT" : "project",
-    "TASK_ATTACHMENT" : "task"
+    "TASK_ATTACHMENT" : "task",
+    "DISTRICT": "district"
 };

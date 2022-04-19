@@ -22,6 +22,7 @@ const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
+const solutionsQueries = require(DB_QUERY_BASE_PATH + "/solutions");
 
 /**
     * UserProjectsHelper
@@ -1199,6 +1200,7 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.lastDownloadedAt = new Date();
                     
                     // fetch userRoleInformation from observation if referenecFrom is observation
+                    let addReportInfoToSolution = false;
                     if ( getUserProfileFromObservation ){
 
                         let observationDetails = await surveyService.observationDetails(
@@ -1223,6 +1225,7 @@ module.exports = class UserProjectsHelper {
                         ) {
 
                             projectCreation.data.userProfile = observationDetails.data.userProfile;
+                            addReportInfoToSolution = true; 
                             
                         } else {
                             //Fetch user profile information by calling sunbird's user read api.
@@ -1232,7 +1235,8 @@ module.exports = class UserProjectsHelper {
                                  userProfile.data &&
                                  userProfile.data.response
                             ) {
-                                   createProject.userProfile = userProfile.data.response;
+                                    projectCreation.data.userProfile = userProfile.data.response;
+                                    addReportInfoToSolution = true; 
                             } 
                         }
                     }
@@ -1240,6 +1244,14 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
+
+                    if ( addReportInfoToSolution && project.solutionId ) {
+                        await _addReportInformationInSolution(
+                            project._id,
+                            project.solutionId,
+                            project.userProfile
+                        );
+                    }
 
                     await kafkaProducersHelper.pushProjectToKafka(project);
                     
@@ -2055,13 +2067,14 @@ module.exports = class UserProjectsHelper {
 
                 }
                 //Fetch user profile information by calling sunbird's user read api.
-
+                let addReportInfoToSolution = false;
                 let userProfile = await sunbirdUserProfile.profile(userToken, userId);
                 if ( userProfile.success && 
                      userProfile.data &&
                      userProfile.data.response
                 ) {
                     libraryProjects.data.userProfile = userProfile.data.response;
+                    addReportInfoToSolution = true;
                 } 
     
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
@@ -2082,6 +2095,15 @@ module.exports = class UserProjectsHelper {
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
+
+                if ( addReportInfoToSolution && projectCreation._doc.solutionId ) {
+
+                    await _addReportInformationInSolution(
+                        projectCreation._doc._id,
+                        projectCreation._doc.solutionId,
+                        projectCreation._doc.userProfile
+                    );
+                }
                 
                 await kafkaProducersHelper.pushProjectToKafka(projectCreation);
 
@@ -2903,6 +2925,95 @@ function _projectData(data) {
                         error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                 success: false,
                 data: {}
+            });
+        }
+    })
+}
+
+/**
+  * Entities information for project.
+  * @method
+  * @name _addReportInformationInSolution 
+  * @param {String} entityIds - entity id.
+  * @returns {Object} Project entity information.
+*/
+
+function _addReportInformationInSolution(projectId, solutionId, userProfile = {}) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let district = {};
+            let organisation = [];
+
+            for (const location of userProfile["userLocations"]) {
+                if ( location.type == CONSTANTS.common.DISTRICT ) {
+                    district["locationId"] = location.id;
+                    district["name"] = location.name;
+                }
+            }
+
+            for (const org of userProfile["organisations"]) {
+                let orgData = {};
+                orgData.orgName = org.orgName;
+                orgData.organisationId = org.organisationId;
+                organisation.push(orgData);
+            }
+
+            let solutionDocument = await solutionsQueries.solutionsDocument({
+                _id: solutionId
+            },
+                [
+                    "_id",
+                    "reportInformation"
+                ]
+            );
+            
+            if( !solutionDocument.length > 0 ) {
+                throw {
+                    message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
+                    status : HTTP_STATUS_CODE['bad_request'].status
+                }
+            }
+
+            let reportInformation = solutionDocument.reportInformation ? solutionDocument.reportInformation : {};
+            if ( reportInformation ) {
+                reportInformation["districts"] = [];
+                reportInformation["districts"].push(district);
+                reportInformation["organisations"] = organisation;
+            } else {
+
+                const checkDistrictExist = reportInformation["districts"].some(eachDistrict => {
+                  if (eachDistrict.locationId == district["locationId"]) {
+                    return true;
+                  }
+                });
+
+                if ( !checkDistrictExist ) {
+                    reportInformation["districts"].push(district);
+                }
+
+                reportInformation["organisations"].concat(organisation);
+            }
+
+            await solutionsQueries.updateSolutionDocument
+            (
+                { _id : solutionId },
+                { $set : { reportInformation: reportInformation } }
+            )
+
+            return resolve({
+                success: true,
+                data: []
+            });
+
+        } catch (error) {
+            return resolve({
+                status:
+                    error.status ?
+                        error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                success: false,
+                message: error.message,
+                data: []
             });
         }
     })
