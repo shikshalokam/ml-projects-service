@@ -2097,7 +2097,7 @@ module.exports = class UserProjectsHelper {
 
                 if ( addReportInfoToSolution && projectCreation._doc.solutionId ) {
 
-                    await _addReportInformationInSolution(
+                    await solutionsHelper.addReportInformationInSolution(
                         projectCreation._doc.solutionId,
                         projectCreation._doc.userProfile
                     );
