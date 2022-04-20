@@ -1581,7 +1581,11 @@ module.exports = class UserProjectsHelper {
                             "endDate",
                             "tasks",
                             "categories",
-                            "programInformation.name"
+                            "programInformation.name",
+                            "recommendedFor",
+                            "link",
+                            "remarks",
+                            "taskReport.completed"
                         ]
                     );
                 }
@@ -1592,7 +1596,7 @@ module.exports = class UserProjectsHelper {
                     { "$match": { _id: ObjectId(projectId), isDeleted: false} },
                     { "$project": {
                         "status": 1, "title": 1, "startDate": 1, "metaInformation.goal": 1, "metaInformation.duration":1,
-                        "categories" : 1, "programInformation.name": 1, "description" : 1,
+                        "categories" : 1, "programInformation.name": 1, "description" : 1, "recommendedFor" : 1, "link" : 1,
                         tasks: { "$filter": {
                             input: '$tasks',
                             as: 'tasks',
@@ -1609,16 +1613,28 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
-
+                console.log("projectDocument before : ",projectDocument)
                 projectDocument = projectDocument[0];
                 projectDocument.goal = projectDocument.metaInformation ? projectDocument.metaInformation.goal : "";
                 projectDocument.duration = projectDocument.metaInformation ? projectDocument.metaInformation.duration : "";
                 projectDocument.programName = projectDocument.programInformation ? projectDocument.programInformation.name : "";
+                projectDocument.remarks = projectDocument.remarks ? projectDocument.remarks : "";
+                projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : 0;
+
                 projectDocument.category = [];
+                
 
                 if (projectDocument.categories && projectDocument.categories.length > 0) {
                     projectDocument.categories.forEach( category => {
                         projectDocument.category.push(category.name);
+                    })
+                }
+
+                projectDocument.recommendedForRoles = [];
+
+                if (projectDocument.recommendedFor && projectDocument.recommendedFor.length > 0) {
+                    projectDocument.recommendedFor.forEach( recommend => {
+                        projectDocument.recommendedForRoles.push(recommend.code);
                     })
                 }
                 
@@ -1644,12 +1660,12 @@ module.exports = class UserProjectsHelper {
                 delete projectDocument.categories;
                 delete projectDocument.metaInformation;
                 delete projectDocument.programInformation;
-
+                delete projectDocument.recommendedFor;
                 
                 if (UTILS.revertStatusorNot(appVersion)) {
                     projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
                 }
-                
+                console.log("projectDocument : ",projectDocument)
                 let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {
