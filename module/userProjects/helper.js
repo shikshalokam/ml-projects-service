@@ -21,7 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
-const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
+const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
 const solutionsQueries = require(DB_QUERY_BASE_PATH + "/solutions");
 
 /**
@@ -1230,7 +1230,7 @@ module.exports = class UserProjectsHelper {
                         } else {
                             //Fetch user profile information by calling sunbird's user read api.
 
-                            let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                            let userProfile = await userProfileService.profile(userToken, userId);
                             if ( userProfile.success && 
                                  userProfile.data &&
                                  userProfile.data.response
@@ -1417,7 +1417,7 @@ module.exports = class UserProjectsHelper {
 
                 //Fetch user profile information by calling sunbird's user read api.
 
-                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                let userProfile = await userProfileService.profile(userToken, userId);
                 if ( userProfile.success && 
                      userProfile.data &&
                      userProfile.data.response
@@ -2067,7 +2067,7 @@ module.exports = class UserProjectsHelper {
                 }
                 //Fetch user profile information by calling sunbird's user read api.
                 let addReportInfoToSolution = false;
-                let userProfile = await sunbirdUserProfile.profile(userToken, userId);
+                let userProfile = await userProfileService.profile(userToken, userId);
                 if ( userProfile.success && 
                      userProfile.data &&
                      userProfile.data.response

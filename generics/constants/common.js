@@ -45,5 +45,6 @@ module.exports = {
     "ATTACHMENT_TYPE_LINK" : "link",
     "PROJECT_ATTACHMENT" : "project",
     "TASK_ATTACHMENT" : "task",
-    "DISTRICT": "district"
+    "DISTRICT": "district",
+    "SERVER_TIME_OUT" : 5000
 };
