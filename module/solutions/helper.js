@@ -75,7 +75,6 @@ module.exports = class SolutionsHelper {
 
             //check solution & userProfile is exist
             if ( solutionId && Object.keys(userProfile).length > 0 ) {
-                console.log("inside")
                 let district = [];
                 let organisation = [];
 
