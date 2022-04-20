@@ -22,7 +22,7 @@ const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
-const solutionsQueries = require(DB_QUERY_BASE_PATH + "/solutions");
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
 /**
     * UserProjectsHelper
@@ -1244,12 +1244,12 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
-
+                    
                     if ( addReportInfoToSolution && project.solutionId ) {
-                        await _addReportInformationInSolution(
+                        await  solutionsHelper.addReportInformationInSolution(
                             project.solutionId,
                             project.userProfile
-                        );
+                        ); 
                     }
 
                     await kafkaProducersHelper.pushProjectToKafka(project);
@@ -2923,101 +2923,6 @@ function _projectData(data) {
                         error.status : HTTP_STATUS_CODE['internal_server_error'].status,
                 success: false,
                 data: {}
-            });
-        }
-    })
-}
-
-/**
-  * Update Report Information In Solutions.
-  * @method
-  * @name _addReportInformationInSolution 
-  * @param {String} solutionId - solution id.
-  * @param {Object} userProfile - user read response
-  * @returns {Object} Solution information.
-*/
-
-function _addReportInformationInSolution(solutionId = "", userProfile = {}) {
-    return new Promise(async (resolve, reject) => {
-        try {
-
-            if ( userProfile && solutionId ) {
-
-                let district = {};
-                let organisation = [];
-
-                for (const location of userProfile["userLocations"]) {
-                    if ( location.type == CONSTANTS.common.DISTRICT ) {
-                        district["locationId"] = location.id;
-                        district["name"] = location.name;
-                    }
-                }
-
-                for (const org of userProfile["organisations"]) {
-                    let orgData = {};
-                    orgData.orgName = org.orgName;
-                    orgData.organisationId = org.organisationId;
-                    organisation.push(orgData);
-                }
-
-                let solutionDocument = await solutionsQueries.solutionsDocument({
-                    _id: solutionId
-                },
-                    [
-                        "_id",
-                        "reportInformation"
-                    ]
-                );
-                
-                if( !solutionDocument.length > 0 ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
-                        status : HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                solutionDocument = solutionDocument[0];
-                let reportInformation = solutionDocument.reportInformation ? solutionDocument.reportInformation : {};
-                if ( reportInformation ) {
-                    reportInformation["districts"] = [];
-                    reportInformation["districts"].push(district);
-                    reportInformation["organisations"] = organisation;
-                } else {
-
-                    const checkDistrictExist = reportInformation["districts"].some(eachDistrict => {
-                      if (eachDistrict.locationId == district["locationId"]) {
-                        return true;
-                      }
-                    });
-
-                    if ( !checkDistrictExist ) {
-                        reportInformation["districts"].push(district);
-                    }
-
-                    reportInformation["organisations"].concat(organisation);
-                }
-
-                await solutionsQueries.updateSolutionDocument
-                (
-                    { _id : solutionId },
-                    { $set : { reportInformation: reportInformation } }
-                )
-            }
-            
-
-            return resolve({
-                success: true,
-                data: []
-            });
-
-        } catch (error) {
-            return resolve({
-                status:
-                    error.status ?
-                        error.status : HTTP_STATUS_CODE['internal_server_error'].status,
-                success: false,
-                message: error.message,
-                data: []
             });
         }
     })
