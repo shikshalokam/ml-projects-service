@@ -1621,6 +1621,16 @@ module.exports = class UserProjectsHelper {
                 projectDocument.remarks = projectDocument.remarks ? projectDocument.remarks : "";
                 projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : 0;
 
+                //adding for test purpose
+                projectDocument.evidenceLink = ["https://www.youtube.com/watch?v=C2Z5-IfvdcQ&list=RDCMUCj_iGliGCkLcHSZ8eqVNPDQ&start_radio=1&rv=C2Z5-IfvdcQ&t=13",
+                                                "https://www.youtube.com/watch?v=N6fspIf42U8"
+                                                ];
+                
+                projectDocument.imageLink = [
+                    "https://irisholidays.com/keralatourism/wp-content/uploads/2021/10/Kerala-peaks-1-1536x864.jpg",
+                    "https://irisholidays.com/keralatourism/wp-content/uploads/2021/10/Kerala-peaks-1-1536x864.jpg",
+                    "https://irisholidays.com/keralatourism/wp-content/uploads/2021/10/Kerala-peaks-1-1536x864.jpg"
+                ];
                 projectDocument.category = [];
                 
 
