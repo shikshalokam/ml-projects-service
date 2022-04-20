@@ -120,6 +120,8 @@ module.exports = class SolutionsHelper {
                     { _id : solutionId },
                     updateQuery
                 )
+            } else {
+                throw new Error(CONSTANTS.apiResponses.SOLUTION_ID_AND_USERPROFILE_REQUIRED);
             }
             
             return resolve({

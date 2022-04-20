@@ -1246,7 +1246,7 @@ module.exports = class UserProjectsHelper {
                     let project = await projectQueries.createProject(projectCreation.data);
                     
                     if ( addReportInfoToSolution && project.solutionId ) {
-                        await  solutionsHelper.addReportInformationInSolution(
+                        let updateSolution = await solutionsHelper.addReportInformationInSolution(
                             project.solutionId,
                             project.userProfile
                         ); 
@@ -2097,7 +2097,7 @@ module.exports = class UserProjectsHelper {
 
                 if ( addReportInfoToSolution && projectCreation._doc.solutionId ) {
 
-                    await solutionsHelper.addReportInformationInSolution(
+                    let updateSolution = await solutionsHelper.addReportInformationInSolution(
                         projectCreation._doc.solutionId,
                         projectCreation._doc.userProfile
                     );
