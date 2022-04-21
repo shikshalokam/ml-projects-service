@@ -74,7 +74,11 @@ module.exports = class SolutionsHelper {
         try {
 
             //check solution & userProfile is exist
-            if ( solutionId && Object.keys(userProfile).length > 0 ) {
+            if ( 
+                solutionId && userProfile && 
+                userProfile["userLocations"] && 
+                userProfile["organisations"]
+            ) {
                 let district = [];
                 let organisation = [];
 
@@ -111,8 +115,14 @@ module.exports = class SolutionsHelper {
 
                 let updateQuery = {};
                 updateQuery["$addToSet"] = {};
-                updateQuery["$addToSet"]["reportInformation.organisations"] = { $each : organisation};
-                updateQuery["$addToSet"]["reportInformation.districts"] = { $each : district};
+
+                if ( organisation.length > 0 ) {
+                    updateQuery["$addToSet"]["reportInformation.organisations"] = { $each : organisation};
+                }
+
+                if ( district.length > 0 ) {
+                    updateQuery["$addToSet"]["reportInformation.districts"] = { $each : district};
+                }
 
                 //add user district and organisation in solution
                 await solutionsQueries.updateSolutionDocument
@@ -126,7 +136,7 @@ module.exports = class SolutionsHelper {
             
             return resolve({
                 success: true,
-                data: []
+                message: CONSTANTS.apiResponses.UPDATED_DOCUMENT_SUCCESSFULLY
             });
             
         } catch (error) {
