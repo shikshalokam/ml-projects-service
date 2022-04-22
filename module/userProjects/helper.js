@@ -1585,6 +1585,7 @@ module.exports = class UserProjectsHelper {
                             "recommendedFor",
                             "link",
                             "remarks",
+                            "attachments",
                             "taskReport.completed"
                         ]
                     );
@@ -1596,7 +1597,7 @@ module.exports = class UserProjectsHelper {
                     { "$match": { _id: ObjectId(projectId), isDeleted: false} },
                     { "$project": {
                         "status": 1, "title": 1, "startDate": 1, "metaInformation.goal": 1, "metaInformation.duration":1,
-                        "categories" : 1, "programInformation.name": 1, "description" : 1, "recommendedFor" : 1, "link" : 1,
+                        "categories" : 1, "programInformation.name": 1, "description" : 1, "recommendedFor" : 1, "link" : 1, "remarks" : 1, "attachments" : 1,  "taskReport.completed" : 1,
                         tasks: { "$filter": {
                             input: '$tasks',
                             as: 'tasks',
@@ -1613,26 +1614,55 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
-                console.log("projectDocument before : ",projectDocument)
+
                 projectDocument = projectDocument[0];
                 projectDocument.goal = projectDocument.metaInformation ? projectDocument.metaInformation.goal : "";
                 projectDocument.duration = projectDocument.metaInformation ? projectDocument.metaInformation.duration : "";
                 projectDocument.programName = projectDocument.programInformation ? projectDocument.programInformation.name : "";
                 projectDocument.remarks = projectDocument.remarks ? projectDocument.remarks : "";
-                projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : 0;
+                projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : CONSTANTS.common.DEFAULT_TASK_COMPLETED;
+                
+                //store tasks and attachment data into object
+                let projectFilter = {
+                    tasks : projectDocument.tasks,
+                    attachments : projectDocument.attachments
+                }
+   
+                //returns project tasks and attachments with downloadable urls
+                let projectDataWithUrl = await _projectInformation( projectFilter );
 
+                //replace projectDocument Data 
+                if ( projectDataWithUrl && 
+                     projectDataWithUrl.tasks && 
+                     projectDataWithUrl.tasks.length > 0
+                ) {
+                    projectDocument.tasks = projectDataWithUrl.tasks ;
+                }
+
+                if ( projectDataWithUrl && 
+                    projectDataWithUrl.attachments && 
+                    projectDataWithUrl.attachments.length > 0
+                ) {
+                   projectDocument.attachments = projectDataWithUrl.attachments ;
+                }
+
+                //get image link and other document links
+                let imageLink = [];
+                let evidenceLink = [];
+                if ( projectDocument.attachments && projectDocument.attachments.length > 0 ) {
+                    projectDocument.attachments.forEach( attachment => {
+                        if( attachment.type == CONSTANTS.common.IMAGE_DATA_TYPE && attachment.url && attachment.url !== "" ) {
+                            imageLink.push( attachment.url );
+                        } else if ( attachment.url && attachment.url !== "" ) {
+                            evidenceLink.push( attachment.url );
+                        }
+                    })
+                }
                 //adding for test purpose
-                projectDocument.evidenceLink = ["https://www.youtube.com/watch?v=C2Z5-IfvdcQ&list=RDCMUCj_iGliGCkLcHSZ8eqVNPDQ&start_radio=1&rv=C2Z5-IfvdcQ&t=13",
-                                                "https://www.youtube.com/watch?v=N6fspIf42U8"
-                                                ];
-                
-                projectDocument.imageLink = [
-                    "https://irisholidays.com/keralatourism/wp-content/uploads/2021/10/Kerala-peaks-1-1536x864.jpg",
-                    "https://irisholidays.com/keralatourism/wp-content/uploads/2021/10/Kerala-peaks-1-1536x864.jpg",
-                    "https://irisholidays.com/keralatourism/wp-content/uploads/2021/10/Kerala-peaks-1-1536x864.jpg"
-                ];
-                projectDocument.category = [];
-                
+                projectDocument.evidenceLink = evidenceLink;       
+                projectDocument.imageLink = imageLink;
+                        
+                projectDocument.category = [];       
 
                 if (projectDocument.categories && projectDocument.categories.length > 0) {
                     projectDocument.categories.forEach( category => {
@@ -1675,7 +1705,7 @@ module.exports = class UserProjectsHelper {
                 if (UTILS.revertStatusorNot(appVersion)) {
                     projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
                 }
-                console.log("projectDocument : ",projectDocument)
+                
                 let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {
@@ -2889,6 +2919,8 @@ function _projectData(data) {
         }
     })
 }
+
+
 
 
 
