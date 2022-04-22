@@ -45,5 +45,6 @@ module.exports = {
     CREATE_IMPROVEMENT_PROJECT_SOLUTION : "/v1/solutions/create",
     PROJECT_AND_TASK_REPORT : "/v1/improvement-project/projectAndTaskReport",
     FILES_DOWNLOADABLE_URL: "/v1/cloud-services/files/getDownloadableUrl",
-    OBSERVATION_DETAILS : "/v1/observations/details"
+    OBSERVATION_DETAILS : "/v1/observations/details",
+    USER_READ_V5 : "/v5/user/read"
 };

@@ -141,6 +141,7 @@ module.exports = {
             type : Array,
             default : [] 
         },
-        remarks : String
+        remarks : String,
+        userProfile : Object
     }
 };
