@@ -21,6 +21,8 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
 /**
     * UserProjectsHelper
@@ -1196,8 +1198,9 @@ module.exports = class UserProjectsHelper {
     
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
-
+                    
                     // fetch userRoleInformation from observation if referenecFrom is observation
+                    let addReportInfoToSolution = false;
                     if ( getUserProfileFromObservation ){
 
                         let observationDetails = await surveyService.observationDetails(
@@ -1212,12 +1215,42 @@ module.exports = class UserProjectsHelper {
                         ) {
 
                             userRoleInformation = observationDetails.data.userRoleInformation;
+                            
+                        }
+
+                        if( observationDetails.data &&
+                            Object.keys(observationDetails.data).length > 0 && 
+                            observationDetails.data.userProfile &&
+                            Object.keys(observationDetails.data.userProfile).length > 0
+                        ) {
+
+                            projectCreation.data.userProfile = observationDetails.data.userProfile;
+                            addReportInfoToSolution = true; 
+                            
+                        } else {
+                            //Fetch user profile information by calling sunbird's user read api.
+
+                            let userProfile = await userProfileService.profile(userToken, userId);
+                            if ( userProfile.success && 
+                                 userProfile.data &&
+                                 userProfile.data.response
+                            ) {
+                                    projectCreation.data.userProfile = userProfile.data.response;
+                                    addReportInfoToSolution = true; 
+                            } 
                         }
                     }
 
                     projectCreation.data.userRoleInformation = userRoleInformation;
     
                     let project = await projectQueries.createProject(projectCreation.data);
+                    
+                    if ( addReportInfoToSolution && project.solutionId ) {
+                        let updateSolution = await solutionsHelper.addReportInformationInSolution(
+                            project.solutionId,
+                            project.userProfile
+                        ); 
+                    }
 
                     await kafkaProducersHelper.pushProjectToKafka(project);
                     
@@ -1381,6 +1414,18 @@ module.exports = class UserProjectsHelper {
                 let createProject = {};
 
                 createProject["userId"] = createProject["createdBy"] = createProject["updatedBy"] = userId;
+
+                //Fetch user profile information by calling sunbird's user read api.
+
+                let userProfile = await userProfileService.profile(userToken, userId);
+                if ( userProfile.success && 
+                     userProfile.data &&
+                     userProfile.data.response
+                ) {
+                    createProject.userProfile = userProfile.data.response;
+                } 
+
+                
 
                 let projectData = await _projectData(data);
                 if (projectData && projectData.success == true) {
@@ -1922,8 +1967,9 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
                         status: HTTP_STATUS_CODE['bad_request'].status
                     };
+                    
                 }
-
+                
                 let taskReport = {};
 
                 if (
@@ -2019,7 +2065,17 @@ module.exports = class UserProjectsHelper {
                     )
 
                 }
-
+                //Fetch user profile information by calling sunbird's user read api.
+                let addReportInfoToSolution = false;
+                let userProfile = await userProfileService.profile(userToken, userId);
+                if ( userProfile.success && 
+                     userProfile.data &&
+                     userProfile.data.response
+                ) {
+                    libraryProjects.data.userProfile = userProfile.data.response;
+                    addReportInfoToSolution = true;
+                } 
+    
                 libraryProjects.data.userId = libraryProjects.data.updatedBy = libraryProjects.data.createdBy = userId;
                 libraryProjects.data.lastDownloadedAt = new Date();
                 libraryProjects.data.status = CONSTANTS.common.STARTED;
@@ -2038,6 +2094,14 @@ module.exports = class UserProjectsHelper {
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
+
+                if ( addReportInfoToSolution && projectCreation._doc.solutionId ) {
+
+                    let updateSolution = await solutionsHelper.addReportInformationInSolution(
+                        projectCreation._doc.solutionId,
+                        projectCreation._doc.userProfile
+                    );
+                }
                 
                 await kafkaProducersHelper.pushProjectToKafka(projectCreation);
 
