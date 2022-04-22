@@ -100,22 +100,9 @@ module.exports = class SolutionsHelper {
                     organisation.push(orgData);
                 }
 
-                //checking solution is exist
-                let solutionDocument = await solutionsQueries.solutionsDocument({
-                    _id: solutionId
-                },
-                ["_id"]);
-                
-                if( !solutionDocument.length > 0 ) {
-                    throw {
-                        message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
-                        status : HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
                 let updateQuery = {};
                 updateQuery["$addToSet"] = {};
-
+  
                 if ( organisation.length > 0 ) {
                     updateQuery["$addToSet"]["reportInformation.organisations"] = { $each : organisation};
                 }
@@ -125,11 +112,14 @@ module.exports = class SolutionsHelper {
                 }
 
                 //add user district and organisation in solution
-                await solutionsQueries.updateSolutionDocument
-                (
-                    { _id : solutionId },
-                    updateQuery
-                )
+                if ( updateQuery["$addToSet"] && Object.keys(updateQuery["$addToSet"].length > 0)) {
+                    await solutionsQueries.updateSolutionDocument
+                    (
+                        { _id : solutionId },
+                        updateQuery
+                    )
+                }
+                
             } else {
                 throw new Error(CONSTANTS.apiResponses.SOLUTION_ID_AND_USERPROFILE_REQUIRED);
             }
