@@ -1788,7 +1788,8 @@ module.exports = class UserProjectsHelper {
                     "solutionExternalId",
                     "lastDownloadedAt",
                     "hasAcceptedTAndC",
-                    "referenceFrom"
+                    "referenceFrom",
+                    "status"
                 ]
             );
 
