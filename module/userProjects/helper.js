@@ -1658,7 +1658,7 @@ module.exports = class UserProjectsHelper {
                         }
                     })
                 }
-                //adding for test purpose
+                
                 projectDocument.evidenceLink = evidenceLink;       
                 projectDocument.imageLink = imageLink;
                         
