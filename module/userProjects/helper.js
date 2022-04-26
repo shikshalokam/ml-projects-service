@@ -1626,7 +1626,12 @@ module.exports = class UserProjectsHelper {
                             "endDate",
                             "tasks",
                             "categories",
-                            "programInformation.name"
+                            "programInformation.name",
+                            "recommendedFor",
+                            "link",
+                            "remarks",
+                            "attachments",
+                            "taskReport.completed"
                         ]
                     );
                 }
@@ -1637,7 +1642,7 @@ module.exports = class UserProjectsHelper {
                     { "$match": { _id: ObjectId(projectId), isDeleted: false} },
                     { "$project": {
                         "status": 1, "title": 1, "startDate": 1, "metaInformation.goal": 1, "metaInformation.duration":1,
-                        "categories" : 1, "programInformation.name": 1, "description" : 1,
+                        "categories" : 1, "programInformation.name": 1, "description" : 1, "recommendedFor" : 1, "link" : 1, "remarks" : 1, "attachments" : 1,  "taskReport.completed" : 1,
                         tasks: { "$filter": {
                             input: '$tasks',
                             as: 'tasks',
@@ -1659,11 +1664,62 @@ module.exports = class UserProjectsHelper {
                 projectDocument.goal = projectDocument.metaInformation ? projectDocument.metaInformation.goal : "";
                 projectDocument.duration = projectDocument.metaInformation ? projectDocument.metaInformation.duration : "";
                 projectDocument.programName = projectDocument.programInformation ? projectDocument.programInformation.name : "";
-                projectDocument.category = [];
+                projectDocument.remarks = projectDocument.remarks ? projectDocument.remarks : "";
+                projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : CONSTANTS.common.DEFAULT_TASK_COMPLETED;
+                
+                //store tasks and attachment data into object
+                let projectFilter = {
+                    tasks : projectDocument.tasks,
+                    attachments : projectDocument.attachments
+                }
+   
+                //returns project tasks and attachments with downloadable urls
+                let projectDataWithUrl = await _projectInformation( projectFilter );
+
+                //replace projectDocument Data 
+                if ( projectDataWithUrl && 
+                     projectDataWithUrl.tasks && 
+                     projectDataWithUrl.tasks.length > 0
+                ) {
+                    projectDocument.tasks = projectDataWithUrl.tasks ;
+                }
+
+                if ( projectDataWithUrl && 
+                    projectDataWithUrl.attachments && 
+                    projectDataWithUrl.attachments.length > 0
+                ) {
+                   projectDocument.attachments = projectDataWithUrl.attachments ;
+                }
+
+                //get image link and other document links
+                let imageLink = [];
+                let evidenceLink = [];
+                if ( projectDocument.attachments && projectDocument.attachments.length > 0 ) {
+                    projectDocument.attachments.forEach( attachment => {
+                        if( attachment.type == CONSTANTS.common.IMAGE_DATA_TYPE && attachment.url && attachment.url !== "" ) {
+                            imageLink.push( attachment.url );
+                        } else if ( attachment.url && attachment.url !== "" ) {
+                            evidenceLink.push( attachment.url );
+                        }
+                    })
+                }
+                
+                projectDocument.evidenceLink = evidenceLink;       
+                projectDocument.imageLink = imageLink;
+                        
+                projectDocument.category = [];       
 
                 if (projectDocument.categories && projectDocument.categories.length > 0) {
                     projectDocument.categories.forEach( category => {
                         projectDocument.category.push(category.name);
+                    })
+                }
+
+                projectDocument.recommendedForRoles = [];
+
+                if (projectDocument.recommendedFor && projectDocument.recommendedFor.length > 0) {
+                    projectDocument.recommendedFor.forEach( recommend => {
+                        projectDocument.recommendedForRoles.push(recommend.code);
                     })
                 }
                 
@@ -1689,7 +1745,7 @@ module.exports = class UserProjectsHelper {
                 delete projectDocument.categories;
                 delete projectDocument.metaInformation;
                 delete projectDocument.programInformation;
-
+                delete projectDocument.recommendedFor;
                 
                 if (UTILS.revertStatusorNot(appVersion)) {
                     projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
@@ -2928,6 +2984,8 @@ function _projectData(data) {
         }
     })
 }
+
+
 
 
 

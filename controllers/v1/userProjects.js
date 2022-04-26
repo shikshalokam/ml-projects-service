@@ -647,7 +647,6 @@ module.exports = class UserProjects extends Abstract {
                     req.userDetails.userToken,
                     req.headers['x-app-ver']
                 );
-
                 return resolve({
                     message: report.message,
                     result: report.data
