@@ -35,6 +35,10 @@ let enviromentVariables = {
   "KAFKA_URL" : {
     "message" : "Required",
     "optional" : false
+  },
+  "USER_SERVICE_URL" : {
+    "message" : "Required user service base url",
+    "optional" : false
   }
 }
 
