@@ -1672,24 +1672,28 @@ module.exports = class UserProjectsHelper {
                     tasks : projectDocument.tasks,
                     attachments : projectDocument.attachments
                 }
-   
+                
                 //returns project tasks and attachments with downloadable urls
                 let projectDataWithUrl = await _projectInformation( projectFilter );
 
                 //replace projectDocument Data 
-                if ( projectDataWithUrl && 
-                     projectDataWithUrl.tasks && 
-                     projectDataWithUrl.tasks.length > 0
+                if ( projectDataWithUrl.success && 
+                     projectDataWithUrl.data && 
+                     projectDataWithUrl.data.tasks && 
+                     projectDataWithUrl.data.tasks.length > 0
                 ) {
-                    projectDocument.tasks = projectDataWithUrl.tasks ;
+                    
+                    projectDocument.tasks = projectDataWithUrl.data.tasks ;
                 }
 
-                if ( projectDataWithUrl && 
-                    projectDataWithUrl.attachments && 
-                    projectDataWithUrl.attachments.length > 0
+                if ( projectDataWithUrl.success && 
+                     projectDataWithUrl.data && 
+                     projectDataWithUrl.data.attachments && 
+                     projectDataWithUrl.data.attachments.length > 0
                 ) {
-                   projectDocument.attachments = projectDataWithUrl.attachments ;
+                   projectDocument.attachments = projectDataWithUrl.data.attachments ;
                 }
+               
 
                 //get image link and other document links
                 let imageLink = [];
@@ -1698,12 +1702,21 @@ module.exports = class UserProjectsHelper {
                     projectDocument.attachments.forEach( attachment => {
                         if( attachment.type == CONSTANTS.common.IMAGE_DATA_TYPE && attachment.url && attachment.url !== "" ) {
                             imageLink.push( attachment.url );
+                        } else if ( attachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK && attachment.name && attachment.name !== "" ) {
+                            let data = {
+                                type : attachment.type,
+                                url : attachment.name
+                            }
+                            evidenceLink.push( data );
                         } else if ( attachment.url && attachment.url !== "" ) {
-                            evidenceLink.push( attachment.url );
+                            let data = {
+                                type : attachment.type,
+                                url : attachment.url
+                            }
+                            evidenceLink.push( data );
                         }
                     })
                 }
-                
                 projectDocument.evidenceLink = evidenceLink;       
                 projectDocument.imageLink = imageLink;
                         
@@ -1750,7 +1763,6 @@ module.exports = class UserProjectsHelper {
                 if (UTILS.revertStatusorNot(appVersion)) {
                     projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
                 }
-                
                 let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
 
                 if (response && response.success == true) {
@@ -2272,7 +2284,7 @@ function _projectInformation(project) {
                         projectAttachments.push(currentProjectAttachment.sourcePath);
                     }
                 }
-
+                
                 let projectAttachmentsUrl = await _attachmentInformation(projectAttachments, projectLinkAttachments, project.attachments, CONSTANTS.common.PROJECT_ATTACHMENT);
                 if ( projectAttachmentsUrl.data && projectAttachmentsUrl.data.length > 0 ) {
                     project.attachments = projectAttachmentsUrl.data;
@@ -2434,6 +2446,7 @@ function _attachmentInformation ( attachmentWithSourcePath = [], linkAttachments
 
                 if (type === CONSTANTS.common.PROJECT_ATTACHMENT ) {
                     attachments.concat(linkAttachments);
+                    
 
                 } else {
 
