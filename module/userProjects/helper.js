@@ -339,7 +339,9 @@ module.exports = class UserProjectsHelper {
                     }
                 }
 
-                updateProject.status = UTILS.convertProjectStatus(data.status);
+                if ( data.status && data.status !== "" ) {
+                   updateProject.status = UTILS.convertProjectStatus(data.status);
+                }
                 
                 if ( data.status == CONSTANTS.common.COMPLETED_STATUS || data.status == CONSTANTS.common.SUBMITTED_STATUS ) {
                     updateProject.completedDate = new Date();
