@@ -295,11 +295,17 @@ module.exports = class UserProjectsHelper {
                     taskReport.total = updateProject.tasks.length;
 
                     updateProject.tasks.forEach(task => {
-                        if (!taskReport[task.status]) {
-                            taskReport[task.status] = 1;
+                        //consider tasks where isDeleted is false.
+                        if ( task.isDeleted == false ) {
+                            if (!taskReport[task.status]) {
+                                taskReport[task.status] = 1;
+                            } else {
+                                taskReport[task.status] += 1;
+                            }
                         } else {
-                            taskReport[task.status] += 1;
+                            taskReport.total = taskReport.total - 1;
                         }
+                        
                     });
 
                     updateProject["taskReport"] = taskReport;
@@ -1364,11 +1370,18 @@ module.exports = class UserProjectsHelper {
                         };
 
                         result.tasks.forEach(task => {
-                            if (!taskReport[task.status]) {
-                                taskReport[task.status] = 1;
+                            if ( task.isDeleted == false ) {
+
+                                if (!taskReport[task.status]) {
+                                    taskReport[task.status] = 1;
+                                } else {
+                                    taskReport[task.status] += 1;
+                                }
+
                             } else {
-                                taskReport[task.status] += 1;
+                                taskReport.total = taskReport.total - 1; 
                             }
+                            
                         });
 
                         result["taskReport"] = taskReport;
@@ -1508,11 +1521,17 @@ module.exports = class UserProjectsHelper {
                     taskReport.total = createProject.tasks.length;
 
                     createProject.tasks.forEach(task => {
-                        if (!taskReport[task.status]) {
-                            taskReport[task.status] = 1;
+                        if ( task.isDeleted == false ) {
+                            if (!taskReport[task.status]) {
+                                taskReport[task.status] = 1;
+                            } else {
+                                taskReport[task.status] += 1;
+                            }
                         } else {
-                            taskReport[task.status] += 1;
+                            //if task is deleted it is not counted in total.
+                            taskReport.total = taskReport.total - 1;
                         }
+                        
                     });
 
                     createProject["taskReport"] = taskReport;
@@ -2060,11 +2079,17 @@ module.exports = class UserProjectsHelper {
                     taskReport.total = libraryProjects.data.tasks.length;
 
                     libraryProjects.data.tasks.forEach(task => {
-                        if (!taskReport[task.status]) {
-                            taskReport[task.status] = 1;
+                        if ( task.isDeleted == false ) {
+                            if (!taskReport[task.status]) {
+                                taskReport[task.status] = 1;
+                            } else {
+                                taskReport[task.status] += 1;
+                            }
                         } else {
-                            taskReport[task.status] += 1;
+                            //reduce total count if task is deleted.
+                            taskReport.total = taskReport.total - 1;
                         }
+                        
                     });
 
                     libraryProjects.data["taskReport"] = taskReport;
