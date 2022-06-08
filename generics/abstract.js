@@ -14,6 +14,10 @@ let Abstract = class Abstract {
   
   constructor(schema) {
     database.createModel(schemas[schema]);
+    if ( schemas[schema].runIndex && schemas[schema].runIndex.length > 0 ) {
+      database.runCompoundIndex(schemas[schema].name,schemas[schema].runIndex);
+    }
+    
   }
 };
 
