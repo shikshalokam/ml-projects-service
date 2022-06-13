@@ -75,8 +75,7 @@ const DB = function() {
         db.collection(modelName).createIndex(currentIndex.name, currentIndex.indexType);
       }
     }
-  }
-
+  };
 
   return {
     database: db,
