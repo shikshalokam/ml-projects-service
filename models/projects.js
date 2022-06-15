@@ -143,5 +143,15 @@ module.exports = {
         },
         remarks : String,
         userProfile : Object
-    }
+    },
+    compoundIndex: [
+        {
+            "name" :{ userId: 1, solutionId: 1 },
+            "indexType" : { unique: true, partialFilterExpression: { solutionId: { $exists: true }}}
+        }
+    ]
+        
+    
+
 };
+
