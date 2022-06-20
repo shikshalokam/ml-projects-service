@@ -1247,6 +1247,18 @@ module.exports = class UserProjectsHelper {
                                     addReportInfoToSolution = true; 
                             } 
                         }
+
+                    } else {
+                        //Fetch user profile information by calling sunbird's user read api.
+
+                        let userProfileData = await userProfileService.profile(userToken, userId);
+                        if ( userProfileData.success && 
+                             userProfileData.data &&
+                             userProfileData.data.response
+                        ) {
+                                projectCreation.data.userProfile = userProfileData.data.response;
+                                addReportInfoToSolution = true; 
+                        } 
                     }
 
                     projectCreation.data.userRoleInformation = userRoleInformation;
