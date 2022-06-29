@@ -224,8 +224,10 @@ function convertProjectStatus(status) {
 
 function revertStatusorNot( appVersion ) {
 
+  let versions = ["4.10", "4.11", "4.12" ];
+
   let appVer = appVersion.split('.',2).join('.');
-  if ( appVer == "4.10") {
+  if ( versions.includes(appVer)) {
       return false
   } else {
 
