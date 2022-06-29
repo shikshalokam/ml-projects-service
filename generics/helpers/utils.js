@@ -224,12 +224,19 @@ function convertProjectStatus(status) {
 
 function revertStatusorNot( appVersion ) {
 
-  let appVersionNo = Number(appVersion.split('.',2).join('.'));
+  let versions = ["4.10", "4.11", "4.12" ];
 
-  if ( !isNaN(appVersionNo) && appVersionNo < 4.7 ) {
-      return true
-  } else {
+  let appVer = appVersion.split('.',2).join('.');
+  if ( versions.includes(appVer)) {
       return false
+  } else {
+
+      let appVersionNo = Number(appVer);
+      if ( !isNaN(appVersionNo) && appVersionNo < 4.7 ) {
+          return true
+      } else {
+          return false
+      }
   }
 
 }
