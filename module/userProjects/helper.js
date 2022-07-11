@@ -1635,6 +1635,8 @@ module.exports = class UserProjectsHelper {
     static share(projectId = "", taskIds = [], userToken,appVersion) {
         return new Promise(async (resolve, reject) => {
             try {
+                
+                let projectPdfUrl = []
 
                 let projectPdf = true;
                 let projectDocument = [];
@@ -1644,178 +1646,221 @@ module.exports = class UserProjectsHelper {
                     isDeleted: false
                 }
 
-                if (!taskIds.length ) {
-
-                    projectDocument = await projectQueries.projectDocument
+                let projectPdfUrlDocument = await projectQueries.projectDocument
                     (
                         query,
                         [
-                            "title",
                             "status",  
-                            "metaInformation.goal",
-                            "metaInformation.duration",
-                            "startDate",
-                            "description",
-                            "endDate",
-                            "tasks",
-                            "categories",
-                            "programInformation.name",
-                            "recommendedFor",
-                            "link",
-                            "remarks",
-                            "attachments",
-                            "taskReport.completed"
+                            "pdfDownloadUrl"
                         ]
                     );
-                }
-                else {
-                    projectPdf = false;
-                    
-                    let aggregateData = [
-                    { "$match": { _id: ObjectId(projectId), isDeleted: false} },
-                    { "$project": {
-                        "status": 1, "title": 1, "startDate": 1, "metaInformation.goal": 1, "metaInformation.duration":1,
-                        "categories" : 1, "programInformation.name": 1, "description" : 1, "recommendedFor" : 1, "link" : 1, "remarks" : 1, "attachments" : 1,  "taskReport.completed" : 1,
-                        tasks: { "$filter": {
-                            input: '$tasks',
-                            as: 'tasks',
-                            cond: { "$in": ['$$tasks._id', taskIds]}
-                        }}
-                    }}]
-                   
-                    projectDocument = await projectQueries.getAggregate(aggregateData);
-                }
-              
-                if (!projectDocument.length) {
-                    throw {
-                        message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
-                        status: HTTP_STATUS_CODE['bad_request'].status
-                    }
-                }
-
-                projectDocument = projectDocument[0];
-                projectDocument.goal = projectDocument.metaInformation ? projectDocument.metaInformation.goal : "";
-                projectDocument.duration = projectDocument.metaInformation ? projectDocument.metaInformation.duration : "";
-                projectDocument.programName = projectDocument.programInformation ? projectDocument.programInformation.name : "";
-                projectDocument.remarks = projectDocument.remarks ? projectDocument.remarks : "";
-                projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : CONSTANTS.common.DEFAULT_TASK_COMPLETED;
                 
-                //store tasks and attachment data into object
-                let projectFilter = {
-                    tasks : projectDocument.tasks,
-                    attachments : projectDocument.attachments
-                }
-                
-                //returns project tasks and attachments with downloadable urls
-                let projectDataWithUrl = await _projectInformation( projectFilter );
-
-                //replace projectDocument Data 
-                if ( projectDataWithUrl.success && 
-                     projectDataWithUrl.data && 
-                     projectDataWithUrl.data.tasks && 
-                     projectDataWithUrl.data.tasks.length > 0
+                //check if download url is already created for this 
+                if ( projectPdfUrlDocument.length > 0 && 
+                    projectPdfUrlDocument[0].status == "submitted" &&
+                    projectPdfUrlDocument[0].pdfDownloadUrl &&
+                    projectPdfUrlDocument[0].pdfDownloadUrl != ""
                 ) {
-                    
-                    projectDocument.tasks = projectDataWithUrl.data.tasks ;
-                }
 
-                if ( projectDataWithUrl.success && 
-                     projectDataWithUrl.data && 
-                     projectDataWithUrl.data.attachments && 
-                     projectDataWithUrl.data.attachments.length > 0
-                ) {
-                   projectDocument.attachments = projectDataWithUrl.data.attachments ;
-                }
-               
-
-                //get image link and other document links
-                let imageLink = [];
-                let evidenceLink = [];
-                if ( projectDocument.attachments && projectDocument.attachments.length > 0 ) {
-                    projectDocument.attachments.forEach( attachment => {
-                        if( attachment.type == CONSTANTS.common.IMAGE_DATA_TYPE && attachment.url && attachment.url !== "" ) {
-                            imageLink.push( attachment.url );
-                        } else if ( attachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK && attachment.name && attachment.name !== "" ) {
-                            let data = {
-                                type : attachment.type,
-                                url : attachment.name
-                            }
-                            evidenceLink.push( data );
-                        } else if ( attachment.url && attachment.url !== "" ) {
-                            let data = {
-                                type : attachment.type,
-                                url : attachment.url
-                            }
-                            evidenceLink.push( data );
-                        }
-                    })
-                }
-                projectDocument.evidenceLink = evidenceLink;       
-                projectDocument.imageLink = imageLink;
-                        
-                projectDocument.category = [];       
-
-                if (projectDocument.categories && projectDocument.categories.length > 0) {
-                    projectDocument.categories.forEach( category => {
-                        projectDocument.category.push(category.name);
-                    })
-                }
-
-                projectDocument.recommendedForRoles = [];
-
-                if (projectDocument.recommendedFor && projectDocument.recommendedFor.length > 0) {
-                    projectDocument.recommendedFor.forEach( recommend => {
-                        projectDocument.recommendedForRoles.push(recommend.code);
-                    })
-                }
-                
-                let tasks = [];
-                if (projectDocument.tasks.length > 0) {
-                    projectDocument.tasks.forEach( task => {
-                        let subtasks = [];
-                        if (!task.isDeleted) {
-                           if (task.children.length > 0) {
-                               task.children.forEach(children => {
-                                   if (!children.isDeleted) {
-                                       subtasks.push(children);
-                                   }
-                               })
-                           }
-                           task.children = subtasks;
-                           tasks.push(task);
-                        }
-                    })
-                    projectDocument.tasks = tasks;
-                }
-
-                delete projectDocument.categories;
-                delete projectDocument.metaInformation;
-                delete projectDocument.programInformation;
-                delete projectDocument.recommendedFor;
-                
-                if (UTILS.revertStatusorNot(appVersion)) {
-                    projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
-                }
-                let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
-
-                if (response && response.success == true) {
                     return resolve({
                         success: true,
                         message: CONSTANTS.apiResponses.REPORT_GENERATED_SUCCESSFULLY,
                         data: {
                             data: {
-                                downloadUrl: response.data.pdfUrl
+                                downloadUrl: projectPdfUrlDocument[0].pdfDownloadUrl
                             }
                         }
                     });
-                }
 
-                else {
-                    throw {
-                        message: CONSTANTS.apiResponses.COULD_NOT_GENERATE_PDF_REPORT,
+                } else {
+
+                    if (!taskIds.length ) {
+
+                        projectDocument = await projectQueries.projectDocument
+                        (
+                            query,
+                            [
+                                "title",
+                                "status",  
+                                "metaInformation.goal",
+                                "metaInformation.duration",
+                                "startDate",
+                                "description",
+                                "endDate",
+                                "tasks",
+                                "categories",
+                                "programInformation.name",
+                                "recommendedFor",
+                                "link",
+                                "remarks",
+                                "attachments",
+                                "taskReport.completed"
+                            ]
+                        );
+                    } else {
+                        projectPdf = false;
+                        
+                        let aggregateData = [
+                        { "$match": { _id: ObjectId(projectId), isDeleted: false} },
+                        { "$project": {
+                            "status": 1, "title": 1, "startDate": 1, "metaInformation.goal": 1, "metaInformation.duration":1,
+                            "categories" : 1, "programInformation.name": 1, "description" : 1, "recommendedFor" : 1, "link" : 1, "remarks" : 1, "attachments" : 1,  "taskReport.completed" : 1,
+                            tasks: { "$filter": {
+                                input: '$tasks',
+                                as: 'tasks',
+                                cond: { "$in": ['$$tasks._id', taskIds]}
+                            }}
+                        }}]
+                       
+                        projectDocument = await projectQueries.getAggregate(aggregateData);
+                    }
+                  
+                    if (!projectDocument.length) {
+                        throw {
+                            message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND,
+                            status: HTTP_STATUS_CODE['bad_request'].status
+                        }
+                    }
+    
+                    projectDocument = projectDocument[0];
+                    projectDocument.goal = projectDocument.metaInformation ? projectDocument.metaInformation.goal : "";
+                    projectDocument.duration = projectDocument.metaInformation ? projectDocument.metaInformation.duration : "";
+                    projectDocument.programName = projectDocument.programInformation ? projectDocument.programInformation.name : "";
+                    projectDocument.remarks = projectDocument.remarks ? projectDocument.remarks : "";
+                    projectDocument.taskcompleted = projectDocument.taskReport.completed ? projectDocument.taskReport.completed : CONSTANTS.common.DEFAULT_TASK_COMPLETED;
+                    
+                    //store tasks and attachment data into object
+                    let projectFilter = {
+                        tasks : projectDocument.tasks,
+                        attachments : projectDocument.attachments
+                    }
+                    
+                    //returns project tasks and attachments with downloadable urls
+                    let projectDataWithUrl = await _projectInformation( projectFilter );
+    
+                    //replace projectDocument Data 
+                    if ( projectDataWithUrl.success && 
+                         projectDataWithUrl.data && 
+                         projectDataWithUrl.data.tasks && 
+                         projectDataWithUrl.data.tasks.length > 0
+                    ) {
+                        
+                        projectDocument.tasks = projectDataWithUrl.data.tasks ;
+                    }
+    
+                    if ( projectDataWithUrl.success && 
+                         projectDataWithUrl.data && 
+                         projectDataWithUrl.data.attachments && 
+                         projectDataWithUrl.data.attachments.length > 0
+                    ) {
+                       projectDocument.attachments = projectDataWithUrl.data.attachments ;
+                    }
+                   
+    
+                    //get image link and other document links
+                    let imageLink = [];
+                    let evidenceLink = [];
+                    if ( projectDocument.attachments && projectDocument.attachments.length > 0 ) {
+                        projectDocument.attachments.forEach( attachment => {
+                            if( attachment.type == CONSTANTS.common.IMAGE_DATA_TYPE && attachment.url && attachment.url !== "" ) {
+                                imageLink.push( attachment.url );
+                            } else if ( attachment.type == CONSTANTS.common.ATTACHMENT_TYPE_LINK && attachment.name && attachment.name !== "" ) {
+                                let data = {
+                                    type : attachment.type,
+                                    url : attachment.name
+                                }
+                                evidenceLink.push( data );
+                            } else if ( attachment.url && attachment.url !== "" ) {
+                                let data = {
+                                    type : attachment.type,
+                                    url : attachment.url
+                                }
+                                evidenceLink.push( data );
+                            }
+                        })
+                    }
+                    projectDocument.evidenceLink = evidenceLink;       
+                    projectDocument.imageLink = imageLink;
+                            
+                    projectDocument.category = [];       
+    
+                    if (projectDocument.categories && projectDocument.categories.length > 0) {
+                        projectDocument.categories.forEach( category => {
+                            projectDocument.category.push(category.name);
+                        })
+                    }
+    
+                    projectDocument.recommendedForRoles = [];
+    
+                    if (projectDocument.recommendedFor && projectDocument.recommendedFor.length > 0) {
+                        projectDocument.recommendedFor.forEach( recommend => {
+                            projectDocument.recommendedForRoles.push(recommend.code);
+                        })
+                    }
+                    
+                    let tasks = [];
+                    if (projectDocument.tasks.length > 0) {
+                        projectDocument.tasks.forEach( task => {
+                            let subtasks = [];
+                            if (!task.isDeleted) {
+                               if (task.children.length > 0) {
+                                   task.children.forEach(children => {
+                                       if (!children.isDeleted) {
+                                           subtasks.push(children);
+                                       }
+                                   })
+                               }
+                               task.children = subtasks;
+                               tasks.push(task);
+                            }
+                        })
+                        projectDocument.tasks = tasks;
+                    }
+    
+                    delete projectDocument.categories;
+                    delete projectDocument.metaInformation;
+                    delete projectDocument.programInformation;
+                    delete projectDocument.recommendedFor;
+                    
+                    if (UTILS.revertStatusorNot(appVersion)) {
+                        projectDocument.status = UTILS.revertProjectStatus(projectDocument.status);
+                    }
+                    let response = await reportService.projectAndTaskReport(userToken, projectDocument, projectPdf);
+    
+                    if (response && response.success == true) {
+                       
+                        let projectUpdated = {
+                            pdfDownloadUrl : response.data.pdfUrl
+                        }
+                        //Add pdf download url to project record
+                        let projectUpdatedData =
+                        await projectQueries.findOneAndUpdate(
+                            {
+                                _id: projectId
+                            },
+                            {
+                                $set: projectUpdated
+                            }, {
+                            new: true
+                            }
+                        );
+                        
+                        return resolve({
+                            success: true,
+                            message: CONSTANTS.apiResponses.REPORT_GENERATED_SUCCESSFULLY,
+                            data: {
+                                data: {
+                                    downloadUrl: response.data.pdfUrl
+                                }
+                            }
+                        });
+                    } else {
+                        throw {
+                            message: CONSTANTS.apiResponses.COULD_NOT_GENERATE_PDF_REPORT,
+                        }
                     }
                 }
-
+                
             } catch (error) {
                 return resolve({
                     status:
