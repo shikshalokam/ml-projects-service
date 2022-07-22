@@ -1,15 +1,13 @@
 /**
- * name : sunbird.js
- * author : Vishnudas
- * Date : 16-March-2022
- * Description : All Sunbird learner related api call.
+ * name : users.js
+ * author : Vishnu
+ * Date : 07-April-2022
+ * Description : All users related api call.
  */
 
 //dependencies
-
-
 const request = require('request');
-const sunbirdBaseUrl = process.env.SUNBIRD_SERVICE_URL;
+const userServiceUrl = process.env.USER_SERVICE_URL;
 const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(  process.env.SUNBIRD_SERVER_TIMEOUT ) : 5000;
 /**
   * 
@@ -28,10 +26,9 @@ const learnerLocationSearch = function ( filterData ) {
         bodyData["request"] = {};
         bodyData["request"]["filters"] = filterData;
         const url = 
-        sunbirdBaseUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
+        userServiceUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
         const options = {
             headers : {
-                "Authorization" : process.env.SUNBIRD_SERVICE_AUTHERIZATION,
                 "content-type": "application/json"
             },
             json : bodyData
@@ -62,7 +59,7 @@ const learnerLocationSearch = function ( filterData ) {
         }
 
         setTimeout(function () {
-            return reject (result = {
+            return resolve (result = {
                 success : false
              });
         }, serverTimeout);
@@ -72,7 +69,6 @@ const learnerLocationSearch = function ( filterData ) {
       }
   })
 }
-
 module.exports = {
-  learnerLocationSearch : learnerLocationSearch
+    learnerLocationSearch : learnerLocationSearch
 };

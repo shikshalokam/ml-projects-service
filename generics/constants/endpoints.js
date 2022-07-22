@@ -45,5 +45,5 @@ module.exports = {
     CREATE_IMPROVEMENT_PROJECT_SOLUTION : "/v1/solutions/create",
     PROJECT_AND_TASK_REPORT : "/v1/improvement-project/projectAndTaskReport",
     FILES_DOWNLOADABLE_URL: "/v1/cloud-services/files/getDownloadableUrl",
-    GET_LOCATION_DATA : "/api/data/v1/location/search"
+    GET_LOCATION_DATA : "/v1/location/search"
 };

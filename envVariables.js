@@ -36,8 +36,8 @@ let enviromentVariables = {
     "message" : "Required",
     "optional" : false
   },
-  "SUNBIRD_SERVICE_URL" : {
-    "message" : "Required sunbird service url",
+  "USER_SERVICE_URL" : {
+    "message" : "Required user service base url",
     "optional" : false
   }
 }

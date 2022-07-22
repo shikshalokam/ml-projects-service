@@ -21,7 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
-const sunbirdService = require(GENERICS_FILES_PATH + '/services/sunbird');
+const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
 
 /**
     * UserProjectsHelper
@@ -2482,9 +2482,9 @@ function _entitiesInformation(entityIds) {
             };
            
         
-            let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
+            let entityDetails = await sunbirdUserProfile.learnerLocationSearch(bodyData);
 
-            if (!entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0) {
+            if (!entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0) {
                 throw {
                     status: HTTP_STATUS_CODE['bad_request'].status,
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
