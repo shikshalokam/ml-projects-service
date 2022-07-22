@@ -1394,7 +1394,7 @@ module.exports = class UserProjectsHelper {
                     }
                     createProject =
                         _.merge(createProject, programAndSolutionInformation.data);
-                } else{
+                } else {
                     let queryData = {};
                     queryData["_id"] = data.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,
@@ -2510,7 +2510,7 @@ function _entitiesInformation(entityIds) {
 
             let entitiesData = [];
 
-            if ( entities.length > 0 ) {
+            if ( entityResult.length > 0 ) {
 
                 entitiesData = _entitiesMetaInformation(entityResult);
             }
