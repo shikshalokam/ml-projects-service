@@ -3,9 +3,10 @@
  * author : Aman Karki
  * Date : 13-July-2020
  * Description : All utility functions.
- */
-
- /**
+*/
+// Dependencies
+const {validate : uuidValidate,v4 : uuidV4} = require('uuid');
+/**
   * convert camel case to title case.
   * @function
   * @name camelCaseToTitleCase
@@ -233,6 +234,29 @@ function revertStatusorNot( appVersion ) {
   }
 
 }
+
+/**
+  * check whether string is valid uuid.
+  * @function
+  * @name checkValidUUID
+  * @param {String} uuids 
+  * @returns {Boolean} returns a Boolean value true/false
+*/
+
+function checkValidUUID(uuids) {
+
+  var validateUUID = true;
+  if(Array.isArray(uuids)){
+      for (var i = 0; uuids.length > i; i++) {
+          if(!uuidValidate(uuids[i])){
+            validateUUID = false
+          }
+      }
+  }else {
+     validateUUID = uuidValidate(uuids);
+  }
+  return validateUUID;
+}
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -245,5 +269,6 @@ module.exports = {
   isValidMongoId : isValidMongoId,
   convertProjectStatus : convertProjectStatus,
   revertProjectStatus:revertProjectStatus,
-  revertStatusorNot:revertStatusorNot
+  revertStatusorNot:revertStatusorNot,
+  checkValidUUID : checkValidUUID
 };

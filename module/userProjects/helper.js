@@ -2477,24 +2477,47 @@ function _projectCategories(categories) {
 function _entitiesInformation(entityIds) {
     return new Promise(async (resolve, reject) => {
         try {
-            let bodyData={
-                "id" : entityIds
-            };
-           
-        
-            let entityDetails = await sunbirdUserProfile.learnerLocationSearch(bodyData);
+            let locationIds = [];
+            let locationCodes = [];
+            let entityInformations = [];
+            entityIds.forEach(entity=>{
+                if (UTILS.checkValidUUID(entity)) {
+                  locationIds.push(entity);
+                } else {
+                    locationCodes.push(entity);
+                }
+            });
 
-            if (!entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0) {
+            if ( locationIds.length > 0 ) {
+                let bodyData = {
+                    "id" : locationIds
+                } 
+                let entityData = await sunbirdUserProfile.learnerLocationSearch( bodyData );
+                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+                    entityInformations =  entityData.data.response;
+                }
+            }
+
+            if ( locationCodes.length > 0 ) {
+                let bodyData = {
+                    "code" : locationCodes
+                } 
+                let entityData = await sunbirdUserProfile.learnerLocationSearch( bodyData );
+                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+                    entityInformations =  entityInformations.concat(entityData.data.response);
+                }
+            }
+           
+            if ( !entityInformations.length > 0 ) {
                 throw {
                     status: HTTP_STATUS_CODE['bad_request'].status,
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
                 }
             }
-        
-            let entities = entityDetails.data.response;
+            
             let entityResult = [];
             //formating response
-            entities.map(entityData => {
+            entityInformations.map(entityData => {
                 let data = {};
                 data._id = entityData.id;
                 data.entityType = entityData.type;
@@ -2514,7 +2537,7 @@ function _entitiesInformation(entityIds) {
 
                 entitiesData = _entitiesMetaInformation(entityResult);
             }
-
+            
             return resolve({
                 success: true,
                 data: entitiesData
@@ -2781,7 +2804,6 @@ function _observationDetails(observationData, userRoleAndProfileInformation = {}
 */
 
 function _entitiesMetaInformation(entitiesData) {
-
     entitiesData = entitiesData.map(entity => {
         entity.metaInformation._id = entity._id;
         entity.metaInformation.entityType = entity.entityType;
