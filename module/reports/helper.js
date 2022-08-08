@@ -38,11 +38,13 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
                 let query = { };
+                
                 if (entityId) {
-                    query["entityId"] = ObjectId(entityId);
+                    query["entityId"] = entityId;
                 } else {
                     query["userId"] = userId
                 }
+
 
                 let dateRange = await _getDateRangeofReport(reportType);
                 let endOf = dateRange.endOf;
@@ -70,7 +72,7 @@ module.exports = class ReportsHelper {
                     []
                 );
 
-
+                
                 let tasksReport = {
                     "total": 0,
                     "overdue": 0
@@ -318,7 +320,9 @@ module.exports = class ReportsHelper {
 
                 }
             } catch (error) {
+                console.log("error : ",error)
                 return resolve({
+                   
                     success: false,
                     message: error.message,
                     data: false
@@ -352,9 +356,9 @@ module.exports = class ReportsHelper {
                         $exists : true
                     }
                 };
-
-                if(entityId != "" && UTILS.isValidMongoId(entityId)) {
-                    query.entityId = ObjectId(entityId);
+               
+                if( entityId != "" ) {
+                    query.entityId = entityId;
                 } 
                 
                 if (userRole != "") {
@@ -484,11 +488,12 @@ module.exports = class ReportsHelper {
                 };
 
                 if (entityId) {
-                    query["entityId"] = ObjectId(entityId);
+                    query["entityId"] = entityId;
                 } else {
                     query["userId"] = userId
                 }
 
+               
                 let chartObject = [];
                 let dateRange = await _getDateRangeofReport(reportType);
                 let endOf = dateRange.endOf;
