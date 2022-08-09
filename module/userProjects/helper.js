@@ -23,7 +23,6 @@ const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
-const sunbirdUserProfile = require(GENERICS_FILES_PATH + "/services/users");
 
 /**
     * UserProjectsHelper
@@ -2693,7 +2692,7 @@ function _entitiesInformation(entityIds) {
                 let bodyData = {
                     "id" : locationIds
                 } 
-                let entityData = await sunbirdUserProfile.learnerLocationSearch( bodyData );
+                let entityData = await userProfileService.learnerLocationSearch( bodyData );
                 if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
                     entityInformations =  entityData.data.response;
                 }
@@ -2703,7 +2702,7 @@ function _entitiesInformation(entityIds) {
                 let bodyData = {
                     "code" : locationCodes
                 } 
-                let entityData = await sunbirdUserProfile.learnerLocationSearch( bodyData );
+                let entityData = await userProfileService.learnerLocationSearch( bodyData );
                 if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
                     entityInformations =  entityInformations.concat(entityData.data.response);
                 }
