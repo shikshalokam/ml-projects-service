@@ -8,6 +8,7 @@
 //dependencies
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
+const serverTimeout = CONSTANTS.common.SERVER_TIME_OUT;
 
 const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
@@ -59,17 +60,16 @@ const profile = function ( token,userId = "" ) {
     })
 }
 
-const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(  process.env.SUNBIRD_SERVER_TIMEOUT ) : 5000;
+
 /**
   * 
   * @function
-  * @name learnerLocationSearch
-  * @param {String} bearerToken - autherization token.
+  * @name locationSearch
   * @param {object} bodyData -  bodydata .
   * @returns {Promise} returns a promise.
 */
 
-const learnerLocationSearch = function ( filterData ) {
+const locationSearch = function ( filterData ) {
   return new Promise(async (resolve, reject) => {
       try {
           
@@ -85,25 +85,27 @@ const learnerLocationSearch = function ( filterData ) {
             json : bodyData
         };
 
-        request.post(url,options,learnerSearchCallback);
+        request.post(url,options,requestCallback);
 
         let result = {
             success : true
         };
 
-        function learnerSearchCallback(err, data) {
-
-            
+        function requestCallback(err, data) {   
             if (err) {
                 result.success = false;
             } else {
-                  
                 let response = data.body;
-                  
-                if( response.responseCode === CONSTANTS.common.OK) {
-                    result["data"] = response.result;
+                
+                if( response.responseCode === CONSTANTS.common.OK &&
+                    response.result &&
+                    response.result.response &&
+                    response.result.response.length > 0
+                ) {
+                    result["data"] = response.result.response;
+                    result["count"] = response.result.count;
                 } else {
-                      result.success = false;
+                    result.success = false;
                 }
             }
             return resolve(result);
@@ -122,5 +124,5 @@ const learnerLocationSearch = function ( filterData ) {
 }
 module.exports = {
     profile : profile,
-    learnerLocationSearch : learnerLocationSearch
+    locationSearch : locationSearch
 };

@@ -2692,9 +2692,9 @@ function _entitiesInformation(entityIds) {
                 let bodyData = {
                     "id" : locationIds
                 } 
-                let entityData = await userProfileService.learnerLocationSearch( bodyData );
-                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-                    entityInformations =  entityData.data.response;
+                let entityData = await userProfileService.locationSearch( bodyData );
+                if ( entityData.success ) {
+                    entityInformations =  entityData.data;
                 }
             }
 
@@ -2702,9 +2702,9 @@ function _entitiesInformation(entityIds) {
                 let bodyData = {
                     "code" : locationCodes
                 } 
-                let entityData = await userProfileService.learnerLocationSearch( bodyData );
-                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-                    entityInformations =  entityInformations.concat(entityData.data.response);
+                let entityData = await userProfileService.locationSearch( bodyData );
+                if ( entityData.success ) {
+                    entityInformations =  entityInformations.concat(entityData.data);
                 }
             }
            
