@@ -65,7 +65,7 @@ const profile = function ( token,userId = "" ) {
   * 
   * @function
   * @name locationSearch
-  * @param {object} bodyData -  bodydata .
+  * @param {object} filterData -  location search filter object.
   * @returns {Promise} returns a promise.
 */
 
