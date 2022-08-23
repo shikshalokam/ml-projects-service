@@ -8,7 +8,6 @@
 //dependencies
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
-const serverTimeout = CONSTANTS.common.SERVER_TIME_OUT;
 
 const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
@@ -66,10 +65,11 @@ const profile = function ( token,userId = "" ) {
   * @function
   * @name locationSearch
   * @param {object} filterData -  location search filter object.
+  * @param {Boolean} formatResult -  format result or not.
   * @returns {Promise} returns a promise.
 */
 
-const locationSearch = function ( filterData ) {
+const locationSearch = function ( filterData, formatResult = false ) {
   return new Promise(async (resolve, reject) => {
       try {
           
@@ -86,7 +86,7 @@ const locationSearch = function ( filterData ) {
         };
 
         request.post(url,options,requestCallback);
-
+        
         let result = {
             success : true
         };
@@ -102,8 +102,27 @@ const locationSearch = function ( filterData ) {
                     response.result.response &&
                     response.result.response.length > 0
                 ) {
-                    result["data"] = response.result.response;
-                    result["count"] = response.result.count;
+                    if ( formatResult ) {
+                        let entityResult =new Array;
+                        response.result.response.map(entityData => {
+                            let data = {};
+                            data._id = entityData.id;
+                            data.entityType = entityData.type;
+                            data.metaInformation = {};
+                            data.metaInformation.name = entityData.name;
+                            data.metaInformation.externalId = entityData.code
+                            data.registryDetails = {};
+                            data.registryDetails.locationId = entityData.id;
+                            data.registryDetails.code = entityData.code;
+                            entityResult.push(data);
+                        });
+                        result["data"] = entityResult;
+                        result["count"] = response.result.count;
+                    } else {
+                        result["data"] = response.result.response;
+                        result["count"] = response.result.count;
+                    }
+                    
                 } else {
                     result.success = false;
                 }
@@ -115,7 +134,7 @@ const locationSearch = function ( filterData ) {
             return resolve (result = {
                 success : false
              });
-        }, serverTimeout);
+        }, CONSTANTS.common.SERVER_TIME_OUT);
 
       } catch (error) {
           return reject(error);

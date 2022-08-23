@@ -2692,7 +2692,7 @@ function _entitiesInformation(entityIds) {
                 let bodyData = {
                     "id" : locationIds
                 } 
-                let entityData = await userProfileService.locationSearch( bodyData );
+                let entityData = await userProfileService.locationSearch( bodyData, formatResult = true);
                 if ( entityData.success ) {
                     entityInformations =  entityData.data;
                 }
@@ -2702,7 +2702,7 @@ function _entitiesInformation(entityIds) {
                 let bodyData = {
                     "code" : locationCodes
                 } 
-                let entityData = await userProfileService.locationSearch( bodyData );
+                let entityData = await userProfileService.locationSearch( bodyData , formatResult = true );
                 if ( entityData.success ) {
                     entityInformations =  entityInformations.concat(entityData.data);
                 }
@@ -2714,30 +2714,11 @@ function _entitiesInformation(entityIds) {
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
                 }
             }
-            
-            let entityResult = [];
-            //formating response
-            entityInformations.map(entityData => {
-                let data = {};
-                data._id = entityData.id;
-                data.entityType = entityData.type;
-                data.metaInformation = {};
-                data.metaInformation.name = entityData.name;
-                data.metaInformation.externalId = entityData.code
-                data.registryDetails = {};
-                data.registryDetails.locationId = entityData.id;
-                data.registryDetails.code = entityData.code;
-                entityResult.push(data);
-            });
-            
-
             let entitiesData = [];
-
-            if ( entityResult.length > 0 ) {
-
-                entitiesData = _entitiesMetaInformation(entityResult);
+            if ( entityInformations.length > 0 ) {
+                entitiesData = _entitiesMetaInformation(entityInformations);
             }
-            
+        
             return resolve({
                 success: true,
                 data: entitiesData
