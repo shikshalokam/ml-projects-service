@@ -178,7 +178,7 @@ module.exports = class UserProjectsHelper {
                 let addOrUpdateEntityToProject = false;
 
                 if (data.entityId) {
-
+                    
                     // If entity is not present in project or new entity is updated.
                     if (
                         !userProject[0].entityInformation ||
@@ -190,7 +190,7 @@ module.exports = class UserProjectsHelper {
                         addOrUpdateEntityToProject = true;
                     }
                 }
-
+                
                 if (addOrUpdateEntityToProject) {
 
                     let entityInformation =
@@ -924,7 +924,6 @@ module.exports = class UserProjectsHelper {
                     "projectTemplateId"
                 ]
                 );
-
                 if (!project.length > 0) {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
@@ -1436,7 +1435,6 @@ module.exports = class UserProjectsHelper {
     static add(data, userId, userToken, appName = "", appVersion = "") {
         return new Promise(async (resolve, reject) => {
             try {
-
                 const projectsModel = Object.keys(schemas["projects"].schema);
                 let createProject = {};
 
@@ -1609,7 +1607,6 @@ module.exports = class UserProjectsHelper {
                         hasAcceptedTAndC : userProject.hasAcceptedTAndC ? userProject.hasAcceptedTAndC : false
                     }
                 });
-
             } catch (error) {
                 return resolve({
                     status:
@@ -2680,27 +2677,48 @@ function _projectCategories(categories) {
 function _entitiesInformation(entityIds) {
     return new Promise(async (resolve, reject) => {
         try {
+            let locationIds = [];
+            let locationCodes = [];
+            let entityInformations = [];
+            entityIds.forEach(entity=>{
+                if (UTILS.checkValidUUID(entity)) {
+                  locationIds.push(entity);
+                } else {
+                    locationCodes.push(entity);
+                }
+            });
 
-            let entityData =
-                await coreService.entityDocuments(
-                    entityIds,
-                    ["metaInformation", "entityType", "entityTypeId", "registryDetails"]
-                );
+            if ( locationIds.length > 0 ) {
+                let bodyData = {
+                    "id" : locationIds
+                } 
+                let entityData = await userProfileService.locationSearch( bodyData, formatResult = true);
+                if ( entityData.success ) {
+                    entityInformations =  entityData.data;
+                }
+            }
 
-            if (!entityData.success) {
+            if ( locationCodes.length > 0 ) {
+                let bodyData = {
+                    "code" : locationCodes
+                } 
+                let entityData = await userProfileService.locationSearch( bodyData , formatResult = true );
+                if ( entityData.success ) {
+                    entityInformations =  entityInformations.concat(entityData.data);
+                }
+            }
+           
+            if ( !entityInformations.length > 0 ) {
                 throw {
                     status: HTTP_STATUS_CODE['bad_request'].status,
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND
                 }
             }
-
             let entitiesData = [];
-
-            if (entityData.success && entityData.data.length > 0) {
-
-                entitiesData = _entitiesMetaInformation(entityData.data);
+            if ( entityInformations.length > 0 ) {
+                entitiesData = _entitiesMetaInformation(entityInformations);
             }
-
+        
             return resolve({
                 success: true,
                 data: entitiesData
@@ -2967,15 +2985,12 @@ function _observationDetails(observationData, userRoleAndProfileInformation = {}
 */
 
 function _entitiesMetaInformation(entitiesData) {
-
     entitiesData = entitiesData.map(entity => {
-        entity.metaInformation._id = ObjectId(entity._id);
+        entity.metaInformation._id = entity._id;
         entity.metaInformation.entityType = entity.entityType;
-        entity.metaInformation.entityTypeId = ObjectId(entity.entityTypeId);
         entity.metaInformation.registryDetails = entity.registryDetails;
         return entity.metaInformation;
-    });
-
+    });    
     return entitiesData;
 }
 
