@@ -1635,8 +1635,6 @@ module.exports = class UserProjectsHelper {
     static share(projectId = "", taskIds = [], userToken,appVersion) {
         return new Promise(async (resolve, reject) => {
             try {
-                
-                let projectPdfUrl = []
 
                 let projectPdf = true;
                 let projectDocument = [];
@@ -1651,15 +1649,15 @@ module.exports = class UserProjectsHelper {
                         query,
                         [
                             "status",  
-                            "pdfDownloadUrl"
+                            "pdfURL"
                         ]
                     );
                 
                 //check if download url is already created for this 
                 if ( projectPdfUrlDocument.length > 0 && 
                     projectPdfUrlDocument[0].status == "submitted" &&
-                    projectPdfUrlDocument[0].pdfDownloadUrl &&
-                    projectPdfUrlDocument[0].pdfDownloadUrl != ""
+                    projectPdfUrlDocument[0].pdfURL &&
+                    projectPdfUrlDocument[0].pdfURL != ""
                 ) {
 
                     return resolve({
@@ -1830,7 +1828,7 @@ module.exports = class UserProjectsHelper {
                     if (response && response.success == true) {
                        
                         let projectUpdated = {
-                            pdfDownloadUrl : response.data.pdfUrl
+                            pdfURL : response.data.pdfUrl
                         }
                         //Add pdf download url to project record
                         let projectUpdatedData =

@@ -136,7 +136,7 @@ module.exports = {
         },
         remarks : String,
         userProfile : Object,
-        pdfDownloadUrl : String
+        pdfURL : String
     },
     compoundIndex: [
         {
