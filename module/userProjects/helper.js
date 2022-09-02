@@ -938,7 +938,6 @@ module.exports = class UserProjectsHelper {
                 let assessmentOrObservationData = {};
                 
                 if (project[0].entityInformation && project[0].entityInformation._id && project[0].programInformation && project[0].programInformation._id) {
-                
                     assessmentOrObservationData = {
                         entityId: project[0].entityInformation._id,
                         programId: project[0].programInformation._id
@@ -1037,7 +1036,6 @@ module.exports = class UserProjectsHelper {
             let solutionExternalId = "";
             
             if( templateId !== "" ) {
-                
                 let templateDocuments = 
                 await projectTemplateQueries.templateDocument({
                     "externalId" : templateId,
@@ -1469,7 +1467,6 @@ module.exports = class UserProjectsHelper {
                 if (data.entityId) {
                     let entityInformation =
                         await _entitiesInformation([data.entityId]);
-
                     if (!entityInformation.success) {
                         return resolve(entityInformation);
                     }
@@ -2985,13 +2982,25 @@ function _observationDetails(observationData, userRoleAndProfileInformation = {}
 */
 
 function _entitiesMetaInformation(entitiesData) {
-    entitiesData = entitiesData.map(entity => {
-        entity.metaInformation._id = entity._id;
-        entity.metaInformation.entityType = entity.entityType;
-        entity.metaInformation.registryDetails = entity.registryDetails;
-        return entity.metaInformation;
-    });    
-    return entitiesData;
+    return new Promise(async (resolve, reject) => {
+        try {
+            entitiesData = entitiesData.map(entity => {
+                entity.metaInformation._id = entity._id;
+                entity.metaInformation.entityType = entity.entityType;
+                entity.metaInformation.registryDetails = entity.registryDetails;
+                return entity.metaInformation;
+            });    
+            
+            return entitiesData;
+
+        } catch (error) {
+            return resolve({
+                message: error.message,
+                success: false,
+                status: error.status ?
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            });
+        }
 }
 
 

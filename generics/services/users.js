@@ -80,7 +80,8 @@ const locationSearch = function ( filterData, formatResult = false ) {
         userServiceUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
         const options = {
             headers : {
-                "content-type": "application/json"
+                "content-type": "application/json",
+                "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJSbTBGOTlnMnd4SmZKelJwa2YzTnRlaE5CYlJnZXRCaCJ9.CjDN6GufxylpAM5J_6j9fD0wq7S2qr1F6FOzAZtQ6XU"
             },
             json : bodyData
         };
@@ -95,8 +96,8 @@ const locationSearch = function ( filterData, formatResult = false ) {
             if (err) {
                 result.success = false;
             } else {
+
                 let response = data.body;
-                
                 if( response.responseCode === CONSTANTS.common.OK &&
                     response.result &&
                     response.result.response &&
@@ -141,7 +142,45 @@ const locationSearch = function ( filterData, formatResult = false ) {
       }
   })
 }
+
+/**
+  * get Parent Entities of an entity.
+  * @method
+  * @name getParentEntities
+  * @param {String} entityId - entity id
+  * @returns {Array} - parent entities.
+*/
+
+async function getParentEntities( entityId, iteration = 0, parentEntities ) {
+
+    if ( iteration == 0 ) {
+        parentEntities = [];
+    }
+
+    let filterQuery = {
+        "id" : entityId
+    };
+
+    let entityDetails = await locationSearch(filterQuery);
+    if ( !entityDetails.success ) {
+        return parentEntities;
+    } else {
+        
+        let entityData = entityDetails.data[0];
+        if ( iteration > 0 ) parentEntities.push(entityData);
+        if ( entityData.parentId ) {
+            iteration = iteration + 1;
+            entityId = entityData.parentId;
+            await getParentEntities(entityId, iteration, parentEntities);
+        }
+    }
+
+    return parentEntities;
+
+}
+
 module.exports = {
     profile : profile,
-    locationSearch : locationSearch
+    locationSearch : locationSearch,
+    getParentEntities : getParentEntities
 };
