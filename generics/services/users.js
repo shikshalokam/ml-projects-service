@@ -80,7 +80,7 @@ const locationSearch = function ( filterData, formatResult = false ) {
         userServiceUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
         const options = {
             headers : {
-                "content-type": "application/json",
+                "content-type": "application/json"
             },
             json : bodyData
         };
