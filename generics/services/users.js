@@ -80,7 +80,7 @@ const locationSearch = function ( filterData, formatResult = false ) {
         userServiceUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
         const options = {
             headers : {
-                "content-type": "application/json"
+                "content-type": "application/json",
             },
             json : bodyData
         };
@@ -141,7 +141,43 @@ const locationSearch = function ( filterData, formatResult = false ) {
       }
   })
 }
+/**
+  * get Parent Entities of an entity.
+  * @method
+  * @name getParentEntities
+  * @param {String} entityId - entity id
+  * @returns {Array} - parent entities.
+*/
+
+async function getParentEntities( entityId, iteration = 0, parentEntities ) {
+
+    if ( iteration == 0 ) {
+        parentEntities = [];
+    }
+
+    let filterQuery = {
+        "id" : entityId
+    };
+
+    let entityDetails = await locationSearch(filterQuery);
+    if ( !entityDetails.success ) {
+        return parentEntities;
+    } else {
+        
+        let entityData = entityDetails.data[0];
+        if ( iteration > 0 ) parentEntities.push(entityData);
+        if ( entityData.parentId ) {
+            iteration = iteration + 1;
+            entityId = entityData.parentId;
+            await getParentEntities(entityId, iteration, parentEntities);
+        }
+    }
+
+    return parentEntities;
+
+}
 module.exports = {
     profile : profile,
-    locationSearch : locationSearch
+    locationSearch : locationSearch,
+    getParentEntities : getParentEntities
 };
