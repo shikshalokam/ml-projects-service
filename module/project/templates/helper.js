@@ -219,7 +219,6 @@ module.exports = class ProjectTemplatesHelper {
 
                 if( parsedData.entityType && parsedData.entityType !== "" ) {
                     parsedData.entityType = csvInformation.entityTypes[parsedData.entityType].name;
-                    parsedData.entityTypeId = csvInformation.entityTypes[parsedData.entityType]._id;
                 }
 
                 let learningResources = 

@@ -1194,7 +1194,7 @@ module.exports = class UserProjectsHelper {
                                 return resolve(entityInformation);
                             }
         
-                            projectCreation.data["entityInformation"] = _entitiesMetaInformation(
+                            projectCreation.data["entityInformation"] = await _entitiesMetaInformation(
                                 entityInformation.data
                             )[0];
         
@@ -2716,9 +2716,9 @@ function _entitiesInformation(entityIds) {
             }
             let entitiesData = [];
             if ( entityInformations.length > 0 ) {
-                entitiesData = _entitiesMetaInformation(entityInformations);
+                entitiesData = await _entitiesMetaInformation(entityInformations);
             }
-        
+            
             return resolve({
                 success: true,
                 data: entitiesData
@@ -2985,13 +2985,18 @@ function _observationDetails(observationData, userRoleAndProfileInformation = {}
 */
 
 function _entitiesMetaInformation(entitiesData) {
-    entitiesData = entitiesData.map(entity => {
-        entity.metaInformation._id = entity._id;
-        entity.metaInformation.entityType = entity.entityType;
-        entity.metaInformation.registryDetails = entity.registryDetails;
-        return entity.metaInformation;
-    });    
-    return entitiesData;
+    return new Promise(async (resolve, reject) => {
+        let entityInformation = []
+        for ( let index = 0; index < entitiesData.length; index++ ) {
+            let entityHierarchy =  await userProfileService.getParentEntities( entitiesData[index]._id );
+            entitiesData[index].metaInformation.hierarchy = entityHierarchy;
+            entitiesData[index].metaInformation._id = entitiesData[index]._id;
+            entitiesData[index].metaInformation.entityType = entitiesData[index].entityType;
+            entitiesData[index].metaInformation.registryDetails = entitiesData[index].registryDetails;
+            entityInformation.push(entitiesData[index].metaInformation)
+        }
+        return resolve (entityInformation);
+    })
 }
 
 
