@@ -76,9 +76,6 @@ module.exports = {
         entityType : {
             type : String
         },
-        entityTypeId : {
-            type : "ObjectId"
-        },
         taskSequence : {
             type : Array,
             default : []

@@ -59,6 +59,125 @@ const profile = function ( token,userId = "" ) {
     })
 }
 
-module.exports = {
-    profile : profile
+
+/**
+  * 
+  * @function
+  * @name locationSearch
+  * @param {object} filterData -  location search filter object.
+  * @param {Boolean} formatResult -  format result or not.
+  * @returns {Promise} returns a promise.
+*/
+
+const locationSearch = function ( filterData, formatResult = false ) {
+  return new Promise(async (resolve, reject) => {
+      try {
+          
+        let bodyData={};
+        bodyData["request"] = {};
+        bodyData["request"]["filters"] = filterData;
+        const url = 
+        userServiceUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
+        const options = {
+            headers : {
+                "content-type": "application/json"
+            },
+            json : bodyData
+        };
+
+        request.post(url,options,requestCallback);
+        
+        let result = {
+            success : true
+        };
+
+        function requestCallback(err, data) {   
+            if (err) {
+                result.success = false;
+            } else {
+                let response = data.body;
+                
+                if( response.responseCode === CONSTANTS.common.OK &&
+                    response.result &&
+                    response.result.response &&
+                    response.result.response.length > 0
+                ) {
+                    if ( formatResult ) {
+                        let entityResult =new Array;
+                        response.result.response.map(entityData => {
+                            let data = {};
+                            data._id = entityData.id;
+                            data.entityType = entityData.type;
+                            data.metaInformation = {};
+                            data.metaInformation.name = entityData.name;
+                            data.metaInformation.externalId = entityData.code
+                            data.registryDetails = {};
+                            data.registryDetails.locationId = entityData.id;
+                            data.registryDetails.code = entityData.code;
+                            entityResult.push(data);
+                        });
+                        result["data"] = entityResult;
+                        result["count"] = response.result.count;
+                    } else {
+                        result["data"] = response.result.response;
+                        result["count"] = response.result.count;
+                    }
+                    
+                } else {
+                    result.success = false;
+                }
+            }
+            return resolve(result);
+        }
+
+        setTimeout(function () {
+            return resolve (result = {
+                success : false
+             });
+        }, CONSTANTS.common.SERVER_TIME_OUT);
+
+      } catch (error) {
+          return reject(error);
+      }
+  })
 }
+/**
+  * get Parent Entities of an entity.
+  * @method
+  * @name getParentEntities
+  * @param {String} entityId - entity id
+  * @returns {Array} - parent entities.
+*/
+
+async function getParentEntities( entityId, iteration = 0, parentEntities ) {
+
+    if ( iteration == 0 ) {
+        parentEntities = [];
+    }
+
+    let filterQuery = {
+        "id" : entityId
+    };
+
+    let entityDetails = await locationSearch(filterQuery);
+    if ( !entityDetails.success ) {
+        return parentEntities;
+    } else {
+        
+        let entityData = entityDetails.data[0];
+        if ( iteration > 0 ) parentEntities.push(entityData);
+        if ( entityData.parentId ) {
+            iteration = iteration + 1;
+            entityId = entityData.parentId;
+            await getParentEntities(entityId, iteration, parentEntities);
+        }
+    }
+
+    return parentEntities;
+
+}
+module.exports = {
+    profile : profile,
+    locationSearch : locationSearch,
+    getParentEntities : getParentEntities
+};
