@@ -1180,7 +1180,7 @@ module.exports = class UserProjectsHelper {
                         if( bodyData.role ) {
                             projectCreation.data["userRole"] = bodyData.role;
                         }
-    
+
                         if( 
                             solutionDetails.entityType && bodyData[solutionDetails.entityType] 
                         ) {
@@ -1189,14 +1189,18 @@ module.exports = class UserProjectsHelper {
                                 userToken,
                                 [bodyData[solutionDetails.entityType]] 
                             );
-        
+
                             if( !entityInformation.success ) {
                                 return resolve(entityInformation);
                             }
-        
-                            projectCreation.data["entityInformation"] = await _entitiesMetaInformation(
+
+                            let entityDetails = await _entitiesMetaInformation(
                                 entityInformation.data
-                            )[0];
+                            );
+
+                            if ( entityDetails && entityDetails.length > 0 ) {
+                                projectCreation.data["entityInformation"] = entityDetails[0];
+                            }
         
                             projectCreation.data.entityId = entityInformation.data[0]._id;
                         }
@@ -2113,7 +2117,7 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data.entityId = entityInformation.data[0]._id;
                 }
 
-                if( requestedData.solutionId && requestedData.solutionId !== "" && isATargetedSolution === false){
+                if( requestedData.solutionId && requestedData.solutionId !== "" && isATargetedSolution === false ){
 
                     let programAndSolutionInformation =
                         await this.createProgramAndSolution(
@@ -2168,8 +2172,8 @@ module.exports = class UserProjectsHelper {
                         libraryProjects.data,
                         programAndSolutionInformation.data
                     )
-
                 }
+
                 //Fetch user profile information by calling sunbird's user read api.
                 let addReportInfoToSolution = false;
                 let userProfile = await userProfileService.profile(userToken, userId);
@@ -2978,6 +2982,7 @@ function _entitiesMetaInformation(entitiesData) {
             entitiesData[index].metaInformation.registryDetails = entitiesData[index].registryDetails;
             entityInformation.push(entitiesData[index].metaInformation)
         }
+
         return resolve (entityInformation);
     })
 }
