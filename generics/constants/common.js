@@ -49,5 +49,6 @@ module.exports = {
     "IMAGE_DATA_TYPE" : "image/jpeg",
     "DISTRICT": "district",
     "SERVER_TIME_OUT" : 5000,
-    "OK" : "OK"
+    "OK" : "OK",
+    "PROJECT" : "project"
 };

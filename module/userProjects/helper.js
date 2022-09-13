@@ -2919,23 +2919,6 @@ function _observationDetails(observationData, userRoleAndProfileInformation = {}
 
             } else {
 
-                let solutionUpdated =
-                    await surveyService.updateSolution(
-                        observationData.token,
-                        {
-                            project: observationData.project,
-                            referenceFrom: "project"
-                        },
-                        observationData.solutionDetails.externalId
-                    );
-
-                if (!solutionUpdated.success) {
-                    throw {
-                        status: HTTP_STATUS_CODE['bad_request'].status,
-                        message: CONSTANTS.apiResponses.SOLUTION_NOT_UPDATED
-                    }
-                }
-
                 let startDate = new Date();
                 let endDate = new Date();
                 endDate.setFullYear(endDate.getFullYear() + 1);
