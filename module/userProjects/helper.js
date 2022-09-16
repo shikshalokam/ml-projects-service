@@ -2116,59 +2116,6 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data.entityId = entityInformation.data[0]._id;
                 }
 
-                //update the observation task with duplicate solution & program
-                if ( 
-                    isATargetedSolution === false && 
-                    libraryProjects.data.tasks &&
-                    libraryProjects.data.tasks.length > 0 
-                ) {
-
-                    for (
-                        let pointerToTask = 0; 
-                        pointerToTask < libraryProjects.data.tasks.length; 
-                        pointerToTask++ 
-                    ) {
-
-                        let currentTask = libraryProjects.data.tasks[pointerToTask];
-                        if ( currentTask.type === CONSTANTS.common.OBSERVATION && 
-                            currentTask.solutionDetails 
-                        ) {
-                            // duplicate task solution
-                            let duplicateTaskProgramAndSolution =
-                            await this.createProgramAndSolution(
-                                currentTask.solutionDetails.programId,
-                                "",
-                                "",
-                                userToken,
-                                currentTask.solutionDetails._id,
-                                isATargetedSolution
-                            );
-
-                            if ( !duplicateTaskProgramAndSolution.success ) {
-                                return resolve(duplicateTaskProgramAndSolution);
-                            }
-
-                            if ( 
-                                !duplicateTaskProgramAndSolution.data ||
-                                !duplicateTaskProgramAndSolution.data.solutionInformation ||
-                                !duplicateTaskProgramAndSolution.data.programInformation 
-                            ) {
-                                throw {
-                                    message: CONSTANTS.apiResponses.COULD_NOT_CREATE_DUPLICATE_SOLUTION,
-                                    status: HTTP_STATUS_CODE['internal_server_error'].status
-                                };
-                            }
-
-                            currentTask.solutionDetails._id = duplicateTaskProgramAndSolution.data.solutionInformation._id;
-                            currentTask.solutionDetails.programId = duplicateTaskProgramAndSolution.data.programInformation._id;
-                            currentTask.solutionDetails.name = duplicateTaskProgramAndSolution.data.solutionInformation.name;
-                            currentTask.solutionDetails.externalId = duplicateTaskProgramAndSolution.data.solutionInformation.externalId;
-                            libraryProjects.data.tasks[pointerToTask] = currentTask;
-
-                        }
-                    }
-                }
-
                 if( requestedData.solutionId && requestedData.solutionId !== "" && isATargetedSolution === false ){
 
                     let programAndSolutionInformation =
