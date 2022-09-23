@@ -41,7 +41,8 @@ module.exports = class ProjectTemplatesHelper {
                 let categoryIds = [];
                 let roleIds = [];
                 let tasksIds = [];
-                let entityTypes = [];
+                // <- Entitytype validation removed {release-5.0.0} - entity generalisation
+                // let entityTypes = [];
 
                 csvData.forEach(template=>{
                     
@@ -69,10 +70,10 @@ module.exports = class ProjectTemplatesHelper {
                             parsedData.recommendedFor
                         );
                     }
-
-                    if( parsedData.entityType ) {
-                        entityTypes.push(parsedData.entityType);
-                    }
+                    // <- Entitytype validation removed {release-5.0.0} - entity generalisation
+                    // if( parsedData.entityType ) {
+                    //     entityTypes.push(parsedData.entityType);
+                    // }
 
                 });
 
@@ -126,37 +127,38 @@ module.exports = class ProjectTemplatesHelper {
                         }
                     }),{});
                 }
+                // <- Entitytype validation removed {release-5.0.0} - entity generalisation
+                // let entityTypesData = {};
 
-                let entityTypesData = {};
-
-                if( entityTypes.length > 0 ) {
+                // if( entityTypes.length > 0 ) {
                     
-                    let entityTypesDocument = 
-                    await coreService.entityTypesDocuments();
+                //     let entityTypesDocument = 
+                //     await coreService.entityTypesDocuments();
 
-                    if( !entityTypesDocument.success ) {
-                        throw {
-                            message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND,
-                            status : HTTP_STATUS_CODE['bad_request'].status
-                        }
-                    }
+                //     if( !entityTypesDocument.success ) {
+                //         throw {
+                //             message : CONSTANTS.apiResponses.ENTITY_TYPES_NOT_FOUND,
+                //             status : HTTP_STATUS_CODE['bad_request'].status
+                //         }
+                //     }
 
-                    entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
-                        ...ac,
-                        [entityType.name] : {
-                            _id : ObjectId(entityType._id),
-                            name : entityType.name
-                        }
-                    }),{});
+                //     entityTypesData = entityTypesDocument.data.reduce((ac,entityType)=> ({
+                //         ...ac,
+                //         [entityType.name] : {
+                //             _id : ObjectId(entityType._id),
+                //             name : entityType.name
+                //         }
+                //     }),{});
 
-                }
+                // }
 
                 return resolve({
                     success : true,
                     data : {
                         categories : categoriesData,
                         roles : recommendedFor,
-                        entityTypes : entityTypesData
+                        // <- Entitytype validation removed {release-5.0.0} - entity generalisation
+                        // entityTypes : entityTypesData
                     }
                 });
 
@@ -216,10 +218,10 @@ module.exports = class ProjectTemplatesHelper {
                 }
 
                 parsedData.recommendedFor = recommendedFor;
-
-                if( parsedData.entityType && parsedData.entityType !== "" ) {
-                    parsedData.entityType = csvInformation.entityTypes[parsedData.entityType].name;
-                }
+                // <- Entitytype validation removed {release-5.0.0} - entity generalisation
+                // if( parsedData.entityType && parsedData.entityType !== "" ) {
+                //     parsedData.entityType = csvInformation.entityTypes[parsedData.entityType].name;
+                // }
 
                 let learningResources = 
                 await learningResourcesHelper.extractLearningResourcesFromCsv(parsedData);
