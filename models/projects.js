@@ -135,7 +135,18 @@ module.exports = {
             default : [] 
         },
         remarks : String,
-        userProfile : Object
+        userProfile : Object,
+        certificate : {
+            templateId : "ObjectId",
+            osid : String,
+            transactionId : String,
+            templateUrl : String,
+            status : String,
+            eligible : Boolean,
+            message : String,
+            issuedOn : Date,
+            criteria : Object
+        }
     },
     compoundIndex: [
         {

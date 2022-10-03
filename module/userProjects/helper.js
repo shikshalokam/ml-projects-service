@@ -23,6 +23,7 @@ const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
+const certificateTemplateQueries = require(DB_QUERY_BASE_PATH + "/certificateTemplates");
 
 /**
     * UserProjectsHelper
@@ -454,9 +455,9 @@ module.exports = class UserProjectsHelper {
 
                 result.solutionInformation = _.pick(
                     solutionAndProgramCreation.data.solution,
-                    ["name", "externalId", "description", "_id", "entityType"]
+                    ["name", "externalId", "description", "_id", "entityType", "certificateTemplateId"]
                 );
-
+                
                 result.solutionInformation._id =
                     ObjectId(result.solutionInformation._id);
 
@@ -1157,7 +1158,24 @@ module.exports = class UserProjectsHelper {
                     if( appVersion !== "" ) {
                         projectCreation.data["appInformation"]["appVersion"] = appVersion;
                     }
-
+                    
+                    if ( solutionDetails.certificateTemplateId && solutionDetails.certificateTemplateId !== "" ) {
+                        // <- Add certificate template details to projectCreation data if present ->
+                        const certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                            _id : solutionDetails.certificateTemplateId
+                        });
+                        
+                        // create certificate object and add data if certificate template is present.
+                        if ( certificateTemplateDetails.length > 0 ) {
+                            projectCreation.data["certificate"] = {
+                                templateId : certificateTemplateDetails[0]._id,
+                                templateUrl : certificateTemplateDetails[0].templateUrl,
+                                status : certificateTemplateDetails[0].status ? certificateTemplateDetails[0].status : "",
+                                criteria : certificateTemplateDetails[0].criteria ? certificateTemplateDetails[0].criteria : "",
+                            }
+                        }
+                    }
+                    
                     let getUserProfileFromObservation = false;
     
                     if( bodyData && Object.keys(bodyData).length > 0 ) {
@@ -2061,7 +2079,6 @@ module.exports = class UserProjectsHelper {
                         isATargetedSolution
                     );
 
-
                 if (
                     libraryProjects.data &&
                     !Object.keys(libraryProjects.data).length > 0
@@ -2173,7 +2190,29 @@ module.exports = class UserProjectsHelper {
                         programAndSolutionInformation.data
                     )
                 }
-
+                //  <- Add certificate template data
+                if ( 
+                    libraryProjects.data.solutionInformation &&
+                    libraryProjects.data.solutionInformation.certificateTemplateId &&
+                    libraryProjects.data.solutionInformation.certificateTemplateId !== ""
+                ){
+                    // <- Add certificate template details to projectCreation data if present ->
+                    const certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                        _id : libraryProjects.data.solutionInformation.certificateTemplateId
+                    });
+                    
+                    // create certificate object and add data if certificate template is present.
+                    if ( certificateTemplateDetails.length > 0 ) {
+                        libraryProjects.data["certificate"] = {
+                            templateId : certificateTemplateDetails[0]._id,
+                            templateUrl : certificateTemplateDetails[0].templateUrl,
+                            status : certificateTemplateDetails[0].status ? certificateTemplateDetails[0].status : "",
+                            criteria : certificateTemplateDetails[0].criteria ? certificateTemplateDetails[0].criteria : "",
+                        }
+                    }
+                    delete  libraryProjects.data.solutionInformation.certificateTemplateId;
+                }
+                
                 //Fetch user profile information by calling sunbird's user read api.
                 let addReportInfoToSolution = false;
                 let userProfile = await userProfileService.profile(userToken, userId);
@@ -2199,11 +2238,11 @@ module.exports = class UserProjectsHelper {
 
                 libraryProjects.data.projectTemplateId = libraryProjects.data._id;
                 libraryProjects.data.projectTemplateExternalId = libraryProjects.data.externalId;
-
+                
                 let projectCreation = await database.models.projects.create(
                     _.omit(libraryProjects.data, ["_id"])
                 );
-
+        
                 if ( addReportInfoToSolution && projectCreation._doc.solutionId ) {
 
                     let updateSolution = await solutionsHelper.addReportInformationInSolution(
@@ -2221,9 +2260,9 @@ module.exports = class UserProjectsHelper {
                         userToken
                     );
                 }
-
+                
                 projectCreation = await _projectInformation(projectCreation._doc);
-
+                
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
@@ -2294,7 +2333,7 @@ function _projectInformation(project) {
 
     return new Promise(async (resolve, reject) => {
         try {
-
+            
             if (project.entityInformation) {
                 project.entityId = project.entityInformation._id;
                 project.entityName = project.entityInformation.name;
@@ -2304,7 +2343,7 @@ function _projectInformation(project) {
                 project.programId = project.programInformation._id;
                 project.programName = project.programInformation.name;
             }
-
+            
             //project attachments
             if ( project.attachments && project.attachments.length > 0 ) {
                 
@@ -2331,7 +2370,7 @@ function _projectInformation(project) {
                 }
                
             }
-
+            
             //task attachments
             if (project.tasks && project.tasks.length > 0) {
                 //order task based on task sequence
@@ -2378,7 +2417,7 @@ function _projectInformation(project) {
                     project.tasks = taskAttachmentsUrl.data;
                 }
             }
-
+            
             project.status =
                 project.status ? project.status : CONSTANTS.common.NOT_STARTED_STATUS;
 
@@ -2393,7 +2432,7 @@ function _projectInformation(project) {
             delete project.entityInformation;
             delete project.solutionInformation;
             delete project.programInformation;
-
+            
             return resolve({
                 success: true,
                 data: project
