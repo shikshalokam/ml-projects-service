@@ -1170,8 +1170,8 @@ module.exports = class UserProjectsHelper {
                             projectCreation.data["certificate"] = {
                                 templateId : certificateTemplateDetails[0]._id,
                                 templateUrl : certificateTemplateDetails[0].templateUrl,
-                                status : certificateTemplateDetails[0].status ? certificateTemplateDetails[0].status : "",
-                                criteria : certificateTemplateDetails[0].criteria ? certificateTemplateDetails[0].criteria : "",
+                                status : certificateTemplateDetails[0].status,
+                                criteria : certificateTemplateDetails[0].criteria,
                             }
                         }
                     }
@@ -2206,8 +2206,8 @@ module.exports = class UserProjectsHelper {
                         libraryProjects.data["certificate"] = {
                             templateId : certificateTemplateDetails[0]._id,
                             templateUrl : certificateTemplateDetails[0].templateUrl,
-                            status : certificateTemplateDetails[0].status ? certificateTemplateDetails[0].status : "",
-                            criteria : certificateTemplateDetails[0].criteria ? certificateTemplateDetails[0].criteria : "",
+                            status : certificateTemplateDetails[0].status,
+                            criteria : certificateTemplateDetails[0].criteria,
                         }
                     }
                     delete  libraryProjects.data.solutionInformation.certificateTemplateId;
