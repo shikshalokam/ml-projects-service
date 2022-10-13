@@ -24,6 +24,7 @@ const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
 const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 const certificateTemplateQueries = require(DB_QUERY_BASE_PATH + "/certificateTemplates");
+const certificateService = require(GENERICS_FILES_PATH + "/services/certificate");
 
 /**
     * UserProjectsHelper
@@ -118,7 +119,6 @@ module.exports = class UserProjectsHelper {
                     "appInformation",
                     "status"
                 ]);
-                
                 if (!userProject.length > 0) {
 
                     throw {
@@ -353,7 +353,7 @@ module.exports = class UserProjectsHelper {
                 if ( data.status == CONSTANTS.common.COMPLETED_STATUS || data.status == CONSTANTS.common.SUBMITTED_STATUS ) {
                     updateProject.completedDate = new Date();
                 }
-
+    
                 let projectUpdated =
                     await projectQueries.findOneAndUpdate(
                         {
@@ -372,9 +372,8 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
-
                 await kafkaProducersHelper.pushProjectToKafka(projectUpdated);
-
+               
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED,
@@ -1311,6 +1310,21 @@ module.exports = class UserProjectsHelper {
             } else {
                 projectDetails.data.status = UTILS.convertProjectStatus(projectDetails.data.status);
             }
+            // make templateUrl downloadable befor passing to front-end
+            if ( projectDetails.data.certificate &&
+                 projectDetails.data.certificate.templateUrl &&
+                 projectDetails.data.certificate.templateUrl !== "" 
+            ) {
+                let certificateTemplateDownloadableUrl =
+                    await coreService.getDownloadableUrl(
+                        {
+                            filePaths: [projectDetails.data.certificate.templateUrl]
+                        }
+                    );
+                    if ( certificateTemplateDownloadableUrl.success ) {
+                        projectDetails.data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                    }
+            } 
 
             return resolve({
                 success: true,
@@ -2279,15 +2293,15 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-      /**
-      * get project details.
-      * @method
-      * @name userProject 
-      * @param {String} projectId - project id.
-      * @returns {Object} Project details.
-     */
+    /**
+     * get project details.
+     * @method
+     * @name userProject 
+     * @param {String} projectId - project id.
+     * @returns {Object} Project details.
+    */
 
-       static userProject(projectId) {
+    static userProject(projectId) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -2318,6 +2332,303 @@ module.exports = class UserProjectsHelper {
             }
         })
     }
+
+    /**
+     * generate project certificate.
+     * @method
+     * @name generateCertificate 
+     * @param {Object} data - certificate creation data.
+     * @returns {JSON} certificate details.
+    */
+
+     static generateCertificate(data) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // logic to check criteria eligibility to be added
+                //  :Check criteria is sattisfied
+                //  if criteria check passes then call sunbird-RC certificate api 
+                let certificateTemplateDetails = [];
+                // get downloadable url for certificate template
+                if ( data.certificate && data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
+                    let certificateTemplateDownloadableUrl =
+                    await coreService.getDownloadableUrl(
+                        {
+                            filePaths: [data.certificate.templateUrl]
+                        }
+                    );
+                    if ( certificateTemplateDownloadableUrl.success ) {
+                        data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                    } else {
+                        return resolve({
+                            success:false
+                        });
+                    }
+                }
+                if ( data.certificate && data.certificate.templateId && data.certificate.templateId !== "" ) {
+                    certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                        _id : data.certificate.templateId
+                    },["issuer","solutionId","programId"]);
+
+                    //certificate template data do not exists.
+                    if ( !certificateTemplateDetails.length > 0 ) {
+                        return resolve({
+                            success:false
+                        });
+                    }
+                }
+                
+                //create certificate request body 
+                let certificateData = {
+                    recipient : {
+                        id : data.userId,
+                        name : data.userProfile.userName,
+                        type : CONSTANTS.common.PROJECT_CERTIFICATE_RECIPIENT_TYPE
+                    },
+                    templateUrl : data.certificate.templateUrl,
+                    issuer : certificateTemplateDetails[0].issuer,
+                    status : UTILS.upperCase(data.certificate.status),
+                    projectId : data._id,
+                    projectName : data.title,
+                    programId : certificateTemplateDetails[0].programId,
+                    programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
+                    solutionId : certificateTemplateDetails[0].solutionId,
+                    solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
+                    completedDate : data.completedDate
+                };
+                
+                const certificateDetails = await certificateService.createCertificate( certificateData );
+            
+                let updateObject = {
+                    "$set" : {}
+                };
+
+                //  if transaction id is present.
+                if ( certificateDetails.success && 
+                     certificateDetails.data && 
+                     certificateDetails.data.ProjectCertificate &&
+                     certificateDetails.data.ProjectCertificate.transactionId &&
+                     certificateDetails.data.ProjectCertificate.transactionId !== "" 
+                    ) {
+                        updateObject["$set"]["certificate.transactionId"] = certificateDetails.data.ProjectCertificate.transactionId;
+                }
+
+                if ( certificateDetails.success && 
+                    certificateDetails.data && 
+                    certificateDetails.data.ProjectCertificate &&
+                    certificateDetails.data.ProjectCertificate.osid &&
+                    certificateDetails.data.ProjectCertificate.osid !== "" 
+                   ) {
+                    updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
+                }
+                let projectDetails = await projectQueries.findOneAndUpdate(
+                    {
+                        _id: data._id
+                    },
+                    updateObject
+                );
+                 
+                return resolve( { 
+                    success: true
+                });
+
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
+    /**
+     * certificate callback
+     * @method
+     * @name certificateCallback 
+     * @param {String} transactionId - transactionId for create certificate.
+     * @param {String} osid - osid for created certificate.
+     * @returns {JSON} certificate data updation details.
+    */
+
+    static certificateCallback(transactionId, osid) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let updateObject = {
+                    "$set" : {}
+                };
+
+                // update osid and eligibility based on transactionId
+                updateObject["$set"]["certificate.osid"] = osid;
+                updateObject["$set"]["certificate.eligible"] = true;
+                updateObject["$set"]["certificate.message"] = CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED;
+                updateObject["$set"]["certificate.issuedOn"] = new Date();
+
+                let projectDetails = await projectQueries.findOneAndUpdate(
+                    {
+                        "certificate.transactionId" : transactionId
+                    },
+                    updateObject,
+                    {
+                        new: true
+                    }
+                );
+
+                if ( projectDetails == null || !Object.keys(projectDetails).length > 0 ) {
+                    throw {
+                        status: HTTP_STATUS_CODE["bad_request"].status,
+                        message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
+                    }
+                }
+                 
+                return resolve({ 
+                    success: true,
+                    message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
+                    data : {
+                        _id : ObjectId(projectDetails._id)
+                    }
+
+                });
+
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
+    /**
+     * List user project details with certificate
+     * @method
+     * @name certificates 
+     * @param {String} userId - userId.
+     * @returns {JSON} certificate data updation details.
+    */
+
+    static certificates(userId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let certificateCount = 0;
+                //  get project details of user which have certificate.
+                const userProject = await projectQueries.projectDocument({
+                    userId: userId,
+                    status: CONSTANTS.common.SUBMITTED_STATUS,
+                    certificate: {$exists:true}
+                }, [
+                    "_id",
+                    "title",
+                    "status",
+                    "certificate.osid",
+                    "certificate.transactioId",
+                    "certificate.templateUrl",
+                    "certificate.status",
+                    "certificate.eligible",
+                    "certificate.message",
+                    "certificate.issuedOn"
+                ]);
+                
+                if ( !userProject.length > 0 ) {
+                    throw {
+                        status: HTTP_STATUS_CODE["bad_request"].status,
+                        message: CONSTANTS.apiResponses.PROJECT_WITH_CERTIFICATE_NOT_FOUND
+                    }
+                }
+                //  find certificate generated project count
+                for ( let projectIndex = 0; projectIndex < userProject.length; projectIndex++ ) {
+                    if ( userProject[projectIndex].certificate &&
+                         userProject[projectIndex].certificate.osid &&
+                         userProject[projectIndex].certificate.osid !== ""
+                    ) {
+                        certificateCount++;
+                    }
+                }
+                return resolve({ 
+                    success: true,
+                    message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
+                    data : {
+                        data : userProject,
+                        count : userProject.length,
+                        certificateCount : certificateCount
+                    }
+
+                });
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
+    /**
+     * Re-Issue project certificate
+     * @method
+     * @name certificateReIssue 
+     * @param {String} projectId - projectId.
+     * @param {String} token - usertoken.
+     * @param {String} recipientName - recipient name.
+     * @returns {JSON} certificate re-issued details.
+    */
+
+     static certificateReIssue(projectId, token, recipientName = "") {
+        return new Promise(async (resolve, reject) => {
+            try {
+                //  get project details project for which certificate re-issue required .
+                const userProject = await projectQueries.projectDocument({
+                   _id: projectId
+                });
+
+                //  if project details not found.
+                if (!userProject.length > 0) {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
+                    };
+                }
+                
+                //  This logic can be used if we are not going with user read api
+                if ( recipientName != "" ) {
+                    userProject[0].userProfile.userName = recipientName
+                }
+
+                //  fetch user data using userId of project and calling the profile API
+                // let userProfileData = await userProfileService.profile(token, userProject[0].userId);
+                // if ( userProfileData.success && 
+                //      userProfileData.data &&
+                //      userProfileData.data.response &&
+                //      userProfileData.data.response.userName &&
+                //      userProfileData.data.response.userName !== ""
+                // ) {
+                //     userProject[0].userName = userProfileData.data.response.userName;
+                // } else {
+                //     throw {
+                //         status: HTTP_STATUS_CODE['bad_request'].status,
+                //         message: CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
+                //     };
+                // }
+                // await kafkaProducersHelper.pushProjectToKafka(userProject[0]);
+                return resolve({ 
+                    success: true,
+                    message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
+                    data : {
+                        _id :  userProject[0]._id
+                    }
+
+                });
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
 
 };
 
