@@ -25,6 +25,9 @@ module.exports = (req) => {
         },
         share : function () {
             req.checkParams('_id').exists().withMessage("required project id");
+        },
+        certificateReIssue : function () {
+            req.checkParams('_id').exists().withMessage("required project id");
         }
     }
 

@@ -264,6 +264,18 @@ function checkValidUUID(uuids) {
   }
   return validateUUID;
 }
+
+/**
+  * convert string to upperCase.
+  * @function
+  * @name lowerCase
+  * @param {String} str 
+  * @returns {String} returns a lowercase string. ex:hello , o/p: HELLO
+*/
+
+function upperCase(str) {
+  return str.toUpperCase()
+}
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -277,5 +289,6 @@ module.exports = {
   convertProjectStatus : convertProjectStatus,
   revertProjectStatus:revertProjectStatus,
   revertStatusorNot:revertStatusorNot,
-  checkValidUUID : checkValidUUID
+  checkValidUUID : checkValidUUID,
+  upperCase : upperCase
 };

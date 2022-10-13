@@ -50,5 +50,7 @@ module.exports = {
     "DISTRICT": "district",
     "SERVER_TIME_OUT" : 5000,
     "OK" : "OK",
-    "PROJECT" : "project"
+    "PROJECT" : "project",
+    "PROJECT_CERTIFICATE_RECIPIENT_TYPE" : "user",
+    "PROJECT_CERTIFICATE_GENERATED" : "Certificate generated successfully"
 };

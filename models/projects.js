@@ -139,7 +139,10 @@ module.exports = {
         certificate : {
             templateId : "ObjectId",
             osid : String,
-            transactionId : String,
+            transactionId : {
+                type : String,
+                index : true
+            },
             templateUrl : String,
             status : String,
             eligible : Boolean,
