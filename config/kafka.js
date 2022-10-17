@@ -89,9 +89,9 @@ var _sendToKafkaConsumers = function (topic,host) {
       if (message && message.topic === SUBMISSION_TOPIC) {
         submissionsConsumer.messageReceived(message);
       }
-      // call certificateSubmissionsConsumer 
+      // call projectCertificateConsumer 
       if (message && message.topic === CERTIFICATE_TOPIC) {
-        certificateSubmissionsConsumer.messageReceived(message);
+        projectCertificateConsumer.messageReceived(message);
       }
 
     });
@@ -102,7 +102,7 @@ var _sendToKafkaConsumers = function (topic,host) {
         submissionsConsumer.errorTriggered(error);
       }
       if(error.topics && error.topics[0] === CERTIFICATE_TOPIC) {
-        certificateSubmissionsConsumer.errorTriggered(error);
+        projectCertificateConsumer.errorTriggered(error);
       }
 
     });

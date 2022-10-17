@@ -1,5 +1,5 @@
 /**
- * name : certificateSubmissions.js
+ * name : projectCertificate.js
  * author : Vishnu
  * created-date : 10-Oct-2022
  * Description : Project certificates submission consumer.
@@ -22,10 +22,8 @@ var messageReceived = function (message) {
 
         try {
             // This consumer is consuming from an old topic : PROJECT_CERTIFICATE_TOPIC, which is no more used by data team. ie) using existig topic instead of creating new one.
-            let parsedMessage = JSON.parse(message.value);
-            if ( parsedMessage.status == CONSTANTS.common.SUBMITTED_STATUS && parsedMessage.certificate ) {
-                await userProjectsHelper.generateCertificate(parsedMessage);
-            }
+            let parsedMessage = JSON.parse( message.value );
+            await userProjectsHelper.generateCertificate( parsedMessage );
         return resolve("Message Received");
         } catch (error) {
         return reject(error);

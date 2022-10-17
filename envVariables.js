@@ -39,6 +39,10 @@ let enviromentVariables = {
   "USER_SERVICE_URL" : {
     "message" : "Required user service base url",
     "optional" : false
+  },
+  "SERVICE_NAME" : {
+    "message" : "Required ml-project-service name",
+    "optional" : false
   }
 }
 

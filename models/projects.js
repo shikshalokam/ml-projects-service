@@ -145,7 +145,10 @@ module.exports = {
             },
             templateUrl : String,
             status : String,
-            eligible : Boolean,
+            eligible : {
+                type : Boolean,
+                default : false
+            },
             message : String,
             issuedOn : Date,
             criteria : Object

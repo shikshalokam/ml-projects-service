@@ -104,7 +104,6 @@ module.exports = class UserProjectsHelper {
     static sync(projectId, lastDownloadedAt, data, userId, userToken, appName = "", appVersion = "") {
         return new Promise(async (resolve, reject) => {
             try {
-                
                 const userProject = await projectQueries.projectDocument({
                     _id: projectId,
                     userId: userId
@@ -353,7 +352,7 @@ module.exports = class UserProjectsHelper {
                 if ( data.status == CONSTANTS.common.COMPLETED_STATUS || data.status == CONSTANTS.common.SUBMITTED_STATUS ) {
                     updateProject.completedDate = new Date();
                 }
-    
+                
                 let projectUpdated =
                     await projectQueries.findOneAndUpdate(
                         {
@@ -372,8 +371,15 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
-                await kafkaProducersHelper.pushProjectToKafka(projectUpdated);
-               
+
+                // push to kafka only if project is submitted and certificate key is present
+                if ( projectUpdated.status == CONSTANTS.common.SUBMITTED_STATUS &&
+                     projectUpdated.certificate &&
+                     Object.keys(projectUpdated.certificate).length > 0
+                ) {
+                    await kafkaProducersHelper.pushProjectToKafka(projectUpdated);
+                }
+                
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED,
@@ -1170,7 +1176,7 @@ module.exports = class UserProjectsHelper {
                                 templateId : certificateTemplateDetails[0]._id,
                                 templateUrl : certificateTemplateDetails[0].templateUrl,
                                 status : certificateTemplateDetails[0].status,
-                                criteria : certificateTemplateDetails[0].criteria,
+                                criteria : certificateTemplateDetails[0].criteria
                             }
                         }
                     }
@@ -2334,103 +2340,162 @@ module.exports = class UserProjectsHelper {
     }
 
     /**
+     * validate certificate criteria.
+     * @method
+     * @name criteriaValidation 
+     * @param {Object} data - project data for certificate creation 
+     * @returns 
+    */
+
+    static criteriaValidation(data) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let criteria = data.certificate.criteria;
+                let validationResult = [];
+                let validationMessage = "";
+                if ( criteria.conditions ) {
+                    let conditions = criteria.conditions;
+                    let conditionKeys = Object.keys(conditions)
+
+                    for ( let index = 0; index < conditionKeys.length; index++ ) {
+                        // correntCondition contain the prefinal level data
+                        let currentCondition = conditions[conditionKeys[index]];
+
+                        //now pass expression and validation scope to another function which will start the validation procedure
+                        let validation = await _subCriteriaValidation( currentCondition.conditions, currentCondition.expression, data );
+                        
+                        validationResult.push(validation.success);
+                        ( validation.success == false ) ? validationMessage = validationMessage + " " + currentCondition.validationText : "";
+                    }
+            
+                    return resolve({
+                        success: criteriaValidation,
+                        message: ( criteriaValidation == false ) ? validationMessage : CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY
+                    });
+                }
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        })
+    }
+
+    /**
      * generate project certificate.
      * @method
      * @name generateCertificate 
-     * @param {Object} data - certificate creation data.
+     * @param {Object} data - project data for certificate creation data.
      * @returns {JSON} certificate details.
     */
 
      static generateCertificate(data) {
         return new Promise(async (resolve, reject) => {
             try {
-                // logic to check criteria eligibility to be added
-                //  :Check criteria is sattisfied
-                //  if criteria check passes then call sunbird-RC certificate api 
-                let certificateTemplateDetails = [];
-                // get downloadable url for certificate template
-                if ( data.certificate && data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
-                    let certificateTemplateDownloadableUrl =
-                    await coreService.getDownloadableUrl(
-                        {
-                            filePaths: [data.certificate.templateUrl]
-                        }
-                    );
-                    if ( certificateTemplateDownloadableUrl.success ) {
-                        data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                //  Check criteria is sattisfied if eligible is false
+                if ( data.certificate.eligible == false ) {
+                    let validateCriteria = await this.criteriaValidation(projectUpdated)
+                    if ( validateCriteria ) {
+                        data.certificate.eligible = true;
+                        data.certificate.message = validateCriteria.message
                     } else {
+                        data.certificate.message = validateCriteria.message
+                    }
+                }
+                
+                //  after criteria validation eligibility can change
+                if ( data.certificate.eligible == false ) {
+                    return resolve( { 
+                        success: false
+                    });
+                } else {
+                    let certificateTemplateDetails = [];
+                    // get downloadable url for certificate template
+                    if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
+                        let certificateTemplateDownloadableUrl =
+                        await coreService.getDownloadableUrl(
+                            {
+                                filePaths: [data.certificate.templateUrl]
+                            }
+                        );
+                        if ( certificateTemplateDownloadableUrl.success ) {
+                            data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                        } else {
+                            return resolve({
+                                success:false
+                            });
+                        }
+                    }
+                    if ( data.certificate.templateId && data.certificate.templateId !== "" ) {
+                        certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                            _id : data.certificate.templateId
+                        },["issuer","solutionId","programId"]);
+
+                        //certificate template data do not exists.
+                        if ( !certificateTemplateDetails.length > 0 ) {
+                            return resolve({
+                                success:false
+                            });
+                        }
+                    }
+                    
+                    //create certificate request body 
+                    let certificateData = {
+                        recipient : {
+                            id : data.userId,
+                            name : data.userProfile.userName,
+                            type : data.userProfile.userType
+                        },
+                        templateUrl : data.certificate.templateUrl,
+                        issuer : certificateTemplateDetails[0].issuer,
+                        status : UTILS.upperCase(data.certificate.status),
+                        projectId : data._id,
+                        projectName : data.title,
+                        programId : certificateTemplateDetails[0].programId,
+                        programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
+                        solutionId : certificateTemplateDetails[0].solutionId,
+                        solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
+                        completedDate : data.completedDate
+                    };
+                    
+                    const certificateDetails = await certificateService.createCertificate( certificateData );
+
+                    if ( certificateDetails.success || certificateDetails.data || certificateDetails.data.ProjectCertificate ) {
                         return resolve({
                             success:false
                         });
                     }
-                }
-                if ( data.certificate && data.certificate.templateId && data.certificate.templateId !== "" ) {
-                    certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
-                        _id : data.certificate.templateId
-                    },["issuer","solutionId","programId"]);
+                
+                    let updateObject = {
+                        "$set" : {}
+                    };
 
-                    //certificate template data do not exists.
-                    if ( !certificateTemplateDetails.length > 0 ) {
-                        return resolve({
-                            success:false
-                        });
+                    //  if transaction id is present.
+                    if (certificateDetails.data.ProjectCertificate.transactionId &&
+                        certificateDetails.data.ProjectCertificate.transactionId !== "" 
+                        ) {
+                            updateObject["$set"]["certificate.transactionId"] = certificateDetails.data.ProjectCertificate.transactionId;
                     }
-                }
-                
-                //create certificate request body 
-                let certificateData = {
-                    recipient : {
-                        id : data.userId,
-                        name : data.userProfile.userName,
-                        type : CONSTANTS.common.PROJECT_CERTIFICATE_RECIPIENT_TYPE
-                    },
-                    templateUrl : data.certificate.templateUrl,
-                    issuer : certificateTemplateDetails[0].issuer,
-                    status : UTILS.upperCase(data.certificate.status),
-                    projectId : data._id,
-                    projectName : data.title,
-                    programId : certificateTemplateDetails[0].programId,
-                    programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
-                    solutionId : certificateTemplateDetails[0].solutionId,
-                    solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
-                    completedDate : data.completedDate
-                };
-                
-                const certificateDetails = await certificateService.createCertificate( certificateData );
-            
-                let updateObject = {
-                    "$set" : {}
-                };
 
-                //  if transaction id is present.
-                if ( certificateDetails.success && 
-                     certificateDetails.data && 
-                     certificateDetails.data.ProjectCertificate &&
-                     certificateDetails.data.ProjectCertificate.transactionId &&
-                     certificateDetails.data.ProjectCertificate.transactionId !== "" 
+                    if ( certificateDetails.data.ProjectCertificate.osid &&
+                        certificateDetails.data.ProjectCertificate.osid !== "" 
                     ) {
-                        updateObject["$set"]["certificate.transactionId"] = certificateDetails.data.ProjectCertificate.transactionId;
+                        updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
+                    }
+                    let projectDetails = await projectQueries.findOneAndUpdate(
+                        {
+                            _id: data._id
+                        },
+                        updateObject
+                    );
+                    
+                    return resolve( { 
+                        success: true
+                    });
                 }
-
-                if ( certificateDetails.success && 
-                    certificateDetails.data && 
-                    certificateDetails.data.ProjectCertificate &&
-                    certificateDetails.data.ProjectCertificate.osid &&
-                    certificateDetails.data.ProjectCertificate.osid !== "" 
-                   ) {
-                    updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
-                }
-                let projectDetails = await projectQueries.findOneAndUpdate(
-                    {
-                        _id: data._id
-                    },
-                    updateObject
-                );
-                 
-                return resolve( { 
-                    success: true
-                });
-
+                
             } catch (error) {
                 return resolve({
                     success: false,
@@ -2460,7 +2525,7 @@ module.exports = class UserProjectsHelper {
                 // update osid and eligibility based on transactionId
                 updateObject["$set"]["certificate.osid"] = osid;
                 updateObject["$set"]["certificate.eligible"] = true;
-                updateObject["$set"]["certificate.message"] = CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED;
+                updateObject["$set"]["certificate.message"] = CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY;
                 updateObject["$set"]["certificate.issuedOn"] = new Date();
 
                 let projectDetails = await projectQueries.findOneAndUpdate(
@@ -2569,17 +2634,17 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name certificateReIssue 
      * @param {String} projectId - projectId.
-     * @param {String} token - usertoken.
-     * @param {String} recipientName - recipient name.
      * @returns {JSON} certificate re-issued details.
     */
 
-     static certificateReIssue(projectId, token, recipientName = "") {
+     static certificateReIssue(projectId) {
         return new Promise(async (resolve, reject) => {
             try {
                 //  get project details project for which certificate re-issue required .
                 const userProject = await projectQueries.projectDocument({
-                   _id: projectId
+                    _id: projectId,
+                    status: CONSTANTS.common.SUBMITTED_STATUS,
+                    certificate: {$exists:true}  
                 });
 
                 //  if project details not found.
@@ -2590,27 +2655,22 @@ module.exports = class UserProjectsHelper {
                     };
                 }
                 
-                //  This logic can be used if we are not going with user read api
-                if ( recipientName != "" ) {
-                    userProject[0].userProfile.userName = recipientName
-                }
-
                 //  fetch user data using userId of project and calling the profile API
-                // let userProfileData = await userProfileService.profile(token, userProject[0].userId);
-                // if ( userProfileData.success && 
-                //      userProfileData.data &&
-                //      userProfileData.data.response &&
-                //      userProfileData.data.response.userName &&
-                //      userProfileData.data.response.userName !== ""
-                // ) {
-                //     userProject[0].userName = userProfileData.data.response.userName;
-                // } else {
-                //     throw {
-                //         status: HTTP_STATUS_CODE['bad_request'].status,
-                //         message: CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
-                //     };
-                // }
-                // await kafkaProducersHelper.pushProjectToKafka(userProject[0]);
+                let userProfileData = await userProfileService.profileReadPrivate(userProject[0].userId);
+                if ( userProfileData.success && 
+                     userProfileData.data &&
+                     userProfileData.data.response &&
+                     userProfileData.data.response.userName &&
+                     userProfileData.data.response.userName !== ""
+                ) {
+                    userProject[0].userProfile.userName = userProfileData.data.response.userName;
+                } else {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
+                    };
+                }
+                await kafkaProducersHelper.pushProjectToKafka(userProject[0]);
                 return resolve({ 
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
@@ -2631,6 +2691,163 @@ module.exports = class UserProjectsHelper {
 
 
 };
+/**
+ * _subCriteriaValidation.
+ * @method
+ * @name _subCriteriaValidation 
+ * @param {Object} conditions - condition data.
+ * @param {String} expression - validation expression
+ * @returns {Boolean} validation.
+*/
+
+function _subCriteriaValidation(conditions, expression, data) {
+   return new Promise(async (resolve, reject) => {
+        try {
+            let conditionKeys = Object.keys(conditions)
+            let validationResult = [];
+           
+            for ( let index = 0; index < conditionKeys.length; index++ ) {
+                let currentCondition = conditions[conditionKeys[index]];
+                // correntCondition contain the prefinal level data
+                //now pass expression and validation scope to another function which will start the validation procedure
+                let validation = await _validateCriteriaConditions( currentCondition, data );
+                validationResult.push(validation);
+            }
+            
+            let subcriteriaValidation = await _criteriaExpressionValidation( expression, conditionKeys, validationResult )
+            return resolve({
+                success: subcriteriaValidation
+            });
+
+        } catch (error) {
+            return resolve({
+                message: error.message,
+                success: false,
+                status:
+                    error.status ?
+                        error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            })
+        }
+    })
+}
+
+/**
+ * _validateCriteriaConditions.
+ * @method
+ * @name _validateCriteriaConditions 
+ * @param {Object} condition - condition data.
+ * @param {String} data - validation data
+ * @returns {Boolean} validation.
+*/
+
+function _validateCriteriaConditions(condition, data) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let result = false;
+            if ( !condition.function || condition.function == "" ) {
+                if( condition.scope == CONSTANTS.common.PROJECT ){
+
+                    // let expression = data[condition.key] + condition.operator + condition.value;
+                    if ( condition.key == "completedDate") {
+                        let comparableDates = UTILS.createComparableDates( data[condition.key], condition.value );
+                        data[condition.key] = comparableDates.dateOne;
+                        condition.value = comparableDates.dateTwo;
+                    }
+                    result = UTILS.operatorValidation( data[condition.key], condition.value, condition.operator );
+                    
+                } 
+            } else {
+                try {
+                    let valueFromProject = 0;
+                    // if: condition is in scope of project and contains a function to check
+                    if ( condition.scope == CONSTANTS.common.PROJECT ) {
+                        valueFromProject = UTILS.getAttachmentCount( data[condition.key], condition.filter ); 
+                    } else if ( condition.scope == CONSTANTS.common.TASK_ATTACHMENT ){
+                        // for task attachment validatiion _id of specific task or "all" key should be passed in an array called taskDetails
+                        let tasksAttachments = [];
+                        let projectTasks = data.tasks;
+                        
+                        if ( projectTasks && projectTasks.length > 0 && condition.taskDetails.length > 0 &&  condition.taskDetails[0] == "all" ) {
+                            
+                            for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++ ) {
+
+                                if( projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) 
+                                {
+                                    tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
+                                }
+                            }
+
+                        } else if ( projectTasks && projectTasks.length > 0 && condition.taskDetails.length > 0 ) {
+
+                            // specific task Id or Ids are passed for attachment validation
+                            for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++  ) {
+                                for ( let taskDetailsPointer = 0; taskDetailsPointer < condition.taskDetails.length; taskDetailsPointer++ ) {
+                                    // get attachments data of specified task/ tasks
+                                    if( projectTasks[tasksIndex]._id == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
+                                        tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
+                                    }
+                                }
+                                
+                            }
+
+                        } else {
+                            return resolve(result)
+                        }
+                        if ( !tasksAttachments.length > 0 ) {
+                            return resolve(result)
+                        }
+                        valueFromProject = UTILS.getAttachmentCount( tasksAttachments, condition.filter ); 
+                    }
+                    result =  UTILS.operatorValidation( valueFromProject, condition.value, condition.operator );
+
+                } catch (fnError) {
+                    return resolve(result)
+                }
+            }            
+            return resolve(result);
+        } catch (error) {
+            return resolve({
+                message: error.message,
+                success: false,
+                status:
+                    error.status ?
+                        error.status : HTTP_STATUS_CODE['internal_server_error'].status
+            })
+        }
+    })
+}
+/**
+ * _criteriaExpressionValidation
+ * @method
+ * @name _criteriaExpressionValidation 
+ * @param {String} expression - criteria expression
+ * @param {Array} keys - condition keys
+ * @param {Array} result - condition result
+ * @returns {Boolean} validation result.
+*/
+
+function _criteriaExpressionValidation(expression, keys, result) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            if( expression == "" ||
+                !keys.length > 0 ||
+                !result.length > 0 ||
+                keys.length != result.length ) {
+                return resolve(false);
+            }
+            for ( let pointerToKeys = 0; pointerToKeys < keys.length; pointerToKeys++) {
+                expression = expression.replace(keys[pointerToKeys],result[pointerToKeys].toString())
+            }
+            let evalResult = eval(expression)
+            
+            return resolve(evalResult);
+
+        } catch (error) {
+            return resolve(false);
+        }
+    })
+}
 
 /**
  * Project information.

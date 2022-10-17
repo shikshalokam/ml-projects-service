@@ -126,7 +126,6 @@ module.exports = class UserProjects extends Abstract {
     async sync(req) {
         return new Promise(async (resolve, reject) => {
             try {
-
                 let createdProject = await userProjectsHelper.sync(
                     req.params._id,
                     req.query.lastDownloadedAt,
@@ -999,10 +998,7 @@ module.exports = class UserProjects extends Abstract {
     return new Promise(async (resolve, reject) => {
             try {
                 let callback = req.body
-                if ( callback.data && 
-                     callback.data.transactionId &&
-                     callback.data.transactionId !== "" &&
-                     callback.data.osid &&
+                if ( callback.data.transactionId !== "" &&
                      callback.data.osid !== ""
                 ) {
                     let certificateDetails = await userProjectsHelper.certificateCallback( callback.data.transactionId, callback.data.osid );
@@ -1115,8 +1111,6 @@ module.exports = class UserProjects extends Abstract {
                     // ReIssue certificate of given project : projectId is passed as param 
                     let projectDetails = await userProjectsHelper.certificateReIssue(
                         req.params._id,
-                        req.userDetails.userToken,
-                        req.query.recipientName ? req.query.recipientName : ""
                     );
                     return resolve({
                         message: projectDetails.message,
