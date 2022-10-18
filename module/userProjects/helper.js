@@ -2396,7 +2396,7 @@ module.exports = class UserProjectsHelper {
             try {
                 //  Check criteria is sattisfied if eligible is false
                 if ( data.certificate.eligible == false ) {
-                    let validateCriteria = await this.criteriaValidation(projectUpdated)
+                    let validateCriteria = await this.criteriaValidation(data)
                     if ( validateCriteria ) {
                         data.certificate.eligible = true;
                         data.certificate.message = validateCriteria.message
@@ -2404,7 +2404,6 @@ module.exports = class UserProjectsHelper {
                         data.certificate.message = validateCriteria.message
                     }
                 }
-                
                 //  after criteria validation eligibility can change
                 if ( data.certificate.eligible == false ) {
                     return resolve( { 
@@ -2461,7 +2460,6 @@ module.exports = class UserProjectsHelper {
                     };
                     
                     const certificateDetails = await certificateService.createCertificate( certificateData );
-
                     if ( certificateDetails.success || certificateDetails.data || certificateDetails.data.ProjectCertificate ) {
                         return resolve({
                             success:false
