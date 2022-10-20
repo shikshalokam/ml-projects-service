@@ -1328,7 +1328,7 @@ module.exports = class UserProjectsHelper {
                         }
                     );
                     if ( certificateTemplateDownloadableUrl.success ) {
-                        projectDetails.data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                        projectDetails.data.certificate.templateUrl = certificateTemplateDownloadableUrl.data[0].url;
                     }
             } 
 
@@ -2353,6 +2353,7 @@ module.exports = class UserProjectsHelper {
                 let criteria = data.certificate.criteria;
                 let validationResult = [];
                 let validationMessage = "";
+                let validationExpression = criteria.expression
                 if ( criteria.conditions &&  Object.keys(criteria.conditions).length > 0 ) {
                     let conditions = criteria.conditions;
                     let conditionKeys = Object.keys(conditions)
@@ -2367,7 +2368,7 @@ module.exports = class UserProjectsHelper {
                         validationResult.push(validation.success);
                         ( validation.success == false ) ? validationMessage = validationMessage + " " + currentCondition.validationText : "";
                     }
-            
+                    let criteriaValidation = await _criteriaExpressionValidation( validationExpression, conditionKeys, validationResult )
                     return resolve({
                         success: criteriaValidation,
                         message: ( criteriaValidation == false ) ? validationMessage : CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY
@@ -2400,13 +2401,28 @@ module.exports = class UserProjectsHelper {
                 //  if eligible key is not there check criteria for validation
                 if ( !data.certificate.eligible ) {
                     let validateCriteria = await this.criteriaValidation(data)
-                    if ( validateCriteria ) {
+                    if ( validateCriteria.success ) {
                         data.certificate.eligible = true;
                     } else {
                         data.certificate.eligible = false;
                         data.certificate.message = validateCriteria.message
                     }
                 }
+                let updateObject = {
+                    "$set" : {}
+                };
+                updateObject["$set"]["certificate.eligible"] =  data.certificate.eligible;
+                if ( data.certificate.message && data.certificate.message !=="" ) {
+                    updateObject["$set"]["certificate.message"] =  data.certificate.message;
+                }
+                if ( Object.keys(updateObject["$set"]).length > 0 ) {
+                    await projectQueries.findOneAndUpdate(
+                        {
+                            _id: data._id
+                        },
+                        updateObject
+                    );
+                } 
                 if ( data.certificate.eligible === true && ( data.certificate.transactionId || data.certificate.osid ) ) {
                     return resolve( { 
                         success: false
@@ -2423,7 +2439,7 @@ module.exports = class UserProjectsHelper {
                                 }
                             );
                             if ( certificateTemplateDownloadableUrl.success ) {
-                                data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                                data.certificate.templateUrl = certificateTemplateDownloadableUrl.data[0].url;
                             } else {
                                 return resolve({
                                     success:false
@@ -2453,11 +2469,11 @@ module.exports = class UserProjectsHelper {
                             templateUrl : data.certificate.templateUrl,
                             issuer : certificateTemplateDetails[0].issuer,
                             status : UTILS.upperCase(data.certificate.status),
-                            projectId : data._id,
+                            projectId : (data._id).toString(),
                             projectName : data.title,
-                            programId : certificateTemplateDetails[0].programId,
+                            programId : (certificateTemplateDetails[0].programId).toString(),
                             programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
-                            solutionId : certificateTemplateDetails[0].solutionId,
+                            solutionId : (certificateTemplateDetails[0].solutionId).toString(),
                             solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
                             completedDate : data.completedDate
                         };
@@ -2478,7 +2494,8 @@ module.exports = class UserProjectsHelper {
                              certificateDetails.data.ProjectCertificate.transactionId !== "" 
                             ) {
                                 let transactionIdvalue = certificateDetails.data.ProjectCertificate.transactionId;
-                                transactionIdvalue = transactionIdvalue.split("1-")
+                                transactionIdvalue = transactionIdvalue.split("1-");
+                                let transactionIdData = transactionIdvalue[1];
                                 updateObject["$set"]["certificate.transactionId"] = transactionIdvalue[1];
                         }
 
@@ -2487,8 +2504,8 @@ module.exports = class UserProjectsHelper {
                         ) {
                             updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
                         }
-
-                        if ( Object.keys(updateObject["$set"]) > 0 ) {
+                        updateObject["$set"]["certificate.eligible"] = true;
+                        if ( Object.keys(updateObject["$set"]).length > 0 ) {
                             let projectDetails = await projectQueries.findOneAndUpdate(
                                 {
                                     _id: data._id
