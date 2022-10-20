@@ -41,8 +41,9 @@ let enviromentVariables = {
     "optional" : false
   },
   "SERVICE_NAME" : {
-    "message" : "Required ml-project-service name",
-    "optional" : false
+    "message" : "Form service base url",
+    "optional" : true,
+    "default" : "ml-project-service"
   }
 }
 

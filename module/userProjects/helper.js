@@ -2353,7 +2353,7 @@ module.exports = class UserProjectsHelper {
                 let criteria = data.certificate.criteria;
                 let validationResult = [];
                 let validationMessage = "";
-                if ( criteria.conditions ) {
+                if ( criteria.conditions &&  Object.keys(criteria.conditions).length > 0 ) {
                     let conditions = criteria.conditions;
                     let conditionKeys = Object.keys(conditions)
 
@@ -2373,6 +2373,9 @@ module.exports = class UserProjectsHelper {
                         message: ( criteriaValidation == false ) ? validationMessage : CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY
                     });
                 }
+                return resolve({
+                    success: false
+                })
             } catch (error) {
                 return resolve({
                     success: false,
@@ -2394,106 +2397,120 @@ module.exports = class UserProjectsHelper {
      static generateCertificate(data) {
         return new Promise(async (resolve, reject) => {
             try {
-                //  Check criteria is sattisfied if eligible is false
-                if ( data.certificate.eligible == false ) {
+                //  if eligible key is not there check criteria for validation
+                if ( !data.certificate.eligible ) {
                     let validateCriteria = await this.criteriaValidation(data)
                     if ( validateCriteria ) {
                         data.certificate.eligible = true;
-                        data.certificate.message = validateCriteria.message
                     } else {
+                        data.certificate.eligible = false;
                         data.certificate.message = validateCriteria.message
                     }
                 }
-                //  after criteria validation eligibility can change
-                if ( data.certificate.eligible == false ) {
+                if ( data.certificate.eligible === true && ( data.certificate.transactionId || data.certificate.osid ) ) {
                     return resolve( { 
                         success: false
                     });
                 } else {
-                    let certificateTemplateDetails = [];
-                    // get downloadable url for certificate template
-                    if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
-                        let certificateTemplateDownloadableUrl =
-                        await coreService.getDownloadableUrl(
-                            {
-                                filePaths: [data.certificate.templateUrl]
+                    if ( data.certificate.eligible === true ) {
+                        let certificateTemplateDetails = [];
+                        // get downloadable url for certificate template
+                        if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
+                            let certificateTemplateDownloadableUrl =
+                            await coreService.getDownloadableUrl(
+                                {
+                                    filePaths: [data.certificate.templateUrl]
+                                }
+                            );
+                            if ( certificateTemplateDownloadableUrl.success ) {
+                                data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                            } else {
+                                return resolve({
+                                    success:false
+                                });
                             }
-                        );
-                        if ( certificateTemplateDownloadableUrl.success ) {
-                            data.certificate.templateUrl = certificateTemplateDownloadableUrl.data.url;
+                        }
+                        if ( data.certificate.templateId && data.certificate.templateId !== "" ) {
+                            certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                                _id : data.certificate.templateId
+                            },["issuer","solutionId","programId"]);
+
+                            //certificate template data do not exists.
+                            if ( !certificateTemplateDetails.length > 0 ) {
+                                return resolve({
+                                    success:false
+                                });
+                            }
+                        }
+                        
+                        //create certificate request body 
+                        let certificateData = {
+                            recipient : {
+                                id : data.userId,
+                                name : data.userProfile.userName,
+                                type : data.userProfile.userType
+                            },
+                            templateUrl : data.certificate.templateUrl,
+                            issuer : certificateTemplateDetails[0].issuer,
+                            status : UTILS.upperCase(data.certificate.status),
+                            projectId : data._id,
+                            projectName : data.title,
+                            programId : certificateTemplateDetails[0].programId,
+                            programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
+                            solutionId : certificateTemplateDetails[0].solutionId,
+                            solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
+                            completedDate : data.completedDate
+                        };
+                        
+                        const certificateDetails = await certificateService.createCertificate( certificateData );
+                        if ( !certificateDetails.success || !certificateDetails.data || !certificateDetails.data.ProjectCertificate ) {
+                            return resolve({
+                                success:false
+                            });
+                        }
+                    
+                        let updateObject = {
+                            "$set" : {}
+                        };
+
+                        //  if transaction id is present.
+                        if ( certificateDetails.data.ProjectCertificate.transactionId &&
+                             certificateDetails.data.ProjectCertificate.transactionId !== "" 
+                            ) {
+                                let transactionIdvalue = certificateDetails.data.ProjectCertificate.transactionId;
+                                transactionIdvalue = transactionIdvalue.split("1-")
+                                updateObject["$set"]["certificate.transactionId"] = transactionIdvalue[1];
+                        }
+
+                        if ( certificateDetails.data.ProjectCertificate.osid &&
+                             certificateDetails.data.ProjectCertificate.osid !== "" 
+                        ) {
+                            updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
+                        }
+
+                        if ( Object.keys(updateObject["$set"]) > 0 ) {
+                            let projectDetails = await projectQueries.findOneAndUpdate(
+                                {
+                                    _id: data._id
+                                },
+                                updateObject
+                            );
+                            
+                            return resolve( { 
+                                success: true
+                            });
                         } else {
                             return resolve({
                                 success:false
                             });
                         }
-                    }
-                    if ( data.certificate.templateId && data.certificate.templateId !== "" ) {
-                        certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
-                            _id : data.certificate.templateId
-                        },["issuer","solutionId","programId"]);
-
-                        //certificate template data do not exists.
-                        if ( !certificateTemplateDetails.length > 0 ) {
-                            return resolve({
-                                success:false
-                            });
-                        }
-                    }
-                    
-                    //create certificate request body 
-                    let certificateData = {
-                        recipient : {
-                            id : data.userId,
-                            name : data.userProfile.userName,
-                            type : data.userProfile.userType
-                        },
-                        templateUrl : data.certificate.templateUrl,
-                        issuer : certificateTemplateDetails[0].issuer,
-                        status : UTILS.upperCase(data.certificate.status),
-                        projectId : data._id,
-                        projectName : data.title,
-                        programId : certificateTemplateDetails[0].programId,
-                        programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
-                        solutionId : certificateTemplateDetails[0].solutionId,
-                        solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
-                        completedDate : data.completedDate
-                    };
-                    
-                    const certificateDetails = await certificateService.createCertificate( certificateData );
-                    if ( certificateDetails.success || certificateDetails.data || certificateDetails.data.ProjectCertificate ) {
+                        
+                    } else {
                         return resolve({
                             success:false
                         });
                     }
-                
-                    let updateObject = {
-                        "$set" : {}
-                    };
-
-                    //  if transaction id is present.
-                    if (certificateDetails.data.ProjectCertificate.transactionId &&
-                        certificateDetails.data.ProjectCertificate.transactionId !== "" 
-                        ) {
-                            updateObject["$set"]["certificate.transactionId"] = certificateDetails.data.ProjectCertificate.transactionId;
-                    }
-
-                    if ( certificateDetails.data.ProjectCertificate.osid &&
-                        certificateDetails.data.ProjectCertificate.osid !== "" 
-                    ) {
-                        updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
-                    }
-                    let projectDetails = await projectQueries.findOneAndUpdate(
-                        {
-                            _id: data._id
-                        },
-                        updateObject
-                    );
-                    
-                    return resolve( { 
-                        success: true
-                    });
                 }
-                
             } catch (error) {
                 return resolve({
                     success: false,
@@ -2516,13 +2533,18 @@ module.exports = class UserProjectsHelper {
     static certificateCallback(transactionId, osid) {
         return new Promise(async (resolve, reject) => {
             try {
+                if ( transactionId == "" || osid == "" ) {
+                    throw {
+                        status: HTTP_STATUS_CODE["bad_request"].status,
+                        message: CONSTANTS.apiResponses.TRANSACTION_ID_AND_OSID_REQUIRED
+                    }
+                }
                 let updateObject = {
                     "$set" : {}
                 };
 
                 // update osid and eligibility based on transactionId
                 updateObject["$set"]["certificate.osid"] = osid;
-                updateObject["$set"]["certificate.eligible"] = true;
                 updateObject["$set"]["certificate.message"] = CONSTANTS.common.PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY;
                 updateObject["$set"]["certificate.issuedOn"] = new Date();
 
@@ -2668,6 +2690,12 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
                     };
                 }
+                if ( userProject[0].certificate.transactionId ) {
+                    delete userProject[0].certificate.transactionId;
+                }
+                if ( userProject[0].certificate.osid ) {
+                    delete userProject[0].certificate.osid;
+                }
                 await kafkaProducersHelper.pushProjectToKafka(userProject[0]);
                 return resolve({ 
                     success: true,
@@ -2743,7 +2771,7 @@ function _validateCriteriaConditions(condition, data) {
         try {
             let result = false;
             if ( !condition.function || condition.function == "" ) {
-                if( condition.scope == CONSTANTS.common.PROJECT ){
+                if ( condition.scope == CONSTANTS.common.PROJECT ){
 
                     // let expression = data[condition.key] + condition.operator + condition.value;
                     if ( condition.key == "completedDate") {
@@ -2769,7 +2797,7 @@ function _validateCriteriaConditions(condition, data) {
                             
                             for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++ ) {
 
-                                if( projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) 
+                                if ( projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) 
                                 {
                                     tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
                                 }
@@ -2781,7 +2809,7 @@ function _validateCriteriaConditions(condition, data) {
                             for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++  ) {
                                 for ( let taskDetailsPointer = 0; taskDetailsPointer < condition.taskDetails.length; taskDetailsPointer++ ) {
                                     // get attachments data of specified task/ tasks
-                                    if( projectTasks[tasksIndex]._id == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
+                                    if ( projectTasks[tasksIndex]._id == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
                                         tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
                                     }
                                 }
@@ -2834,7 +2862,7 @@ function _criteriaExpressionValidation(expression, keys, result) {
                 keys.length != result.length ) {
                 return resolve(false);
             }
-            for ( let pointerToKeys = 0; pointerToKeys < keys.length; pointerToKeys++) {
+            for ( let pointerToKeys = 0; pointerToKeys < keys.length; pointerToKeys++ ) {
                 expression = expression.replace(keys[pointerToKeys],result[pointerToKeys].toString())
             }
             let evalResult = eval(expression)

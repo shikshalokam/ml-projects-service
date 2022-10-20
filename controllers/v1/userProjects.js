@@ -997,16 +997,11 @@ module.exports = class UserProjects extends Abstract {
     async certificateCallback(req) {
     return new Promise(async (resolve, reject) => {
             try {
-                let callback = req.body
-                if ( callback.data.transactionId !== "" &&
-                     callback.data.osid !== ""
-                ) {
-                    let certificateDetails = await userProjectsHelper.certificateCallback( callback.data.transactionId, callback.data.osid );
+                let certificateDetails = await userProjectsHelper.certificateCallback( req.body.data.transactionId, req.body.data.osid );
                     return resolve({
                         message: certificateDetails.message,
                         result: certificateDetails.data
                     });
-                }
             } catch (error) {
                 return reject({
                     status: error.status || HTTP_STATUS_CODE.internal_server_error.status,

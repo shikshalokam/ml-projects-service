@@ -126,5 +126,6 @@ module.exports = {
     "FAILED_TO_SYNC_PROJECT_ALREADY_SUBMITTED" : "Failed to sync, Project is already Submitted",
     "SOLUTION_ID_AND_USERPROFILE_REQUIRED": "Required solution Id and userProfile",
     "PROJECT_WITH_CERTIFICATE_NOT_FOUND": "No certification project found for user",
-    "PROJECT_CERTIFICATE_GENERATED" : "Successfully generated project certificate"
+    "PROJECT_CERTIFICATE_GENERATED" : "Successfully generated project certificate",
+    "TRANSACTION_ID_AND_OSID_REQUIRED" : "Required transactionId and osid"
 };
