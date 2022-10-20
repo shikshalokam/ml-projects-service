@@ -2506,7 +2506,7 @@ module.exports = class UserProjectsHelper {
                         }
                         updateObject["$set"]["certificate.eligible"] = true;
                         if ( Object.keys(updateObject["$set"]).length > 0 ) {
-                            let projectDetails = await projectQueries.findOneAndUpdate(
+                            await projectQueries.findOneAndUpdate(
                                 {
                                     _id: data._id
                                 },
@@ -2648,7 +2648,7 @@ module.exports = class UserProjectsHelper {
                 }
                 return resolve({ 
                     success: true,
-                    message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
+                    message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
                     data : {
                         data : userProject,
                         count : userProject.length,
