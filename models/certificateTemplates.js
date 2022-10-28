@@ -9,8 +9,8 @@ module.exports = {
     },
     solutionId: {
       type : "ObjectId",
-      index : true,
-      unique: true
+      unique: true,
+      index : true
     },
     programId: "ObjectId",
     criteria: {
