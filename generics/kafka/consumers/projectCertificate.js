@@ -21,7 +21,12 @@ var messageReceived = function (message) {
     try {
       // This consumer is consuming from an old topic : PROJECT_CERTIFICATE_TOPIC, which is no more used by data team. ie) using existig topic instead of creating new one.
       let parsedMessage = JSON.parse( message.value );
-      await userProjectsHelper.generateCertificate( parsedMessage );
+      if ( parsedMessage.status == CONSTANTS.common.SUBMITTED_STATUS &&
+           parsedMessage.certificate &&
+           Object.keys(parsedMessage.certificate).length > 0
+        ) {
+          await userProjectsHelper.generateCertificate( parsedMessage );
+      }
       return resolve("Message Received");
     } catch (error) {
       return reject(error);

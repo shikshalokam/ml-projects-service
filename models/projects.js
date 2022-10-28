@@ -138,10 +138,15 @@ module.exports = {
         userProfile : Object,
         certificate : {
             templateId : "ObjectId",
-            osid : String,
+            osid : {
+                type : String,
+                index : true,
+                unique : true
+            },
             transactionId : {
                 type : String,
-                index : true
+                index : true,
+                unique : true
             },
             templateUrl : String,
             status : String,

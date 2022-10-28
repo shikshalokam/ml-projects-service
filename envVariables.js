@@ -41,12 +41,12 @@ let enviromentVariables = {
     "optional" : false
   },
   "SERVICE_NAME" : {
-    "message" : "Form service base url",
+    "message" : "current service name",
     "optional" : true,
     "default" : "ml-project-service"
   },
   "CERTIFICATE_SERVICE_URL" : {
-    "message" : "Form service base url",
+    "message" : "certificate service base url",
     "optional" : true,
     "default" : "http://registry-service:8081"
   }

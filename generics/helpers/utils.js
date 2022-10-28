@@ -316,15 +316,15 @@ function createComparableDates(dateArg1, dateArg2) {
 /**
   * count attachments
   * @function
-  * @name getAttachmentCount
+  * @name noOfElementsInArray
   * @param {Object} data - data to count
   * @param {Object} filter -  filter data
   * @returns {Number} - attachment count
 */
 
-function getAttachmentCount(data, filter) {
+function noOfElementsInArray(data, filter = {}) {
   if ( !filter || !Object.keys(filter).length > 0 ) {
-    return 0
+    return data.length;
   }
   if ( !data.length > 0 ) {
     return 0;
@@ -344,7 +344,7 @@ function getAttachmentCount(data, filter) {
 }
 
 /**
-  * validate lhs and rhs using operator passed as String
+  * validate lhs and rhs using operator passed as String/ Number
   * @function
   * @name operatorValidation
   * @param {Number or String} valueLhs 
@@ -353,7 +353,7 @@ function getAttachmentCount(data, filter) {
 */
 
 function operatorValidation(valueLhs, valueRhs, operator) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => { 
       let result = false;
       if (operator == "==" ) {
           result = (valueLhs == valueRhs) ? true : false
@@ -363,11 +363,14 @@ function operatorValidation(valueLhs, valueRhs, operator) {
           result = (valueLhs > valueRhs) ? true : false
       } else if (operator == "<" ) {
           result = (valueLhs < valueRhs) ? true : false
+      } else if (operator == "<=" ) {
+        result = (valueLhs <= valueRhs) ? true : false
+      } else if (operator == ">=" ) {
+        result = (valueLhs >= valueRhs) ? true : false
       } 
       return resolve(result)
   })          
 }
-
 
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
@@ -385,6 +388,6 @@ module.exports = {
   checkValidUUID : checkValidUUID,
   upperCase : upperCase,
   createComparableDates : createComparableDates,
-  getAttachmentCount : getAttachmentCount,
+  noOfElementsInArray : noOfElementsInArray,
   operatorValidation : operatorValidation
 };
