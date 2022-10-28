@@ -2433,9 +2433,15 @@ module.exports = class UserProjectsHelper {
                              certificateDetails.data.ProjectCertificate.transactionId !== "" 
                             ) {
                                 let transactionIdvalue = certificateDetails.data.ProjectCertificate.transactionId;
-                                transactionIdvalue = transactionIdvalue.split("1-");
-                                let transactionIdData = transactionIdvalue[1];
-                                updateObject["$set"]["certificate.transactionId"] = transactionIdvalue[1];
+                                const first2 = transactionIdvalue.slice(0, 2);
+                                
+                                if ( first2 === "1-" ) {
+                                    transactionIdvalue = transactionIdvalue.split(/1-(.*)/s)
+                                    updateObject["$set"]["certificate.transactionId"] = transactionIdvalue[1];
+                                } else {
+                                    updateObject["$set"]["certificate.transactionId"] = transactionIdvalue;
+                                }
+                                
                         }
 
                         if ( certificateDetails.data.ProjectCertificate.osid &&
