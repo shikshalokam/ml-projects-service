@@ -142,6 +142,9 @@ module.exports = class UserProjectsHelper {
 
                 const projectsModel = Object.keys(schemas["projects"].schema);
 
+                if(data.userRoleInformation) delete data.userRoleInformation;
+                if(data.userProfile) delete data.userProfile;
+
                 let updateProject = {};
                 let projectData = await _projectData(data);
                 if (projectData && projectData.success == true) {
@@ -1269,7 +1272,7 @@ module.exports = class UserProjectsHelper {
                     projectCreation.data.userRoleInformation = userRoleInformation;
                     
                     //compare & update userProfile with userRoleInformation
-                    if ( projectCreation.data.userProfile && userRoleInformation ) {
+                    if ( projectCreation.data.userProfile && userRoleInformation && Object.keys(userRoleInformation).length > 0 && Object.keys(projectCreation.data.userProfile).length > 0 ) {
                         let updatedUserProfile = await _updateUserProfileBasedOnUserRoleInfo(
                             projectCreation.data.userProfile,
                             userRoleInformation
