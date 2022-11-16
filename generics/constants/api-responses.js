@@ -127,5 +127,10 @@ module.exports = {
     "SOLUTION_ID_AND_USERPROFILE_REQUIRED": "Required solution Id and userProfile",
     "PROJECT_WITH_CERTIFICATE_NOT_FOUND": "No certification project found for user",
     "PROJECT_CERTIFICATE_GENERATED" : "Successfully generated project certificate",
-    "TRANSACTION_ID_AND_OSID_REQUIRED" : "Required transactionId and osid"
+    "TRANSACTION_ID_AND_OSID_REQUIRED" : "Required transactionId and osid",
+    "PROJECT_CERTIFICATE_GENERATED_ONCE" : "Certificate generated once",
+    "DOWNLOADABLE_URL_NOT_FOUND" : "Failed to generate downloadable URL",
+    "CERTIFICATE_TEMPLATE_NOT_FOUND" : "Certificate template details not found",
+    "CERTIFICATE_GENERATION_FAILED" : "Certificate generation failed",
+    "NOT_ELIGIBLE_FOR_CERTIFICATE" : "Project is not eligible for certificate"
 };

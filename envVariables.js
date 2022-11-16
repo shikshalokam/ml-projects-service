@@ -48,7 +48,25 @@ let enviromentVariables = {
   "CERTIFICATE_SERVICE_URL" : {
     "message" : "certificate service base url",
     "optional" : true,
-    "default" : "http://registry-service:8081"
+    "default" : "http://registry-service:8081",
+    "requiredIf" : {
+      "key": "PROJECT_CERTIFICATE_ON_OFF",
+      "operator" : "EQUALS",
+      "value" : "ON"
+    }
+  },
+  "PROJECT_CERTIFICATE_ON_OFF" : {
+    "message" : "Enable/Disable project certification",
+    "optional" : false
+  },
+  "CERTIFICATE_ISSUER_KID" : {
+    "message" : "Required certificate issuer kid",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "PROJECT_CERTIFICATE_ON_OFF",
+      "operator" : "EQUALS",
+      "value" : "ON"
+    }
   }
 }
 
@@ -62,7 +80,7 @@ module.exports = function() {
     };
   
     let keyCheckPass = true;
-
+    let validRequiredIfOperators = ["EQUALS","NOT_EQUALS"]
 
     if(enviromentVariables[eachEnvironmentVariable].optional === true
       && enviromentVariables[eachEnvironmentVariable].requiredIf

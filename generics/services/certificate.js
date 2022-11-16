@@ -8,7 +8,7 @@
 //dependencies
 const request = require('request');
 const CERTIFICATE_SERVICE_URL = process.env.CERTIFICATE_SERVICE_URL;
-const ML_PROJECT_URL = `https://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
+const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
 
 /**
   * Project certificate creation

@@ -25,7 +25,7 @@ module.exports = class certificateValidationsHelper {
     static criteriaValidation(data) {
         return new Promise(async (resolve, reject) => {
             try {
-                let criteria = data.certificate.criteria;
+                let criteria = data.certificate.criteria; // criteria conditions for certificate
                 let validationResult = [];
                 let validationMessage = "";
                 let validationExpression = criteria.expression
@@ -43,6 +43,7 @@ module.exports = class certificateValidationsHelper {
                         validationResult.push(validation.success);
                         ( validation.success == false ) ? validationMessage = validationMessage + " " + currentCondition.validationText : "";
                     }
+                    // validate criteria using defined expression 
                     let criteriaValidation = await _criteriaExpressionValidation( validationExpression, conditionKeys, validationResult )
                     return resolve({
                         success: criteriaValidation,
@@ -77,7 +78,7 @@ function _subCriteriaValidation(conditions, expression, data) {
         try {
             let conditionKeys = Object.keys(conditions)
             let validationResult = [];
-           
+           // loop throug conditions of subcriterias
             for ( let index = 0; index < conditionKeys.length; index++ ) {
                 let currentCondition = conditions[conditionKeys[index]];
                 // correntCondition contain the prefinal level data
@@ -85,7 +86,7 @@ function _subCriteriaValidation(conditions, expression, data) {
                 let validation = await _validateCriteriaConditions( currentCondition, data );
                 validationResult.push(validation);
             }
-            
+            // validate expression 
             let subcriteriaValidation = await _criteriaExpressionValidation( expression, conditionKeys, validationResult )
             return resolve({
                 success: subcriteriaValidation
@@ -116,14 +117,15 @@ function _validateCriteriaConditions(condition, data) {
     return new Promise(async (resolve, reject) => {
         try {
             let result = false;
-            if ( !condition.function || condition.function == "" ) {
+            if ( !condition.function || condition.function == "" ) { 
                 if ( condition.scope == CONSTANTS.common.PROJECT ){
-
+                    // if validation is on completedDate
                     if ( condition.key == "completedDate") {
                         let comparableDates = UTILS.createComparableDates( data[condition.key], condition.value );
                         data[condition.key] = comparableDates.dateOne;
                         condition.value = comparableDates.dateTwo;
                     }
+                    // validate prject value with condition value
                     result = UTILS.operatorValidation( data[condition.key], condition.value, condition.operator );
                     
                 } 
@@ -132,16 +134,17 @@ function _validateCriteriaConditions(condition, data) {
                     let valueFromProject = 0;
                     // if: condition is in scope of project and contains a function to check
                     if ( condition.scope == CONSTANTS.common.PROJECT ) {
+                        // get count of attachments at project level
                         valueFromProject = UTILS.noOfElementsInArray( data[condition.key], condition.filter ); 
                     } else if ( condition.scope == CONSTANTS.common.TASK_ATTACHMENT ){
                         // for task attachment validatiion _id of specific task or "all" key should be passed in an array called taskDetails
                         let tasksAttachments = [];
                         let projectTasks = data.tasks;
-                        
+                        // check tasks and taskDetails exists
                         if ( projectTasks && projectTasks.length > 0 && condition.taskDetails.length > 0 &&  condition.taskDetails[0] == "all" ) {
-                            
+                            // loop through tasks to get attachments
                             for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++ ) {
-
+                                
                                 if ( projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) 
                                 {
                                     tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
@@ -167,8 +170,10 @@ function _validateCriteriaConditions(condition, data) {
                         if ( !tasksAttachments.length > 0 ) {
                             return resolve(result)
                         }
+                        // get task attachments count
                         valueFromProject = UTILS.noOfElementsInArray( tasksAttachments, condition.filter ); 
                     }
+                    // validate against condition value
                     result =  UTILS.operatorValidation( valueFromProject, condition.value, condition.operator );
 
                 } catch (fnError) {
@@ -207,6 +212,7 @@ function _criteriaExpressionValidation(expression, keys, result) {
                 keys.length != result.length ) {
                 return resolve(false);
             }
+            // generate expression string that can be evaluated
             for ( let pointerToKeys = 0; pointerToKeys < keys.length; pointerToKeys++ ) {
                 expression = expression.replace(keys[pointerToKeys],result[pointerToKeys].toString())
             }

@@ -2336,8 +2336,10 @@ module.exports = class UserProjectsHelper {
      static generateCertificate(data) {
         return new Promise(async (resolve, reject) => {
             try {
+                
                 //  if eligible key is not there check criteria for validation
                 if ( !data.certificate.eligible ) {
+                    //  validate certificate data, checking if it passes all criteria
                     let validateCriteria = await certificateValidationsHelper.criteriaValidation(data)
                     if ( validateCriteria.success ) {
                         data.certificate.eligible = true;
@@ -2349,6 +2351,7 @@ module.exports = class UserProjectsHelper {
                 let updateObject = {
                     "$set" : {}
                 };
+                // update project certificate data
                 updateObject["$set"]["certificate.eligible"] =  data.certificate.eligible;
                 if ( data.certificate.message && data.certificate.message !=="" ) {
                     updateObject["$set"]["certificate.message"] =  data.certificate.message;
@@ -2362,9 +2365,9 @@ module.exports = class UserProjectsHelper {
                     );
                 } 
                 if ( data.certificate.eligible === true && ( data.certificate.transactionId || data.certificate.osid ) ) {
-                    return resolve( { 
-                        success: false
-                    });
+                    throw {
+                        message:  CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED_ONCE
+                    };
                 } else {
                     if ( data.certificate.eligible === true ) {
                         let certificateTemplateDetails = [];
@@ -2379,9 +2382,9 @@ module.exports = class UserProjectsHelper {
                             if ( certificateTemplateDownloadableUrl.success ) {
                                 data.certificate.templateUrl = certificateTemplateDownloadableUrl.data[0].url;
                             } else {
-                                return resolve({
-                                    success:false
-                                });
+                                throw {
+                                    message:  CONSTANTS.apiResponses.DOWNLOADABLE_URL_NOT_FOUND
+                                };
                             }
                         }
                         if ( data.certificate.templateId && data.certificate.templateId !== "" ) {
@@ -2391,12 +2394,12 @@ module.exports = class UserProjectsHelper {
 
                             //certificate template data do not exists.
                             if ( !certificateTemplateDetails.length > 0 ) {
-                                return resolve({
-                                    success:false
-                                });
+                                throw {
+                                    message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
+                                };
                             }
                         }
-                        
+                        certificateTemplateDetails[0].issuer.kid = process.env.CERTIFICATE_ISSUER_KID;
                         //create certificate request body 
                         let certificateData = {
                             recipient : {
@@ -2419,9 +2422,9 @@ module.exports = class UserProjectsHelper {
                         const certificateDetails = await certificateService.createCertificate( certificateData );
                         
                         if ( !certificateDetails.success || !certificateDetails.data || !certificateDetails.data.ProjectCertificate ) {
-                            return resolve({
-                                success:false
-                            });
+                            throw {
+                                message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
+                            };
                         }
                     
                         let updateObject = {
@@ -2443,7 +2446,7 @@ module.exports = class UserProjectsHelper {
                                 }
                                 
                         }
-
+                        // update project details certificate details
                         if ( certificateDetails.data.ProjectCertificate.osid &&
                              certificateDetails.data.ProjectCertificate.osid !== "" 
                         ) {
@@ -2462,22 +2465,22 @@ module.exports = class UserProjectsHelper {
                                 success: true
                             });
                         } else {
-                            return resolve({
-                                success:false
-                            });
+                            throw {
+                                message:  CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
+                            };
                         }
                         
                     } else {
-                        return resolve({
-                            success:false
-                        });
+                        throw {
+                            message:  CONSTANTS.apiResponses.NOT_ELIGIBLE_FOR_CERTIFICATE
+                        };
                     }
                 }
             } catch (error) {
                 return resolve({
                     success: false,
-                    message: error.message,
-                    data: {}
+                    message: error.message
+
                 });
             }
         })
