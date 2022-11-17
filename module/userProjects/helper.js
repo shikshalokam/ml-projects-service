@@ -3096,14 +3096,14 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
                         if(currentProfileUserType.subType && currentProfileUserType.subType !== null) { // If the role has a subType
 
                             // Check if subType exists in userRoleInformation role, if not means profile data is old and should be reset.
-                            if(!observation.userRoleInformation.role.toUpperCase().includes(currentProfileUserType.subType.toUpperCase())) {
+                            if(!userRoleInformation.role.toUpperCase().includes(currentProfileUserType.subType.toUpperCase())) {
                                 resetCurrentUserProfileRoles = true; // Reset userProfile.profileUserTypes
                                 break;
                             }
                         } else { // If the role subType is null or is not there
 
                             // Check if type exists in userRoleInformation role, if not means profile data is old and should be reset.
-                            if(!observation.userRoleInformation.role.toUpperCase().includes(currentProfileUserType.type.toUpperCase())) {
+                            if(!userRoleInformation.role.toUpperCase().includes(currentProfileUserType.type.toUpperCase())) {
                                 resetCurrentUserProfileRoles = true; // Reset userProfile.profileUserTypes
                                 break;
                             }
@@ -3204,7 +3204,7 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
                 let userLocations = new Array;
 
                 userRoleInfomrationLocationKeys.forEach( requestedDataKey => {
-                    if (UTILS.checkIfValidUUID(userRoleInformationLocationObject[requestedDataKey])) {
+                    if (UTILS.checkValidUUID(userRoleInformationLocationObject[requestedDataKey])) {
                         locationIds.push(userRoleInformationLocationObject[requestedDataKey]);
                     } else {
                         locationCodes.push(userRoleInformationLocationObject[requestedDataKey]);
@@ -3249,8 +3249,8 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
 
         } catch (error) {
             return resolve({
-                status: error.status || httpStatusCode.internal_server_error.status,
-                message: error.message || httpStatusCode.internal_server_error.message,
+                status: error.status || HTTP_STATUS_CODE['internal_server_error'].status,
+                message: error.message || HTTP_STATUS_CODE['internal_server_error'].message,
                 data : false
             });
         }
