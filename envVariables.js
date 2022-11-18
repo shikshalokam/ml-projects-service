@@ -59,15 +59,6 @@ let enviromentVariables = {
     "message" : "Enable/Disable project certification",
     "optional" : false,
     "default" : "ON"
-  },
-  "CERTIFICATE_ISSUER_KID" : {
-    "message" : "Required certificate issuer kid",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "PROJECT_CERTIFICATE_ON_OFF",
-      "operator" : "EQUALS",
-      "value" : "ON"
-    }
   }
 }
 

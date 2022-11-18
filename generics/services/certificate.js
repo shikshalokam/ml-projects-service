@@ -60,6 +60,58 @@ const createCertificate = function (bodyData) {
     })
 }
 
+/**
+  * Project certificate issuer-kid
+  * @function
+  * @name getCertificateIssuerKid
+  * @returns {JSON} - Certificate issuer kid details.
+*/
+
+const getCertificateIssuerKid = function () {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let issuerKidUrl =  
+            CERTIFICATE_SERVICE_URL + CONSTANTS.endpoints.GET_CERTIFICATE_KID;
+            let bodyData = {"filters": {}};
+
+            const options = {
+                headers : {
+                    "Content-Type": "application/json"
+                },
+                json : bodyData
+            };
+            request.post(issuerKidUrl,options,getKidCallback);
+
+            function getKidCallback(err, data) {
+                let result = {
+                    success : true
+                };
+                
+                if (err) {
+                    result.success = false;
+                } else {
+                    let response = data.body;
+                    if( response.length >  0 && response[0].osid && response[0].osid !== "" ) {
+                        result["data"] = response[0].osid;
+                    } else {
+                        result.success = false;
+                    }
+                }
+                return resolve(result);
+            }
+            setTimeout(function () {
+                return resolve (result = {
+                    success : false
+                 });
+            }, CONSTANTS.common.SERVER_TIME_OUT);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
-    createCertificate : createCertificate
+    createCertificate : createCertificate,
+    getCertificateIssuerKid : getCertificateIssuerKid
 }

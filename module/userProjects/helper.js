@@ -2399,7 +2399,14 @@ module.exports = class UserProjectsHelper {
                                 };
                             }
                         }
-                        certificateTemplateDetails[0].issuer.kid = process.env.CERTIFICATE_ISSUER_KID;
+                        // get certificate issuer kid from sunbird-RC
+                        let kidData = await certificateService.getCertificateIssuerKid();
+                        if( !kidData.success ) {
+                            throw {
+                                message: CONSTANTS.apiResponses.ISSUER_KID_NOT_FOUND
+                            }
+                        }
+                        certificateTemplateDetails[0].issuer.kid = kidData.data;
                         //create certificate request body 
                         let certificateData = {
                             recipient : {

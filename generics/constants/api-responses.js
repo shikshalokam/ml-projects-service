@@ -132,5 +132,6 @@ module.exports = {
     "DOWNLOADABLE_URL_NOT_FOUND" : "Failed to generate downloadable URL",
     "CERTIFICATE_TEMPLATE_NOT_FOUND" : "Certificate template details not found",
     "CERTIFICATE_GENERATION_FAILED" : "Certificate generation failed",
-    "NOT_ELIGIBLE_FOR_CERTIFICATE" : "Project is not eligible for certificate"
+    "NOT_ELIGIBLE_FOR_CERTIFICATE" : "Project is not eligible for certificate",
+    "ISSUER_KID_NOT_FOUND" : "Failed to fetch certificate issuer kid"
 };
