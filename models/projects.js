@@ -154,10 +154,13 @@ module.exports = {
             message : String,
             issuedOn : Date,
             criteria : Object,
-            transactionIdCreatedAt : Date,
-            reIssuedAt : Date,
-            prevTransactionId : String,
-            prevOsid : String
+            originalTransactionInformation :{
+                transactionIdCreatedAt : Date,
+                reIssuedAt : Date,
+                prevTransactionId : String,
+                prevOsid : String
+            }
+            
         }
     },
     compoundIndex: [

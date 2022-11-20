@@ -2525,7 +2525,7 @@ module.exports = class UserProjectsHelper {
                 ) {
                     updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
                 }
-                updateObject["$set"]["certificate.transactionIdCreatedAt"] = new Date();;
+                updateObject["$set"]["certificate.originalTransactionInformation.transactionIdCreatedAt"] = new Date();;
                 
                 if ( Object.keys(updateObject["$set"]).length > 0 ) {
                     await projectQueries.findOneAndUpdate(
@@ -2727,12 +2727,12 @@ module.exports = class UserProjectsHelper {
                 }
 
                 if ( userProject[0].certificate.transactionId ) {
-                    updateObject["$set"]["certificate.prevTransactionId"] = userProject[0].certificate.transactionId
+                    updateObject["$set"]["certificate.originalTransactionInformation.prevTransactionId"] = userProject[0].certificate.transactionId
                 }
                 if ( userProject[0].certificate.osid ) {
-                    updateObject["$set"]["certificate.prevOsid"] = userProject[0].certificate.osid;
+                    updateObject["$set"]["certificate.originalTransactionInformation.prevOsid"] = userProject[0].certificate.osid;
                 }
-                updateObject["$set"]["certificate.reIssuedAt"] = new Date();
+                updateObject["$set"]["certificate.originalTransactionInformation.reIssuedAt"] = new Date();
                 await projectQueries.findOneAndUpdate(
                     {
                         _id: userProject[0]._id
