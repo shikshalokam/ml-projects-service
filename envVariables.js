@@ -8,6 +8,7 @@
 const Log = require("log");
 let log = new Log("debug");
 let table = require("cli-table");
+const certificateService = require(GENERICS_FILES_PATH + "/services/certificate");
 
 let tableData = new table();
 
@@ -129,16 +130,30 @@ module.exports = function() {
         tableObj[eachEnvironmentVariable] = `FAILED - ${eachEnvironmentVariable} is required`;
       }
     }
-
     tableData.push(tableObj);
   })
 
   log.info(tableData.toString());
-
+  getKid();
   return {
     success : success
   }
 }
+
+async function getKid(){
+  if ( enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"] &&
+      enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"].default &&
+      enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"].default === "ON"
+    ) {
+      // get certificate issuer kid from sunbird-RC
+      let kidData = await certificateService.getCertificateIssuerKid();
+      if( !kidData.success ) {
+        console.log("Server stoped . Failed to set certificate issuer Kid value")
+        process.exit();
+      }
+      global.CERTIFICATE_ISSUER_KID = kidData.data
+  }
+};
 
 
 

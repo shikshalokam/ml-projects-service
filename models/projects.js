@@ -153,7 +153,11 @@ module.exports = {
             eligible : Boolean,
             message : String,
             issuedOn : Date,
-            criteria : Object
+            criteria : Object,
+            transactionIdCreatedAt : Date,
+            reIssuedAt : Date,
+            prevTransactionId : String,
+            prevOsid : String
         }
     },
     compoundIndex: [

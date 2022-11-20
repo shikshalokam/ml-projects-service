@@ -266,18 +266,6 @@ function checkValidUUID(uuids) {
 }
 
 /**
-  * convert string to upperCase.
-  * @function
-  * @name upperCase
-  * @param {String} str 
-  * @returns {String} returns a upperCase string. ex:hello , o/p: HELLO
-*/
-
-function upperCase(str) {
-  return str.toUpperCase()
-}
-
-/**
   * make dates comparable
   * @function
   * @name createComparableDates
@@ -386,7 +374,6 @@ module.exports = {
   revertProjectStatus:revertProjectStatus,
   revertStatusorNot:revertStatusorNot,
   checkValidUUID : checkValidUUID,
-  upperCase : upperCase,
   createComparableDates : createComparableDates,
   noOfElementsInArray : noOfElementsInArray,
   operatorValidation : operatorValidation

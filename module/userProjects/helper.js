@@ -106,6 +106,7 @@ module.exports = class UserProjectsHelper {
     static sync(projectId, lastDownloadedAt, data, userId, userToken, appName = "", appVersion = "") {
         return new Promise(async (resolve, reject) => {
             try {
+                
                 const userProject = await projectQueries.projectDocument({
                     _id: projectId,
                     userId: userId
@@ -2333,29 +2334,199 @@ module.exports = class UserProjectsHelper {
      * @returns {JSON} certificate details.
     */
 
-     static generateCertificate(data) {
+    static generateCertificate(data) {
         return new Promise(async (resolve, reject) => {
             try {
-                
-                //  if eligible key is not there check criteria for validation
-                if ( !data.certificate.eligible ) {
-                    //  validate certificate data, checking if it passes all criteria
-                    let validateCriteria = await certificateValidationsHelper.criteriaValidation(data)
-                    if ( validateCriteria.success ) {
-                        data.certificate.eligible = true;
-                    } else {
-                        data.certificate.eligible = false;
-                        data.certificate.message = validateCriteria.message
-                    }
+
+                // check eligibility of project for certificate creation
+                let eligibility = await this.checkCertificateEligibility(data);
+                if (!eligibility ){
+                    throw {
+                        message:  CONSTANTS.apiResponses.NOT_ELIGIBLE_FOR_CERTIFICATE
+                    };
                 }
+
+                // create payload for certificate generation
+                const certificateData = await this.createCertificatePayload(data);
+
+                // call sunbird-RC to create certificate for project
+                const certificate = await this.createCertificate(certificateData)
+                
+                return resolve(certificate);
+
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message
+
+                });
+            }
+        })
+    }
+
+    /**
+     * check project eligibility for certificate.
+     * @method
+     * @name checkCertificateEligibility 
+     * @param {Object} data - project data for certificate creation data.
+     * @returns {Boolean} certificate eligibilty status.
+    */
+
+    static checkCertificateEligibility(data) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let eligible = false;
                 let updateObject = {
                     "$set" : {}
                 };
-                // update project certificate data
-                updateObject["$set"]["certificate.eligible"] =  data.certificate.eligible;
-                if ( data.certificate.message && data.certificate.message !=="" ) {
-                    updateObject["$set"]["certificate.message"] =  data.certificate.message;
+                //  validate certificate data, checking if it passes all criteria
+                let validateCriteria = await certificateValidationsHelper.criteriaValidation(data)
+                if ( validateCriteria.success ) {
+                    eligible = true;
+                } else {
+                    updateObject["$set"]["certificate.message"] = validateCriteria.message;
                 }
+                updateObject["$set"]["certificate.eligible"] = eligible;
+
+                // update project certificate data
+                await projectQueries.findOneAndUpdate(
+                    {
+                        _id: data._id
+                    },
+                    updateObject
+                );
+                
+                return resolve(eligible);
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message
+
+                });
+            }
+        })
+    }
+
+    /**
+     * createCertificatePayload.
+     * @method
+     * @name createCertificatePayload 
+     * @param {Object} data - project data for certificate creation data.
+     * @returns {Object} payload for certificate creation.
+    */
+
+    static createCertificatePayload(data) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                // get downloadable url for certificate template
+                if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
+                    let certificateTemplateDownloadableUrl =
+                    await coreService.getDownloadableUrl(
+                        {
+                            filePaths: [data.certificate.templateUrl]
+                        }
+                    );
+                    if ( certificateTemplateDownloadableUrl.success ) {
+                        data.certificate.templateUrl = certificateTemplateDownloadableUrl.data[0].url;
+                    } else {
+                        throw {
+                            message:  CONSTANTS.apiResponses.DOWNLOADABLE_URL_NOT_FOUND
+                        };
+                    }
+                }
+
+                let certificateTemplateDetails =[];
+                if ( data.certificate.templateId && data.certificate.templateId !== "" ) {
+                    certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                        _id : data.certificate.templateId
+                    },["issuer","solutionId","programId"]);
+
+                    //certificate template data do not exists.
+                    if ( !certificateTemplateDetails.length > 0 ) {
+                        throw {
+                            message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
+                        };
+                    }
+                }
+                
+                //create certificate request body 
+                let certificateData = {
+                    recipient : {
+                        id : data.userId,
+                        name : data.userProfile.userName,
+                        type : data.userProfile.userType
+                    },
+                    templateUrl : data.certificate.templateUrl,
+                    issuer : CERTIFICATE_ISSUER_KID,
+                    status : data.certificate.status.toUpperCase(),
+                    projectId : (data._id).toString(),
+                    projectName : data.title,
+                    programId : (certificateTemplateDetails[0].programId).toString(),
+                    programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
+                    solutionId : (certificateTemplateDetails[0].solutionId).toString(),
+                    solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
+                    completedDate : data.completedDate
+                };
+                return resolve(certificateData);
+
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message
+
+                });
+            }
+        })
+    }    
+
+    /**
+     * call sunbird-RC for certificate creation.
+     * @method
+     * @name createCertificate 
+     * @param {Object} certificateData - payload for certificate creation data.
+     * @returns {Boolean} certificate creation status.
+    */
+
+    static createCertificate(certificateData) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const certificateDetails = await certificateService.createCertificate( certificateData );      
+                if ( !certificateDetails.success || !certificateDetails.data || !certificateDetails.data.ProjectCertificate ) {
+                    throw {
+                        message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
+                    };
+                }
+            
+                let updateObject = {
+                    "$set" : {}
+                };
+
+                //  if transaction id is present.
+                if ( certificateDetails.data.ProjectCertificate.transactionId &&
+                    certificateDetails.data.ProjectCertificate.transactionId !== "" 
+                ) {
+                    let transactionIdvalue = certificateDetails.data.ProjectCertificate.transactionId;
+                    const first2 = transactionIdvalue.slice(0, 2);
+                    
+                    if ( first2 === "1-" ) {
+                        transactionIdvalue = transactionIdvalue.split(/1-(.*)/s)
+                        updateObject["$set"]["certificate.transactionId"] = transactionIdvalue[1];
+                    } else {
+                        updateObject["$set"]["certificate.transactionId"] = transactionIdvalue;
+                    }
+                        
+                }
+
+                // update project details certificate details
+                if ( certificateDetails.data.ProjectCertificate.osid &&
+                    certificateDetails.data.ProjectCertificate.osid !== "" 
+                ) {
+                    updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
+                }
+                updateObject["$set"]["certificate.transactionIdCreatedAt"] = new Date();;
+                
                 if ( Object.keys(updateObject["$set"]).length > 0 ) {
                     await projectQueries.findOneAndUpdate(
                         {
@@ -2364,125 +2535,9 @@ module.exports = class UserProjectsHelper {
                         updateObject
                     );
                 } 
-                if ( data.certificate.eligible === true && ( data.certificate.transactionId || data.certificate.osid ) ) {
-                    throw {
-                        message:  CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED_ONCE
-                    };
-                } else {
-                    if ( data.certificate.eligible === true ) {
-                        let certificateTemplateDetails = [];
-                        // get downloadable url for certificate template
-                        if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
-                            let certificateTemplateDownloadableUrl =
-                            await coreService.getDownloadableUrl(
-                                {
-                                    filePaths: [data.certificate.templateUrl]
-                                }
-                            );
-                            if ( certificateTemplateDownloadableUrl.success ) {
-                                data.certificate.templateUrl = certificateTemplateDownloadableUrl.data[0].url;
-                            } else {
-                                throw {
-                                    message:  CONSTANTS.apiResponses.DOWNLOADABLE_URL_NOT_FOUND
-                                };
-                            }
-                        }
-                        if ( data.certificate.templateId && data.certificate.templateId !== "" ) {
-                            certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
-                                _id : data.certificate.templateId
-                            },["issuer","solutionId","programId"]);
-
-                            //certificate template data do not exists.
-                            if ( !certificateTemplateDetails.length > 0 ) {
-                                throw {
-                                    message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
-                                };
-                            }
-                        }
-                        // get certificate issuer kid from sunbird-RC
-                        let kidData = await certificateService.getCertificateIssuerKid();
-                        if( !kidData.success ) {
-                            throw {
-                                message: CONSTANTS.apiResponses.ISSUER_KID_NOT_FOUND
-                            }
-                        }
-                        certificateTemplateDetails[0].issuer.kid = kidData.data;
-                        //create certificate request body 
-                        let certificateData = {
-                            recipient : {
-                                id : data.userId,
-                                name : data.userProfile.userName,
-                                type : data.userProfile.userType
-                            },
-                            templateUrl : data.certificate.templateUrl,
-                            issuer : certificateTemplateDetails[0].issuer,
-                            status : UTILS.upperCase(data.certificate.status),
-                            projectId : (data._id).toString(),
-                            projectName : data.title,
-                            programId : (certificateTemplateDetails[0].programId).toString(),
-                            programName : ( data.programInformation && data.programInformation.name ) ? data.programInformation.name : "",
-                            solutionId : (certificateTemplateDetails[0].solutionId).toString(),
-                            solutionName : ( data.solutionInformation && data.solutionInformation.name ) ? data.solutionInformation.name :  "",
-                            completedDate : data.completedDate
-                        };
-                        
-                        const certificateDetails = await certificateService.createCertificate( certificateData );
-                        
-                        if ( !certificateDetails.success || !certificateDetails.data || !certificateDetails.data.ProjectCertificate ) {
-                            throw {
-                                message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
-                            };
-                        }
-                    
-                        let updateObject = {
-                            "$set" : {}
-                        };
-
-                        //  if transaction id is present.
-                        if ( certificateDetails.data.ProjectCertificate.transactionId &&
-                             certificateDetails.data.ProjectCertificate.transactionId !== "" 
-                            ) {
-                                let transactionIdvalue = certificateDetails.data.ProjectCertificate.transactionId;
-                                const first2 = transactionIdvalue.slice(0, 2);
-                                
-                                if ( first2 === "1-" ) {
-                                    transactionIdvalue = transactionIdvalue.split(/1-(.*)/s)
-                                    updateObject["$set"]["certificate.transactionId"] = transactionIdvalue[1];
-                                } else {
-                                    updateObject["$set"]["certificate.transactionId"] = transactionIdvalue;
-                                }
-                                
-                        }
-                        // update project details certificate details
-                        if ( certificateDetails.data.ProjectCertificate.osid &&
-                             certificateDetails.data.ProjectCertificate.osid !== "" 
-                        ) {
-                            updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
-                        }
-                        updateObject["$set"]["certificate.eligible"] = true;
-                        if ( Object.keys(updateObject["$set"]).length > 0 ) {
-                            await projectQueries.findOneAndUpdate(
-                                {
-                                    _id: data._id
-                                },
-                                updateObject
-                            );
-                            
-                            return resolve( { 
-                                success: true
-                            });
-                        } else {
-                            throw {
-                                message:  CONSTANTS.apiResponses.USER_PROJECT_NOT_UPDATED
-                            };
-                        }
-                        
-                    } else {
-                        throw {
-                            message:  CONSTANTS.apiResponses.NOT_ELIGIBLE_FOR_CERTIFICATE
-                        };
-                    }
-                }
+                return resolve( { 
+                    success: true
+                });
             } catch (error) {
                 return resolve({
                     success: false,
@@ -2524,10 +2579,7 @@ module.exports = class UserProjectsHelper {
                     {
                         "certificate.transactionId" : transactionId
                     },
-                    updateObject,
-                    {
-                        new: true
-                    }
+                    updateObject
                 );
 
                 if ( projectDetails == null || !Object.keys(projectDetails).length > 0 ) {
@@ -2567,7 +2619,7 @@ module.exports = class UserProjectsHelper {
     static certificates(userId) {
         return new Promise(async (resolve, reject) => {
             try {
-                let certificateCount = 0;
+                
                 //  get project details of user which have certificate.
                 const userProject = await projectQueries.projectDocument({
                     userId: userId,
@@ -2592,22 +2644,18 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_WITH_CERTIFICATE_NOT_FOUND
                     }
                 }
-                //  find certificate generated project count
-                for ( let projectIndex = 0; projectIndex < userProject.length; projectIndex++ ) {
-                    if ( userProject[projectIndex].certificate &&
-                         userProject[projectIndex].certificate.osid &&
-                         userProject[projectIndex].certificate.osid !== ""
-                    ) {
-                        certificateCount++;
-                    }
-                }
+
+                let count = _.countBy(userProject, (rec) => {
+                    return (rec.certificate && rec.certificate.osid && rec.certificate.osid !== "" )? 'generated': 'notGenerated';
+                });
+                
                 return resolve({ 
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
                     data : {
                         data : userProject,
                         count : userProject.length,
-                        certificateCount : certificateCount
+                        certificateCount : count.generated
                     }
 
                 });
@@ -2646,6 +2694,9 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
                     };
                 }
+                let updateObject = {
+                    "$set" : {}
+                };
                 
                 //  fetch user data using userId of project and calling the profile API
                 let userProfileData = await userProfileService.profileReadPrivate(userProject[0].userId);
@@ -2662,13 +2713,33 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.USER_PROFILE_NOT_FOUND
                     };
                 }
+
+                // create payload for certificate generation
+                const certificateData = await this.createCertificatePayload(userProject[0]);
+
+                // call sunbird-RC to create certificate for project
+                const certificate = await this.createCertificate(certificateData);
+
+                if ( !certificate.success ) {
+                    throw {
+                        message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
+                    };
+                }
+
                 if ( userProject[0].certificate.transactionId ) {
-                    delete userProject[0].certificate.transactionId;
+                    updateObject["$set"]["certificate.prevTransactionId"] = userProject[0].certificate.transactionId
                 }
                 if ( userProject[0].certificate.osid ) {
-                    delete userProject[0].certificate.osid;
+                    updateObject["$set"]["certificate.prevOsid"] = userProject[0].certificate.osid;
                 }
-                await kafkaProducersHelper.pushProjectToKafka(userProject[0]);
+                updateObject["$set"]["certificate.reIssuedAt"] = new Date();
+                await projectQueries.findOneAndUpdate(
+                    {
+                        _id: userProject[0]._id
+                    },
+                    updateObject
+                );
+                
                 return resolve({ 
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
