@@ -45,7 +45,8 @@ module.exports = {
         },
         isDeleted : {
             type : Boolean,
-            default : false
+            default : false,
+            index : true
         },
         recommendedFor : {
             type : Array,
