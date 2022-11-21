@@ -2525,7 +2525,7 @@ module.exports = class UserProjectsHelper {
                 ) {
                     updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
                 }
-                updateObject["$set"]["certificate.originalTransactionInformation.transactionIdCreatedAt"] = new Date();;
+                updateObject["$set"]["certificate.transactionIdCreatedAt"] = new Date();;
                 
                 if ( Object.keys(updateObject["$set"]).length > 0 ) {
                     await projectQueries.findOneAndUpdate(
@@ -2560,6 +2560,7 @@ module.exports = class UserProjectsHelper {
     static certificateCallback(transactionId, osid) {
         return new Promise(async (resolve, reject) => {
             try {
+                // callback request structure nested so validating transactionId and osid here instead in validator.
                 if ( transactionId == "" || osid == "" ) {
                     throw {
                         status: HTTP_STATUS_CODE["bad_request"].status,
@@ -2727,12 +2728,12 @@ module.exports = class UserProjectsHelper {
                 }
 
                 if ( userProject[0].certificate.transactionId ) {
-                    updateObject["$set"]["certificate.originalTransactionInformation.prevTransactionId"] = userProject[0].certificate.transactionId
+                    updateObject["$set"]["certificate.originalTransactionInformation.transactionId"] = userProject[0].certificate.transactionId
                 }
                 if ( userProject[0].certificate.osid ) {
-                    updateObject["$set"]["certificate.originalTransactionInformation.prevOsid"] = userProject[0].certificate.osid;
+                    updateObject["$set"]["certificate.originalTransactionInformation.osid"] = userProject[0].certificate.osid;
                 }
-                updateObject["$set"]["certificate.originalTransactionInformation.reIssuedAt"] = new Date();
+                updateObject["$set"]["certificate.reIssuedAt"] = new Date();
                 await projectQueries.findOneAndUpdate(
                     {
                         _id: userProject[0]._id

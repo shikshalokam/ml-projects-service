@@ -154,11 +154,11 @@ module.exports = {
             message : String,
             issuedOn : Date,
             criteria : Object,
+            reIssuedAt : Date,
+            transactionIdCreatedAt : Date,
             originalTransactionInformation :{
-                transactionIdCreatedAt : Date,
-                reIssuedAt : Date,
-                prevTransactionId : String,
-                prevOsid : String
+                transactionId : String,
+                osid : String
             }
             
         }
