@@ -176,8 +176,57 @@ async function getParentEntities( entityId, iteration = 0, parentEntities ) {
     return parentEntities;
 
 }
+
+/**
+  * get user profileData without token.
+  * @method
+  * @name profileReadPrivate
+  * @param {String} userId - user Id
+  * @returns {JSON} - User profile details
+*/
+const profileReadPrivate = function (userId) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            //  <--- Important : This url endpoint is private do not use it for regular workflows --->
+            let url = userServiceUrl + CONSTANTS.endpoints.USER_READ_PRIVATE + "/" + userId;
+            const options = {
+                headers : {
+                    "content-type": "application/json"
+                }
+            };
+            request.get(url,options,userReadCallback);
+            let result = {
+                success : true
+            };
+            function userReadCallback(err, data) { 
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.responseCode === HTTP_STATUS_CODE['ok'].code ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                }   
+                return resolve(result);
+            }
+            setTimeout(function () {
+                return resolve (result = {
+                    success : false
+                 });
+             }, CONSTANTS.common.SERVER_TIME_OUT);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
 module.exports = {
     profile : profile,
     locationSearch : locationSearch,
-    getParentEntities : getParentEntities
+    getParentEntities : getParentEntities,
+    profileReadPrivate : profileReadPrivate
 };

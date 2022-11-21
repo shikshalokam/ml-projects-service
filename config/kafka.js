@@ -9,6 +9,7 @@
 //dependencies
 const kafka = require('kafka-node');
 const SUBMISSION_TOPIC = process.env.SUBMISSION_TOPIC;
+const CERTIFICATE_TOPIC = process.env.PROJECT_SUBMISSION_TOPIC;
 
 /**
   * Kafka configurations.
@@ -41,6 +42,12 @@ const connect = function() {
 
     _sendToKafkaConsumers(
       SUBMISSION_TOPIC,
+      process.env.KAFKA_URL
+    );
+
+    //  project certificate details consumer
+    _sendToKafkaConsumers(
+      CERTIFICATE_TOPIC,
       process.env.KAFKA_URL
     );
 
@@ -82,6 +89,10 @@ var _sendToKafkaConsumers = function (topic,host) {
       if (message && message.topic === SUBMISSION_TOPIC) {
         submissionsConsumer.messageReceived(message);
       }
+      // call projectCertificateConsumer 
+      if (message && message.topic === CERTIFICATE_TOPIC) {
+        projectCertificateConsumer.messageReceived(message);
+      }
 
     });
 
@@ -89,6 +100,9 @@ var _sendToKafkaConsumers = function (topic,host) {
 
       if(error.topics && error.topics[0] === SUBMISSION_TOPIC) {
         submissionsConsumer.errorTriggered(error);
+      }
+      if(error.topics && error.topics[0] === CERTIFICATE_TOPIC) {
+        projectCertificateConsumer.errorTriggered(error);
       }
 
     });

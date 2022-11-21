@@ -557,7 +557,7 @@ module.exports = class ProjectTemplatesHelper {
                     externalId : templateId,
                     isReusable : true
                 });
-
+                
                 if ( !projectTemplateData.length > 0 ) {
                     throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND)
                 }

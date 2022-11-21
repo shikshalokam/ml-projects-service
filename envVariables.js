@@ -8,6 +8,7 @@
 const Log = require("log");
 let log = new Log("debug");
 let table = require("cli-table");
+const certificateService = require(GENERICS_FILES_PATH + "/services/certificate");
 
 let tableData = new table();
 
@@ -39,6 +40,26 @@ let enviromentVariables = {
   "USER_SERVICE_URL" : {
     "message" : "Required user service base url",
     "optional" : false
+  },
+  "SERVICE_NAME" : {
+    "message" : "current service name",
+    "optional" : true,
+    "default" : "ml-project-service"
+  },
+  "CERTIFICATE_SERVICE_URL" : {
+    "message" : "certificate service base url",
+    "optional" : true,
+    "default" : "http://registry-service:8081",
+    "requiredIf" : {
+      "key": "PROJECT_CERTIFICATE_ON_OFF",
+      "operator" : "EQUALS",
+      "value" : "ON"
+    }
+  },
+  "PROJECT_CERTIFICATE_ON_OFF" : {
+    "message" : "Enable/Disable project certification",
+    "optional" : false,
+    "default" : "ON"
   }
 }
 
@@ -52,7 +73,7 @@ module.exports = function() {
     };
   
     let keyCheckPass = true;
-
+    let validRequiredIfOperators = ["EQUALS","NOT_EQUALS"]
 
     if(enviromentVariables[eachEnvironmentVariable].optional === true
       && enviromentVariables[eachEnvironmentVariable].requiredIf
@@ -109,16 +130,30 @@ module.exports = function() {
         tableObj[eachEnvironmentVariable] = `FAILED - ${eachEnvironmentVariable} is required`;
       }
     }
-
     tableData.push(tableObj);
   })
 
   log.info(tableData.toString());
-
+  getKid();
   return {
     success : success
   }
 }
+
+async function getKid(){
+  if ( enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"] &&
+      enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"].default &&
+      enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"].default === "ON"
+    ) {
+      // get certificate issuer kid from sunbird-RC
+      let kidData = await certificateService.getCertificateIssuerKid();
+      if( !kidData.success ) {
+        console.log("Server stoped . Failed to set certificate issuer Kid value")
+        process.exit();
+      }
+      global.CERTIFICATE_ISSUER_KID = kidData.data
+  }
+};
 
 
 
