@@ -7,8 +7,6 @@
 
 //dependencies
 const request = require('request');
-const CERTIFICATE_SERVICE_URL = process.env.CERTIFICATE_SERVICE_URL;
-const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
 
 /**
   * Project certificate creation
@@ -21,11 +19,11 @@ const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICA
 const createCertificate = function (bodyData) {
     return new Promise(async (resolve, reject) => {
         try {
+            const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
             const callbackUrl = ML_PROJECT_URL + CONSTANTS.endpoints.PROJECT_CERTIFICATE_API_CALLBACK;
             let certificateCreateUrl =  
-            CERTIFICATE_SERVICE_URL + 
+            process.env.CERTIFICATE_SERVICE_URL + 
             CONSTANTS.endpoints.CERTIFICATE_CREATE + "?mode=async&callback=" + callbackUrl;
-        
             const options = {
                 headers : {
                     "content-type": "application/json"
@@ -71,7 +69,7 @@ const getCertificateIssuerKid = function () {
     return new Promise(async (resolve, reject) => {
         try {
             let issuerKidUrl =  
-            CERTIFICATE_SERVICE_URL + CONSTANTS.endpoints.GET_CERTIFICATE_KID;
+            process.env.CERTIFICATE_SERVICE_URL + CONSTANTS.endpoints.GET_CERTIFICATE_KID;
             let bodyData = {"filters": {}};
 
             const options = {
@@ -81,7 +79,6 @@ const getCertificateIssuerKid = function () {
                 json : bodyData
             };
             request.post(issuerKidUrl,options,getKidCallback);
-
             function getKidCallback(err, data) {
                 let result = {
                     success : true
