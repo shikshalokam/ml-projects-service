@@ -264,6 +264,102 @@ function checkValidUUID(uuids) {
   }
   return validateUUID;
 }
+
+/**
+  * make dates comparable
+  * @function
+  * @name createComparableDates
+  * @param {String} dateArg1
+  * @param {String} dateArg2
+  * @returns {Object} - date object
+*/
+
+function createComparableDates(dateArg1, dateArg2) {
+  let date1
+  if(typeof dateArg1 === "string") {
+    date1 = new Date(dateArg1.replace( /(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"))
+  } else {
+    date1 = new Date(dateArg1)
+  }
+  
+  let date2
+  if(typeof dateArg2 === "string") {
+    date2 = new Date(dateArg2.replace( /(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"))
+  } else {
+    date2 = new Date(dateArg2)
+  }
+
+  date1.setHours(0)
+  date1.setMinutes(0)
+  date1.setSeconds(0)
+  date2.setHours(0)
+  date2.setMinutes(0)
+  date2.setSeconds(0)
+  return({
+    dateOne: date1,
+    dateTwo: date2
+  })
+}
+
+/**
+  * count attachments
+  * @function
+  * @name noOfElementsInArray
+  * @param {Object} data - data to count
+  * @param {Object} filter -  filter data
+  * @returns {Number} - attachment count
+*/
+
+function noOfElementsInArray(data, filter = {}) {
+  if ( !filter || !Object.keys(filter).length > 0 ) {
+    return data.length;
+  }
+  if ( !data.length > 0 ) {
+    return 0;
+  } else {
+    if ( filter.value == "all" ){
+      return data.length;
+    } else {
+      let count = 0;
+      for ( let attachment = 0; attachment < data.length; attachment++ ) {
+        if ( data[attachment][filter.key] == filter.value ) {
+          count++
+        }
+      }
+      return count;
+    }
+  }
+}
+
+/**
+  * validate lhs and rhs using operator passed as String/ Number
+  * @function
+  * @name operatorValidation
+  * @param {Number or String} valueLhs 
+  * @param {Number or String} valueRhs 
+  * @returns {Boolean} - validation result
+*/
+
+function operatorValidation(valueLhs, valueRhs, operator) {
+  return new Promise(async (resolve, reject) => { 
+      let result = false;
+      if (operator == "==" ) {
+          result = (valueLhs == valueRhs) ? true : false
+      } else if (operator == "!=" ) {
+          result = (valueLhs != valueRhs) ? true : false
+      } else if (operator == ">" ) {
+          result = (valueLhs > valueRhs) ? true : false
+      } else if (operator == "<" ) {
+          result = (valueLhs < valueRhs) ? true : false
+      } else if (operator == "<=" ) {
+        result = (valueLhs <= valueRhs) ? true : false
+      } else if (operator == ">=" ) {
+        result = (valueLhs >= valueRhs) ? true : false
+      } 
+      return resolve(result)
+  })          
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -277,5 +373,8 @@ module.exports = {
   convertProjectStatus : convertProjectStatus,
   revertProjectStatus:revertProjectStatus,
   revertStatusorNot:revertStatusorNot,
-  checkValidUUID : checkValidUUID
+  checkValidUUID : checkValidUUID,
+  createComparableDates : createComparableDates,
+  noOfElementsInArray : noOfElementsInArray,
+  operatorValidation : operatorValidation
 };
