@@ -1941,7 +1941,8 @@ module.exports = class UserProjectsHelper {
                     "lastDownloadedAt",
                     "hasAcceptedTAndC",
                     "referenceFrom",
-                    "status"
+                    "status",
+                    "certificate"
                 ]
             );
 
