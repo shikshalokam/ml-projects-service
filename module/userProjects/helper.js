@@ -2112,7 +2112,7 @@ module.exports = class UserProjectsHelper {
                         "",
                         isATargetedSolution
                     );
-
+            
                 if (
                     libraryProjects.data &&
                     !Object.keys(libraryProjects.data).length > 0
@@ -2372,7 +2372,7 @@ module.exports = class UserProjectsHelper {
                 const certificateData = await this.createCertificatePayload(data);
 
                 // call sunbird-RC to create certificate for project
-                const certificate = await this.createCertificate(certificateData)
+                const certificate = await this.createCertificate(certificateData, data._id)
                 
                 return resolve(certificate);
 
@@ -2470,6 +2470,7 @@ module.exports = class UserProjectsHelper {
                             message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
                         };
                     }
+                    certificateTemplateDetails[0].issuer.kid = CERTIFICATE_ISSUER_KID;
                 }
                 
                 //create certificate request body 
@@ -2480,7 +2481,7 @@ module.exports = class UserProjectsHelper {
                         type : data.userProfile.userType
                     },
                     templateUrl : data.certificate.templateUrl,
-                    issuer : CERTIFICATE_ISSUER_KID,
+                    issuer : certificateTemplateDetails[0].issuer,
                     status : data.certificate.status.toUpperCase(),
                     projectId : (data._id).toString(),
                     projectName : data.title,
@@ -2507,10 +2508,11 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name createCertificate 
      * @param {Object} certificateData - payload for certificate creation data.
+     * @param {string} projectId - project Id.
      * @returns {Boolean} certificate creation status.
     */
 
-    static createCertificate(certificateData) {
+    static createCertificate(certificateData, projectId) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -2520,7 +2522,7 @@ module.exports = class UserProjectsHelper {
                         message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
                     };
                 }
-            
+                
                 let updateObject = {
                     "$set" : {}
                 };
@@ -2552,7 +2554,7 @@ module.exports = class UserProjectsHelper {
                 if ( Object.keys(updateObject["$set"]).length > 0 ) {
                     await projectQueries.findOneAndUpdate(
                         {
-                            _id: data._id
+                            _id: projectId
                         },
                         updateObject
                     );
@@ -2741,7 +2743,7 @@ module.exports = class UserProjectsHelper {
                 const certificateData = await this.createCertificatePayload(userProject[0]);
 
                 // call sunbird-RC to create certificate for project
-                const certificate = await this.createCertificate(certificateData);
+                const certificate = await this.createCertificate(certificateData, userProject[0]._id);
 
                 if ( !certificate.success ) {
                     throw {
