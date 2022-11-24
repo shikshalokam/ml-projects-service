@@ -1174,7 +1174,8 @@ module.exports = class UserProjectsHelper {
                         
                         // create certificate object and add data if certificate template is present.
                         if ( certificateTemplateDetails.length > 0 ) {
-                            projectCreation.data["certificate"] = _.pick(certificateTemplateDetails[0], ['_id', 'templateUrl', 'status', 'criteria']);
+                            projectCreation.data["certificate"] = _.pick(certificateTemplateDetails[0], ['templateUrl', 'status', 'criteria']);
+                            projectCreation.data["certificate"]["templateId"] = solutionDetails.certificateTemplateId;
                         }
                     }
                     
@@ -2225,20 +2226,20 @@ module.exports = class UserProjectsHelper {
                 }
                 //  <- Add certificate template data
                 if ( 
-                    libraryProjects.data.solutionInformation &&
-                    libraryProjects.data.solutionInformation.certificateTemplateId &&
-                    libraryProjects.data.solutionInformation.certificateTemplateId !== ""
+                    libraryProjects.data.certificateTemplateId &&
+                    libraryProjects.data.certificateTemplateId !== ""
                 ){
                     // <- Add certificate template details to projectCreation data if present ->
                     const certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
-                        _id : libraryProjects.data.solutionInformation.certificateTemplateId
+                        _id : libraryProjects.data.certificateTemplateId
                     });
                     
                     // create certificate object and add data if certificate template is present.
                     if ( certificateTemplateDetails.length > 0 ) {
-                        libraryProjects.data["certificate"] = _.pick(certificateTemplateDetails[0], ['_id', 'templateUrl', 'status', 'criteria']);
+                        libraryProjects.data["certificate"] = _.pick(certificateTemplateDetails[0], ['templateUrl', 'status', 'criteria']);
                     }
-                    delete  libraryProjects.data.solutionInformation.certificateTemplateId;
+                    libraryProjects.data["certificate"]["templateId"] = libraryProjects.data.certificateTemplateId;
+                    delete  libraryProjects.data.certificateTemplateId;
                 }
                 
                 //Fetch user profile information by calling sunbird's user read api.
