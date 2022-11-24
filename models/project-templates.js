@@ -112,6 +112,7 @@ module.exports = {
                 4 : 0,
                 5 : 0
             }
-        }
+        },
+        certificateTemplateId : "ObjectId"
     }
 };
