@@ -144,7 +144,7 @@ module.exports = class UserProjectsHelper {
                 }
 
                 const projectsModel = Object.keys(schemas["projects"].schema);
-                
+
                 let keysToRemoveFromUpdation = ["userRoleInformation","userProfile","certificate"]
                 keysToRemoveFromUpdation.forEach( key => {
                     if (data[key])delete data[key];
@@ -2480,7 +2480,7 @@ module.exports = class UserProjectsHelper {
                     recipient : {
                         id : data.userId,
                         name : data.userProfile.userName,
-                        type : data.userProfile.userType
+                        type : data.userProfile.profileUserType.type
                     },
                     templateUrl : data.certificate.templateUrl,
                     issuer : certificateTemplateDetails[0].issuer,
