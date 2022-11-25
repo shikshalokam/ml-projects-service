@@ -19,7 +19,7 @@ const request = require('request');
 const createCertificate = function (bodyData) {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log("line 22 payload to RC : ",bodyData)
+            
             const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
             const callbackUrl = ML_PROJECT_URL + CONSTANTS.endpoints.PROJECT_CERTIFICATE_API_CALLBACK;
             let certificateCreateUrl =  
@@ -31,20 +31,21 @@ const createCertificate = function (bodyData) {
                 },
                 json : bodyData
             };
-            
+            console.log("requestUrlcertificate create  : ",certificateCreateUrl)
+            console.log("certificateRequestBody : ",bodyData)
             request.post(certificateCreateUrl,options,certificateCallback);
-            console.log("line 35 certificateCreateUrl :", certificateCreateUrl)
+
             function certificateCallback(err, data) {
 
                 let result = {
                     success : true
                 };
-                console.log("line 41 data from RC call :",data);
-                console.log("line 41 error from RC call :",err);
+                console.log("line 41 error from RC call error :",err.message);
                 if (err) {
                     result.success = false;
                 } else {
                     let response = data.body;
+                    console.log("certificate success response: ",response)
                     if( response.params.status === "SUCCESSFUL" ) {
                         result["data"] = response.result;
                     } else {
@@ -55,6 +56,7 @@ const createCertificate = function (bodyData) {
             }
 
         } catch (error) {
+            console.log("line 58 catch block : ",error.message)
             return reject(error);
         }
     })
@@ -72,24 +74,28 @@ const getCertificateIssuerKid = function () {
         try {
             let issuerKidUrl =  
             process.env.CERTIFICATE_SERVICE_URL + CONSTANTS.endpoints.GET_CERTIFICATE_KID;
+            
             let bodyData = {"filters": {}};
-
+            
             const options = {
                 headers : {
                     "Content-Type": "application/json"
                 },
                 json : bodyData
-            };
+            }; 
+            console.log("issuer Kid url : ",issuerKidUrl);
+            console.log("issuer Kid bodyData : ",bodyData);
             request.post(issuerKidUrl,options,getKidCallback);
             function getKidCallback(err, data) {
                 let result = {
                     success : true
                 };
-                
+                console.log("KID rc call error : ",err.message)
                 if (err) {
                     result.success = false;
                 } else {
                     let response = data.body;
+                    console.log("KID success response : ",response)
                     if( response.length >  0 && response[0].osid && response[0].osid !== "" ) {
                         result["data"] = response[0].osid;
                     } else {
@@ -105,6 +111,7 @@ const getCertificateIssuerKid = function () {
             }, CONSTANTS.common.SERVER_TIME_OUT);
 
         } catch (error) {
+            console.log("catch error : ",error.message)
             return reject(error);
         }
     })
