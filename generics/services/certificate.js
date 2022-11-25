@@ -19,6 +19,7 @@ const request = require('request');
 const createCertificate = function (bodyData) {
     return new Promise(async (resolve, reject) => {
         try {
+            console.log("line 22 payload to RC : ",bodyData)
             const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
             const callbackUrl = ML_PROJECT_URL + CONSTANTS.endpoints.PROJECT_CERTIFICATE_API_CALLBACK;
             let certificateCreateUrl =  
@@ -32,13 +33,14 @@ const createCertificate = function (bodyData) {
             };
             
             request.post(certificateCreateUrl,options,certificateCallback);
-
+            console.log("line 35 certificateCreateUrl :", certificateCreateUrl)
             function certificateCallback(err, data) {
 
                 let result = {
                     success : true
                 };
-                
+                console.log("line 41 data from RC call :",data);
+                console.log("line 41 error from RC call :",err);
                 if (err) {
                     result.success = false;
                 } else {
