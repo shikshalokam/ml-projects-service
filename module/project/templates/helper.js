@@ -22,7 +22,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const projectQueries = require(DB_QUERY_BASE_PATH + "/projects");
 const projectCategoriesQueries = require(DB_QUERY_BASE_PATH + "/projectCategories");
 const solutionsQueries = require(DB_QUERY_BASE_PATH + "/solutions");
-
+const certificateTemplateQueries = require(DB_QUERY_BASE_PATH + "/certificateTemplates");
 
 module.exports = class ProjectTemplatesHelper {
 
@@ -1047,6 +1047,19 @@ module.exports = class ProjectTemplatesHelper {
                         status : HTTP_STATUS_CODE.bad_request.status,
                         message :CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND
                     }    
+                }
+                if ( templateData[0].certificateTemplateId && templateData[0].certificateTemplateId !== "" ){
+                    let certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
+                        _id : templateData[0].certificateTemplateId
+                    },["criteria"]);
+
+                    //certificate template data do not exists.
+                    if ( !certificateTemplateDetails.length > 0 ) {
+                        throw {
+                            message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
+                        };
+                    }
+                    templateData[0].criteria = certificateTemplateDetails[0].criteria
                 }
 
                 if (templateData[0].tasks && templateData[0].tasks.length > 0) {
