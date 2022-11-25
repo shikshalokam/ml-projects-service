@@ -144,10 +144,12 @@ module.exports = class UserProjectsHelper {
                 }
 
                 const projectsModel = Object.keys(schemas["projects"].schema);
-
-                if(data.userRoleInformation) delete data.userRoleInformation;
-                if(data.userProfile) delete data.userProfile;
-
+                
+                let keysToRemoveFromUpdation = ["userRoleInformation","userProfile","certificate"]
+                keysToRemoveFromUpdation.forEach( key => {
+                    if (data[key])delete data[key];
+                })
+                
                 let updateProject = {};
                 let projectData = await _projectData(data);
                 if (projectData && projectData.success == true) {
