@@ -144,11 +144,11 @@ module.exports = class UserProjectsHelper {
                 }
 
                 const projectsModel = Object.keys(schemas["projects"].schema);
-
-                if(data.userRoleInformation) delete data.userRoleInformation;
-                if(data.userProfile) delete data.userProfile;
-                // if certificate is there. only templateUrl is removed from certificate object().
-                if( data.certificate.templateUrl) delete data.certificate.templateUrl; 
+                
+                let keysToRemoveFromUpdation = ["userRoleInformation","userProfile","certificate"]
+                keysToRemoveFromUpdation.forEach( key => {
+                    if (data[key])delete data[key];
+                })
                 
                 let updateProject = {};
                 let projectData = await _projectData(data);
