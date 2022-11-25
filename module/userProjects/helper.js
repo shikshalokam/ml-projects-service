@@ -1174,7 +1174,8 @@ module.exports = class UserProjectsHelper {
                         
                         // create certificate object and add data if certificate template is present.
                         if ( certificateTemplateDetails.length > 0 ) {
-                            projectCreation.data["certificate"] = _.pick(certificateTemplateDetails[0], ['_id', 'templateUrl', 'status', 'criteria']);
+                            projectCreation.data["certificate"] = _.pick(certificateTemplateDetails[0], ['templateUrl', 'status', 'criteria']);
+                            projectCreation.data["certificate"]["templateId"] = solutionDetails.certificateTemplateId;
                         }
                     }
                     
@@ -2111,7 +2112,7 @@ module.exports = class UserProjectsHelper {
                         "",
                         isATargetedSolution
                     );
-
+            
                 if (
                     libraryProjects.data &&
                     !Object.keys(libraryProjects.data).length > 0
@@ -2225,20 +2226,20 @@ module.exports = class UserProjectsHelper {
                 }
                 //  <- Add certificate template data
                 if ( 
-                    libraryProjects.data.solutionInformation &&
-                    libraryProjects.data.solutionInformation.certificateTemplateId &&
-                    libraryProjects.data.solutionInformation.certificateTemplateId !== ""
+                    libraryProjects.data.certificateTemplateId &&
+                    libraryProjects.data.certificateTemplateId !== ""
                 ){
                     // <- Add certificate template details to projectCreation data if present ->
                     const certificateTemplateDetails = await certificateTemplateQueries.certificateTemplateDocument({
-                        _id : libraryProjects.data.solutionInformation.certificateTemplateId
+                        _id : libraryProjects.data.certificateTemplateId
                     });
                     
                     // create certificate object and add data if certificate template is present.
                     if ( certificateTemplateDetails.length > 0 ) {
-                        libraryProjects.data["certificate"] = _.pick(certificateTemplateDetails[0], ['_id', 'templateUrl', 'status', 'criteria']);
+                        libraryProjects.data["certificate"] = _.pick(certificateTemplateDetails[0], ['templateUrl', 'status', 'criteria']);
                     }
-                    delete  libraryProjects.data.solutionInformation.certificateTemplateId;
+                    libraryProjects.data["certificate"]["templateId"] = libraryProjects.data.certificateTemplateId;
+                    delete  libraryProjects.data.certificateTemplateId;
                 }
                 
                 //Fetch user profile information by calling sunbird's user read api.
@@ -2371,7 +2372,7 @@ module.exports = class UserProjectsHelper {
                 const certificateData = await this.createCertificatePayload(data);
 
                 // call sunbird-RC to create certificate for project
-                const certificate = await this.createCertificate(certificateData)
+                const certificate = await this.createCertificate(certificateData, data._id)
                 
                 return resolve(certificate);
 
@@ -2469,6 +2470,7 @@ module.exports = class UserProjectsHelper {
                             message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
                         };
                     }
+                    certificateTemplateDetails[0].issuer.kid = CERTIFICATE_ISSUER_KID;
                 }
                 
                 //create certificate request body 
@@ -2479,7 +2481,7 @@ module.exports = class UserProjectsHelper {
                         type : data.userProfile.userType
                     },
                     templateUrl : data.certificate.templateUrl,
-                    issuer : CERTIFICATE_ISSUER_KID,
+                    issuer : certificateTemplateDetails[0].issuer,
                     status : data.certificate.status.toUpperCase(),
                     projectId : (data._id).toString(),
                     projectName : data.title,
@@ -2506,10 +2508,11 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name createCertificate 
      * @param {Object} certificateData - payload for certificate creation data.
+     * @param {string} projectId - project Id.
      * @returns {Boolean} certificate creation status.
     */
 
-    static createCertificate(certificateData) {
+    static createCertificate(certificateData, projectId) {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -2519,7 +2522,7 @@ module.exports = class UserProjectsHelper {
                         message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
                     };
                 }
-            
+                
                 let updateObject = {
                     "$set" : {}
                 };
@@ -2551,7 +2554,7 @@ module.exports = class UserProjectsHelper {
                 if ( Object.keys(updateObject["$set"]).length > 0 ) {
                     await projectQueries.findOneAndUpdate(
                         {
-                            _id: data._id
+                            _id: projectId
                         },
                         updateObject
                     );
@@ -2740,7 +2743,7 @@ module.exports = class UserProjectsHelper {
                 const certificateData = await this.createCertificatePayload(userProject[0]);
 
                 // call sunbird-RC to create certificate for project
-                const certificate = await this.createCertificate(certificateData);
+                const certificate = await this.createCertificate(certificateData, userProject[0]._id);
 
                 if ( !certificate.success ) {
                     throw {
