@@ -40,9 +40,9 @@ const createCertificate = function (bodyData) {
                 let result = {
                     success : true
                 };
-                console.log("line 41 error from RC call error :",err.message);
                 if (err) {
                     result.success = false;
+                    console.log("line 45 error from RC call error :",err.message);
                 } else {
                     let response = data.body;
                     console.log("certificate success response: ",response)
@@ -90,8 +90,9 @@ const getCertificateIssuerKid = function () {
                 let result = {
                     success : true
                 };
-                console.log("KID rc call error : ",err.message)
+                
                 if (err) {
+                    console.log("KID rc call error : ",err.message)
                     result.success = false;
                 } else {
                     let response = data.body;
