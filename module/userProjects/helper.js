@@ -147,7 +147,9 @@ module.exports = class UserProjectsHelper {
 
                 if(data.userRoleInformation) delete data.userRoleInformation;
                 if(data.userProfile) delete data.userProfile;
-
+                // if certificate is there. only templateUrl is removed from certificate object().
+                if( data.certificate.templateUrl) delete data.certificate.templateUrl; 
+                
                 let updateProject = {};
                 let projectData = await _projectData(data);
                 if (projectData && projectData.success == true) {
