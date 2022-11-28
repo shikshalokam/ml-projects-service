@@ -36,7 +36,7 @@ const createCertificate = function (bodyData) {
             request.post(certificateCreateUrl,options,certificateCallback);
 
             function certificateCallback(err, data) {
-
+                console.log("line 39 raw data from RC call :",JSON.stringify(data));
                 let result = {
                     success : true
                 };
