@@ -32,7 +32,7 @@ const createCertificate = function (bodyData) {
                 json : bodyData
             };
             console.log("requestUrlcertificate create  : ",certificateCreateUrl)
-            console.log("certificateRequestBody : ",bodyData)
+            console.log("certificateRequestBody : ",JSON.stringify(bodyData))
             request.post(certificateCreateUrl,options,certificateCallback);
 
             function certificateCallback(err, data) {
@@ -45,7 +45,7 @@ const createCertificate = function (bodyData) {
                     console.log("line 45 error from RC call error :",err.message);
                 } else {
                     let response = data.body;
-                    console.log("certificate success response: ",response)
+                    console.log("certificate success response: ",JSON.stringify(response))
                     if( response.params.status === "SUCCESSFUL" ) {
                         result["data"] = response.result;
                     } else {
@@ -84,7 +84,7 @@ const getCertificateIssuerKid = function () {
                 json : bodyData
             }; 
             console.log("issuer Kid url : ",issuerKidUrl);
-            console.log("issuer Kid bodyData : ",bodyData);
+            console.log("issuer Kid bodyData : ",JSON.stringify(bodyData));
             request.post(issuerKidUrl,options,getKidCallback);
             function getKidCallback(err, data) {
                 let result = {
@@ -96,7 +96,7 @@ const getCertificateIssuerKid = function () {
                     result.success = false;
                 } else {
                     let response = data.body;
-                    console.log("KID success response : ",response)
+                    console.log("KID success response : ",JSON.stringify(response))
                     if( response.length >  0 && response[0].osid && response[0].osid !== "" ) {
                         result["data"] = response[0].osid;
                     } else {
