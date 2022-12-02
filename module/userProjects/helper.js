@@ -2372,7 +2372,7 @@ module.exports = class UserProjectsHelper {
 
                 // create payload for certificate generation
                 const certificateData = await this.createCertificatePayload(data);
-
+                
                 // call sunbird-RC to create certificate for project
                 const certificate = await this.createCertificate(certificateData, data._id)
                 
@@ -2518,7 +2518,8 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                const certificateDetails = await certificateService.createCertificate( certificateData );      
+                const certificateDetails = await certificateService.createCertificate( certificateData );    
+                
                 if ( !certificateDetails.success || !certificateDetails.data || !certificateDetails.data.ProjectCertificate ) {
                     throw {
                         message:  CONSTANTS.apiResponses.CERTIFICATE_GENERATION_FAILED
@@ -2552,14 +2553,15 @@ module.exports = class UserProjectsHelper {
                     updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
                 }
                 updateObject["$set"]["certificate.transactionIdCreatedAt"] = new Date();;
-                
+               
                 if ( Object.keys(updateObject["$set"]).length > 0 ) {
-                    await projectQueries.findOneAndUpdate(
+                    let updatedProject = await projectQueries.findOneAndUpdate(
                         {
                             _id: projectId
                         },
                         updateObject
                     );
+                    await kafkaProducersHelper.pushProjectToKafka(updatedProject);
                 } 
                 return resolve( { 
                     success: true
@@ -2615,7 +2617,7 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
                     }
                 }
-                 
+                await kafkaProducersHelper.pushProjectToKafka(projectDetails);
                 return resolve({ 
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,

@@ -49,7 +49,7 @@ module.exports = {
     USER_READ_V5 : "/v5/user/read",
     GET_LOCATION_DATA : "/v1/location/search",
     CERTIFICATE_CREATE : "/api/v1/ProjectCertificate",
-    PROJECT_CERTIFICATE_API_CALLBACK : "/v1/userProject/certificateCallback",
+    PROJECT_CERTIFICATE_API_CALLBACK : "/v1/userProjects/certificateCallback",
     USER_READ_PRIVATE : "/private/user/v1/read", // !Caution: End point for reading user details without token. Do not use for public work flow
     GET_CERTIFICATE_KID : "/api/v1/PublicKey/search"
 };
