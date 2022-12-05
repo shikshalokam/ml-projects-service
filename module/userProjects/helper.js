@@ -2551,6 +2551,7 @@ module.exports = class UserProjectsHelper {
                     certificateDetails.data.ProjectCertificate.osid !== "" 
                 ) {
                     updateObject["$set"]["certificate.osid"] = certificateDetails.data.ProjectCertificate.osid;
+                    updateObject["$set"]["certificate.issuedOn"] = new Date();
                 }
                 updateObject["$set"]["certificate.transactionIdCreatedAt"] = new Date();;
                
