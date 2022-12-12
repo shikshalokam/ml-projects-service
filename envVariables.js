@@ -44,7 +44,7 @@ let enviromentVariables = {
   "SERVICE_NAME" : {
     "message" : "current service name",
     "optional" : true,
-    "default" : "ml-project-service"
+    "default" : "ml-projects-service"
   },
   "CERTIFICATE_SERVICE_URL" : {
     "message" : "certificate service base url",
