@@ -2674,6 +2674,28 @@ module.exports = class UserProjectsHelper {
                         message: CONSTANTS.apiResponses.PROJECT_WITH_CERTIFICATE_NOT_FOUND
                     }
                 }
+                //loop through user projects and get downloadable url for templateUrl if osid is present.
+                for( let userProjectPointer = 0; userProjectPointer < userProject.length; userProjectPointer++ ) {
+                    if ( userProject[userProjectPointer].certificate.osid &&
+                        userProject[userProjectPointer].certificate.osid !== "" && 
+                        userProject[userProjectPointer].certificate.templateUrl &&
+                        userProject[userProjectPointer].certificate.templateUrl !== ""
+                        ){
+                            let certificateTemplateDownloadableUrl =
+                                await coreService.getDownloadableUrl(
+                                    {
+                                        filePaths: [userProject[userProjectPointer].certificate.templateUrl]
+                                    }
+                                );
+                                if ( certificateTemplateDownloadableUrl.success ) {
+                                    userProject[userProjectPointer].certificate.templateUrl = certificateTemplateDownloadableUrl.data[0].url;
+                                } else {
+                                    throw {
+                                        message:  CONSTANTS.apiResponses.DOWNLOADABLE_URL_NOT_FOUND
+                                    };
+                                }
+                        }
+                }
 
                 let count = _.countBy(userProject, (rec) => {
                     return (rec.certificate && rec.certificate.osid && rec.certificate.osid !== "" )? 'generated': 'notGenerated';

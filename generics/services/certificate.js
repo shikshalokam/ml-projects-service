@@ -21,10 +21,10 @@ const createCertificate = function (bodyData) {
         try {
             
             const ML_PROJECT_URL = `http://${process.env.SERVICE_NAME}:${process.env.APPLICATION_PORT}`;
-            // const callbackUrl = ML_PROJECT_URL + CONSTANTS.endpoints.PROJECT_CERTIFICATE_API_CALLBACK;
+            const callbackUrl = ML_PROJECT_URL + CONSTANTS.endpoints.PROJECT_CERTIFICATE_API_CALLBACK;
             let certificateCreateUrl =  
             process.env.CERTIFICATE_SERVICE_URL + 
-            CONSTANTS.endpoints.CERTIFICATE_CREATE  //+ "?mode=async&callback=" + callbackUrl;
+            CONSTANTS.endpoints.CERTIFICATE_CREATE + "?mode=async&callback=" + callbackUrl;
             const options = {
                 headers : {
                     "content-type": "application/json"
