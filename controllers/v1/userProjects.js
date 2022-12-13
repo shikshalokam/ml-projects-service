@@ -997,6 +997,8 @@ module.exports = class UserProjects extends Abstract {
     async certificateCallback(req) {
     return new Promise(async (resolve, reject) => {
             try {
+                //console request body to check if callback is coming or not and to check any structural change is there or not 
+                console.log("-------------callback request body------------",JSON.stringify(req.body))
                 let certificateDetails = await userProjectsHelper.certificateCallback( req.body.data.transactionId, req.body.data.osid );
                     return resolve({
                         message: certificateDetails.message,
