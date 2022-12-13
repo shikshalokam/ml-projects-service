@@ -157,6 +157,7 @@ async function getKid(){
         console.log("Kid data fetched successfully : ",kidData.data)
         global.CERTIFICATE_ISSUER_KID = kidData.data
       }
+      console.log(JSON.stringify(kidData))
       // global.CERTIFICATE_ISSUER_KID = kidData.data
   }
 };
