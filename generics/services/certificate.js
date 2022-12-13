@@ -48,7 +48,7 @@ const createCertificate = function (bodyData) {
                 } else {
                     let response = data.body;
                     console.log("certificate success response: ",JSON.stringify(response))
-                    if( response.params.status === "SUCCESSFUL" ) {
+                    if( response.params && response.params.status && response.params.status === "SUCCESSFUL" ) {
                         result["data"] = response.result;
                     } else {
                         result.success = false;
