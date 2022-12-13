@@ -1895,153 +1895,114 @@ module.exports = class UserProjectsHelper {
     * @returns {Object}
    */
 
-  static userAssigned( userId,pageSize,pageNo,search, filter ) {
-    return new Promise(async (resolve, reject) => {
-        try {
-
-            let query = {
-                userId : userId,
-                isDeleted : false
-            }
-
-            let searchQuery = [];
-
-            if (search !== "") {
-                searchQuery = [
-                    { "title" : new RegExp(search, 'i') },
-                    { "description" : new RegExp(search, 'i') }
-                ];
-            }
-
-            if ( filter && filter !== "" ) {
-                if( filter === CONSTANTS.common.CREATED_BY_ME ) {
-                    query["referenceFrom"] = {
-                        $ne : CONSTANTS.common.LINK
-                    };
-                    query["isAPrivateProgram"] = {
-                        $ne : false
-                    };
-                } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
-                    query["isAPrivateProgram"] = false;
-                } else{
-                    query["referenceFrom"] = CONSTANTS.common.LINK;
+    static userAssigned( userId,pageSize,pageNo,search, filter ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+    
+                let query = {
+                    userId : userId,
+                    isDeleted : false
                 }
-            }
-            
-            let projects = await this.projects(
-                query,
-                pageSize,
-                pageNo,
-                searchQuery,    
-                [
-                    "title", 
-                    "description",
-                    "solutionId",
-                    "programId",
-                    "programInformation.name",
-                    "projectTemplateId",
-                    "solutionExternalId",
-                    "lastDownloadedAt",
-                    "hasAcceptedTAndC",
-                    "referenceFrom",
-                    "status",
-                    "certificate"
-                ]
-            );
-            
-            let totalCount = 0;
-            let data = [];
-            
-            if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
-
-                totalCount = projects.data.count;
-                data = projects.data.data;
-                
-                if( data.length > 0 ) {
-                    let templateFilePath = [];
-                    data.forEach( projectData => {
-                        
-                        projectData.name = projectData.title;
-
-
-                        if (projectData.programInformation) {
-                            projectData.programName = projectData.programInformation.name;
-                            delete projectData.programInformation;
-                        }
-
-                        if (projectData.solutionExternalId) {
-                            projectData.externalId = projectData.solutionExternalId;
-                            delete projectData.solutionExternalId;
-                        }
-
-                        projectData.type = CONSTANTS.common.IMPROVEMENT_PROJECT;
-                        delete projectData.title;
-
-                        if (projectData.certificate &&
-                            projectData.certificate.osid &&
-                            projectData.certificate.osid !== "" && 
-                            projectData.certificate.templateUrl &&
-                            projectData.certificate.templateUrl !== ""
-                            ) {
-                                templateFilePath.push(projectData.certificate.templateUrl);
-                        }
-
-                    });
-
-                    if( templateFilePath.length > 0 ) {
-
-                        let certificateTemplateDownloadableUrl = 
-                            await coreService.getDownloadableUrl(
-                                {
-                                    filePaths: templateFilePath
-                                }
-                        );
-                        if ( !certificateTemplateDownloadableUrl.success ) {
-                            throw {
-                                message:  CONSTANTS.apiResponses.DOWNLOADABLE_URL_NOT_FOUND
-                            };
-                        }
-                        // map downloadable templateUrl to corresponding project data
-                        data.forEach(projectData => {
-                            if (projectData.certificate) {
-                                var itemFromUrlArray = certificateTemplateDownloadableUrl.data.find(item=> item.filePath == projectData.certificate.templateUrl);
-                                    if (itemFromUrlArray) {
-                                        projectData.certificate.templateUrl = itemFromUrlArray.url;
-                                    }
-                                }
-                            }
-                            
-                        )
+    
+                let searchQuery = [];
+    
+                if (search !== "") {
+                    searchQuery = [
+                        { "title" : new RegExp(search, 'i') },
+                        { "description" : new RegExp(search, 'i') }
+                    ];
+                }
+    
+                if ( filter && filter !== "" ) {
+                    if( filter === CONSTANTS.common.CREATED_BY_ME ) {
+                        query["referenceFrom"] = {
+                            $ne : CONSTANTS.common.LINK
+                        };
+                        query["isAPrivateProgram"] = {
+                            $ne : false
+                        };
+                    } else if( filter == CONSTANTS.common.ASSIGN_TO_ME ) {
+                        query["isAPrivateProgram"] = false;
+                    } else{
+                        query["referenceFrom"] = CONSTANTS.common.LINK;
                     }
-
                 }
+    
+                let projects = await this.projects(
+                    query,
+                    pageSize,
+                    pageNo,
+                    searchQuery,    
+                    [
+                        "title", 
+                        "description",
+                        "solutionId",
+                        "programId",
+                        "programInformation.name",
+                        "projectTemplateId",
+                        "solutionExternalId",
+                        "lastDownloadedAt",
+                        "hasAcceptedTAndC",
+                        "referenceFrom",
+                        "status",
+                        "certificate"
+                    ]
+                );
+    
+                let totalCount = 0;
+                let data = [];
+                
+                if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
+    
+                    totalCount = projects.data.count;
+                    data = projects.data.data;
+    
+                    if( data.length > 0 ) {
+                        data.forEach( projectData => {
+                            projectData.name = projectData.title;
+    
+    
+                            if (projectData.programInformation) {
+                                projectData.programName = projectData.programInformation.name;
+                                delete projectData.programInformation;
+                            }
+    
+                            if (projectData.solutionExternalId) {
+                                projectData.externalId = projectData.solutionExternalId;
+                                delete projectData.solutionExternalId;
+                            }
+    
+                            projectData.type = CONSTANTS.common.IMPROVEMENT_PROJECT;
+                            delete projectData.title;
+                        });
+                    }
+                }
+                
+                return resolve({
+                    success : true,
+                    message : CONSTANTS.apiResponses.USER_ASSIGNED_PROJECT_FETCHED,
+                    data : {
+                        data: data,
+                        count: totalCount
+                    }
+                });
+    
+            } catch (error) {
+                return resolve({
+                    success : false,
+                    message : error.message,
+                    status : 
+                    error.status ? 
+                    error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                    data : {
+                        description : CONSTANTS.common.PROJECT_DESCRIPTION,
+                        data : [],
+                        count : 0
+                    }
+                });
             }
-            
-            return resolve({
-                success : true,
-                message : CONSTANTS.apiResponses.USER_ASSIGNED_PROJECT_FETCHED,
-                data : {
-                    data: data,
-                    count: totalCount
-                }
-            });
-
-        } catch (error) {
-            return resolve({
-                success : false,
-                message : error.message,
-                status : 
-                error.status ? 
-                error.status : HTTP_STATUS_CODE['internal_server_error'].status,
-                data : {
-                    description : CONSTANTS.common.PROJECT_DESCRIPTION,
-                    data : [],
-                    count : 0
-                }
-            });
-        }
-    })
-  }
+        })
+    }
 
   /**
     * List of user imported projects.
@@ -2685,7 +2646,7 @@ module.exports = class UserProjectsHelper {
      * @returns {JSON} certificate data updation details.
     */
 
-    static certificates(userId) {
+     static certificates(userId) {
         return new Promise(async (resolve, reject) => {
             try {
                 
@@ -2712,40 +2673,6 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE["bad_request"].status,
                         message: CONSTANTS.apiResponses.PROJECT_WITH_CERTIFICATE_NOT_FOUND
                     }
-                }
-                let templateFilePath = [];
-                //loop through user projects and get downloadable url for templateUrl if osid is present.
-                for( let userProjectPointer = 0; userProjectPointer < userProject.length; userProjectPointer++ ) {
-                    if ( userProject[userProjectPointer].certificate.osid &&
-                        userProject[userProjectPointer].certificate.osid !== "" && 
-                        userProject[userProjectPointer].certificate.templateUrl &&
-                        userProject[userProjectPointer].certificate.templateUrl !== ""
-                        ) {
-                            templateFilePath.push(userProject[userProjectPointer].certificate.templateUrl);
-                        }
-                }
-                
-                if( templateFilePath.length > 0 ) {
-
-                    let certificateTemplateDownloadableUrl = 
-                        await coreService.getDownloadableUrl(
-                            {
-                                filePaths: templateFilePath
-                            }
-                    );
-                    if ( !certificateTemplateDownloadableUrl.success ) {
-                        throw {
-                            message:  CONSTANTS.apiResponses.DOWNLOADABLE_URL_NOT_FOUND
-                        };
-                    }
-                    // map downloadable templateUrl to corresponding project data
-                    userProject.forEach(projectData => {
-                            var itemFromUrlArray = certificateTemplateDownloadableUrl.data.find(item=> item.filePath == projectData.certificate.templateUrl);
-                            if (itemFromUrlArray) {
-                                projectData.certificate.templateUrl = itemFromUrlArray.url;
-                            }
-                        }
-                    )
                 }
 
                 let count = _.countBy(userProject, (rec) => {
@@ -2780,7 +2707,7 @@ module.exports = class UserProjectsHelper {
      * @returns {JSON} certificate re-issued details.
     */
 
-     static certificateReIssue(projectId) {
+    static certificateReIssue(projectId) {
         return new Promise(async (resolve, reject) => {
             try {
                 //  get project details project for which certificate re-issue required .
