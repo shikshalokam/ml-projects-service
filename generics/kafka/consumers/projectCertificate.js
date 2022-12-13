@@ -24,7 +24,7 @@ var messageReceived = function (message) {
       if ( parsedMessage.status == CONSTANTS.common.SUBMITTED_STATUS &&
            parsedMessage.certificate &&
            Object.keys(parsedMessage.certificate).length > 0 &&
-           !parsedMessage.certificate.osid
+           !parsedMessage.certificate.eligible 
         ) {
           await userProjectsHelper.generateCertificate( parsedMessage );
       }
