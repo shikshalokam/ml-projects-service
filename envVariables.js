@@ -49,7 +49,7 @@ let enviromentVariables = {
   "CERTIFICATE_SERVICE_URL" : {
     "message" : "certificate service base url",
     "optional" : true,
-    "default" : "http://registry-service:8081",
+    "default" : "http://11.3.8.129/registry-service",
     "requiredIf" : {
       "key": "PROJECT_CERTIFICATE_ON_OFF",
       "operator" : "EQUALS",
@@ -150,10 +150,11 @@ async function getKid(){
       // get certificate issuer kid from sunbird-RC
       let kidData = await certificateService.getCertificateIssuerKid();
       if( !kidData.success ) {
-        console.log("Server stoped . Failed to set certificate issuer Kid value")
-        process.exit();
+        console.log("failed to get kid value from registry service")
+        // console.log("Server stoped . Failed to set certificate issuer Kid value")
+        // process.exit();
       }
-      global.CERTIFICATE_ISSUER_KID = kidData.data
+      // global.CERTIFICATE_ISSUER_KID = kidData.data
   }
 };
 
