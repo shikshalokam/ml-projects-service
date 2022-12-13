@@ -49,7 +49,7 @@ let enviromentVariables = {
   "CERTIFICATE_SERVICE_URL" : {
     "message" : "certificate service base url",
     "optional" : true,
-    "default" : "http://11.3.8.129/registry-service",
+    "default" : "http://registry-service:8081",
     "requiredIf" : {
       "key": "PROJECT_CERTIFICATE_ON_OFF",
       "operator" : "EQUALS",
