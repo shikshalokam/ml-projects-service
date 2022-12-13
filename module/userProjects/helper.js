@@ -2628,6 +2628,11 @@ module.exports = class UserProjectsHelper {
     static certificateCallback(transactionId, osid) {
         return new Promise(async (resolve, reject) => {
             try {
+                // adding comments to check call back is called properly or not
+                console.log("<==================callback called====================>",transactionId,osid)
+                console.log("transactionId :",transactionId)
+                console.log("osid :",osid)
+                console.log("<==================callback called====================>")
                 // callback request structure nested so validating transactionId and osid here instead in validator.
                 if ( transactionId == "" || osid == "" ) {
                     throw {

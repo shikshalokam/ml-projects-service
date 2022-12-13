@@ -23,7 +23,8 @@ var messageReceived = function (message) {
       let parsedMessage = JSON.parse( message.value );
       if ( parsedMessage.status == CONSTANTS.common.SUBMITTED_STATUS &&
            parsedMessage.certificate &&
-           Object.keys(parsedMessage.certificate).length > 0
+           Object.keys(parsedMessage.certificate).length > 0 &&
+           !parsedMessage.certificate.osid
         ) {
           await userProjectsHelper.generateCertificate( parsedMessage );
       }
