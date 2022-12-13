@@ -1104,6 +1104,8 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
                 try {
                     // ReIssue certificate of given project : projectId is passed as param 
+                    // This console has to be removed- adding to check the Issuer kid value in case rancher doesn't display console while deployment
+                    console.log("+++++CERTIFICATE_ISSUER_KID+++++ : ",CERTIFICATE_ISSUER_KID)
                     let projectDetails = await userProjectsHelper.certificateReIssue(
                         req.params._id,
                     );

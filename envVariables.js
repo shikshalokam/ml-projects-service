@@ -150,9 +150,12 @@ async function getKid(){
       // get certificate issuer kid from sunbird-RC
       let kidData = await certificateService.getCertificateIssuerKid();
       if( !kidData.success ) {
-        console.log("failed to get kid value from registry service")
+        console.log("failed to get kid value from registry service : ",kidData)
         // console.log("Server stoped . Failed to set certificate issuer Kid value")
         // process.exit();
+      } else {
+        console.log("Kid data fetched successfully : ",kidData.data)
+        global.CERTIFICATE_ISSUER_KID = kidData.data
       }
       // global.CERTIFICATE_ISSUER_KID = kidData.data
   }
