@@ -2601,7 +2601,6 @@ module.exports = class UserProjectsHelper {
                         },
                         updateObject
                     );
-                    await kafkaProducersHelper.pushProjectToKafka(updatedProject);
                 } 
                 return resolve( { 
                     success: true
@@ -2850,7 +2849,7 @@ module.exports = class UserProjectsHelper {
                 
                 return resolve({ 
                     success: true,
-                    message: CONSTANTS.apiResponses.PROJECT_CERTIFICATE_GENERATED,
+                    message: CONSTANTS.apiResponses.PROJECT_SUBMITTED_FOR_REISSUE,
                     data : {
                         _id :  userProject[0]._id
                     }
