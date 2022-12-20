@@ -152,12 +152,12 @@ function _validateCriteriaConditions(condition, data) {
                             }
 
                         } else if ( projectTasks && projectTasks.length > 0 && condition.taskDetails.length > 0 ) {
-
-                            // specific task Id or Ids are passed for attachment validation
+                            
+                            // specific task Id( from projectTemplates ) or Ids are passed for attachment validation
                             for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++  ) {
                                 for ( let taskDetailsPointer = 0; taskDetailsPointer < condition.taskDetails.length; taskDetailsPointer++ ) {
                                     // get attachments data of specified task/ tasks
-                                    if ( projectTasks[tasksIndex]._id == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
+                                    if ( projectTasks[tasksIndex].referenceId == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
                                         tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
                                     }
                                 }
