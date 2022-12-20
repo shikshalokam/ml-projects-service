@@ -379,6 +379,7 @@ module.exports = class UserProjectsHelper {
                         status: HTTP_STATUS_CODE['bad_request'].status
                     }
                 }
+                
                 //  push project details to kafka
                 await kafkaProducersHelper.pushProjectToKafka(projectUpdated);
             
@@ -1376,7 +1377,6 @@ module.exports = class UserProjectsHelper {
     static userAssignedProjectCreation(templateId, userId, userToken) {
         return new Promise(async (resolve, reject) => {
             try {
-
                 const projectTemplateData =
                     await projectTemplateQueries.templateDocument({
                         status: CONSTANTS.common.PUBLISHED,
@@ -1415,7 +1415,7 @@ module.exports = class UserProjectsHelper {
                         await projectTemplatesHelper.tasksAndSubTasks(
                             projectTemplateData[0]._id
                         );
-
+        
                     if (tasksAndSubTasks.length > 0) {
 
                         result.tasks = _projectTask(tasksAndSubTasks);
@@ -3130,6 +3130,7 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
             singleTask.isDeletable = true;
         }
 
+        singleTask.referenceId =  singleTask._id;
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
         singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
