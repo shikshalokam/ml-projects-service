@@ -121,6 +121,7 @@ module.exports = class UserProjectsHelper {
                     "appInformation",
                     "status"
                 ]);
+                
                 if (!userProject.length > 0) {
 
                     throw {
@@ -3130,7 +3131,7 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
             singleTask.isDeletable = true;
         }
         if ( UTILS.isValidMongoId(singleTask._id.toString()) ) {
-            singleTask.referenceId = singleTask._id;
+            singleTask.referenceId = singleTask._id.toString();
         }
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
         singleTask.updatedAt = new Date();
