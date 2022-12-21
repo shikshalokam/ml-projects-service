@@ -121,6 +121,7 @@ module.exports = class UserProjectsHelper {
                     "appInformation",
                     "status"
                 ]);
+                
                 if (!userProject.length > 0) {
 
                     throw {
@@ -3120,7 +3121,7 @@ function _attachmentInformation ( attachmentWithSourcePath = [], linkAttachments
 function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
 
     tasks.forEach(singleTask => {
-
+        
         singleTask.externalId = singleTask.externalId ? singleTask.externalId : singleTask.name.toLowerCase();
         singleTask.type = singleTask.type ? singleTask.type : CONSTANTS.common.SIMPLE_TASK_TYPE;
         singleTask.status = singleTask.status ? singleTask.status : CONSTANTS.common.NOT_STARTED_STATUS;
@@ -3129,8 +3130,9 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
         if (!singleTask.hasOwnProperty("isDeletable")) {
             singleTask.isDeletable = true;
         }
-
-        singleTask.referenceId =  singleTask._id;
+        if ( UTILS.isValidMongoId(singleTask._id.toString()) ) {
+            singleTask.referenceId = singleTask._id.toString();
+        }
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
         singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
@@ -3169,7 +3171,7 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
         }
 
     })
-
+    
     return tasks;
 }
 
