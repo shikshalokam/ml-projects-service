@@ -157,7 +157,7 @@ function _validateCriteriaConditions(condition, data) {
                             for ( let tasksIndex = 0; tasksIndex < projectTasks.length; tasksIndex++  ) {
                                 for ( let taskDetailsPointer = 0; taskDetailsPointer < condition.taskDetails.length; taskDetailsPointer++ ) {
                                     // get attachments data of specified task/ tasks
-                                    if ( projectTasks[tasksIndex].externalId == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
+                                    if ( projectTasks[tasksIndex].referenceId == condition.taskDetails[taskDetailsPointer] && projectTasks[tasksIndex][condition.key] && projectTasks[tasksIndex][condition.key].length > 0 ) {
                                         tasksAttachments.push(...projectTasks[tasksIndex][condition.key])
                                     }
                                 }
