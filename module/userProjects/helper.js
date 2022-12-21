@@ -3130,7 +3130,6 @@ function _projectTask(tasks, isImportedFromLibrary = false, parentTaskId = "") {
             singleTask.isDeletable = true;
         }
 
-        singleTask.referenceId =  singleTask._id;
         singleTask.createdAt = singleTask.createdAt ? singleTask.createdAt : new Date();
         singleTask.updatedAt = new Date();
         singleTask._id = UTILS.isValidMongoId(singleTask._id.toString()) ? uuidv4() : singleTask._id;
