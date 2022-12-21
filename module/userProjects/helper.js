@@ -2709,7 +2709,8 @@ module.exports = class UserProjectsHelper {
                     "certificate.status",
                     "certificate.eligible",
                     "certificate.message",
-                    "certificate.issuedOn"
+                    "certificate.issuedOn",
+                    "completedDate"
                 ]);
                 
                 if ( !userProject.length > 0 ) {
