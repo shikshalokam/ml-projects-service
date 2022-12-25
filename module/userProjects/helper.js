@@ -2687,19 +2687,27 @@ module.exports = class UserProjectsHelper {
      * @method
      * @name certificates 
      * @param {String} userId - userId.
+     *  @param {String} projectId - projectId.
      * @returns {JSON} certificate data updation details.
     */
 
-    static certificates(userId) {
+    static certificates(userId, projectId = "") {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                //  get project details of user which have certificate.
-                const userProject = await projectQueries.projectDocument({
+                let findQuery = {
                     userId: userId,
                     status: CONSTANTS.common.SUBMITTED_STATUS,
                     certificate: {$exists:true}
-                }, [
+                }
+                // if projectId is passed update query
+                if ( projectId != "" ) {
+                    findQuery._id = projectId
+                }
+                //  get project details of user which have certificate.
+                const userProject = await projectQueries.projectDocument(
+                    findQuery, 
+                    [
                     "_id",
                     "title",
                     "status",
