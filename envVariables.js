@@ -151,6 +151,9 @@ async function getKid(){
       let kidData = await certificateService.getCertificateIssuerKid();
       if( !kidData.success ) {
         console.log("failed to get kid value from registry service : ",kidData)
+        if( process.env.CERTIFICATE_ISSUER_KID && process.env.CERTIFICATE_ISSUER_KID != "" ) {
+          global.CERTIFICATE_ISSUER_KID = process.env.CERTIFICATE_ISSUER_KID;
+        }
         // console.log("Server stoped . Failed to set certificate issuer Kid value")
         // process.exit();
       } else {
