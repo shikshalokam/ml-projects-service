@@ -2482,7 +2482,7 @@ module.exports = class UserProjectsHelper {
     static createCertificatePayload(data) {
         return new Promise(async (resolve, reject) => {
             try {
-
+                console.log("Certificate issuer Kid: ",CERTIFICATE_ISSUER_KID)
                 // get downloadable url for certificate template
                 if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
                     let certificateTemplateDownloadableUrl =
@@ -2536,6 +2536,7 @@ module.exports = class UserProjectsHelper {
                 return resolve(certificateData);
 
             } catch (error) {
+                console.log("error:",error.message)
                 return resolve({
                     success: false,
                     message: error.message
