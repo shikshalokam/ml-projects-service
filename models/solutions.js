@@ -97,6 +97,8 @@ module.exports = {
         default: 1
       },
       reportInformation : Object,
-      certificateTemplateId : "ObjectId"
+      certificateTemplateId : "ObjectId",
+      rootOrganisations : Array,
+      createdFor : Array
     }
   };
