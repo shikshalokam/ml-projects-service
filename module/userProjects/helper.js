@@ -2519,7 +2519,7 @@ module.exports = class UserProjectsHelper {
                 let certificateData = {
                     recipient : {
                         id : data.userId,
-                        name : data.userProfile.userName,
+                        name : `${data.userProfile.firstName} ${data.userProfile.lastName}`,
                         type : data.userProfile.profileUserType.type
                     },
                     templateUrl : data.certificate.templateUrl,
