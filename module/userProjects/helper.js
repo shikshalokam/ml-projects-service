@@ -2813,10 +2813,11 @@ module.exports = class UserProjectsHelper {
                 if ( userProfileData.success && 
                      userProfileData.data &&
                      userProfileData.data.response &&
-                     userProfileData.data.response.userName &&
-                     userProfileData.data.response.userName !== ""
+                     userProfileData.data.response.firstName &&
+                     userProfileData.data.response.lastName
                 ) {
-                    userProject[0].userProfile.userName = userProfileData.data.response.userName;
+                    userProject[0].userProfile.firstName = userProfileData.data.response.firstName;
+                    userProject[0].userProfile.lastName = userProfileData.data.response.lastName;
                 } else {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
