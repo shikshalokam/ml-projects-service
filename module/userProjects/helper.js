@@ -2814,7 +2814,7 @@ module.exports = class UserProjectsHelper {
                      userProfileData.data &&
                      userProfileData.data.response &&
                      userProfileData.data.response.firstName &&
-                     userProfileData.data.response.lastName
+                     userProfileData.data.response.firstName !== ""
                 ) {
                     userProject[0].userProfile.firstName = userProfileData.data.response.firstName;
                     userProject[0].userProfile.lastName = userProfileData.data.response.lastName;
