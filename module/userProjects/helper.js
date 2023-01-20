@@ -2810,7 +2810,6 @@ module.exports = class UserProjectsHelper {
                 
                 //  fetch user data using userId of project and calling the profile API
                 let userProfileData = await userProfileService.profileReadPrivate(userProject[0].userId);
-                console.log("userProfileData>>>",JSON.stringify(userProfileData))
                 if ( userProfileData.success && 
                      userProfileData.data &&
                      userProfileData.data.response &&
