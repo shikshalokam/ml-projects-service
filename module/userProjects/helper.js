@@ -2810,6 +2810,7 @@ module.exports = class UserProjectsHelper {
                 
                 //  fetch user data using userId of project and calling the profile API
                 let userProfileData = await userProfileService.profileReadPrivate(userProject[0].userId);
+                console.log("userProfileData>>>",JSON.stringify(userProfileData))
                 if ( userProfileData.success && 
                      userProfileData.data &&
                      userProfileData.data.response &&
@@ -2843,6 +2844,15 @@ module.exports = class UserProjectsHelper {
                 if ( userProject[0].certificate.osid ) {
                     updateObject["$set"]["certificate.originalTransactionInformation.osid"] = userProject[0].certificate.osid;
                 }
+
+                if (userProject[0].userProfile.firstName ) {
+                    updateObject["$set"]["userProfile.firstName"] = userProject[0].userProfile.firstName;
+                }
+
+                if (userProject[0].userProfile.lastName ) {
+                    updateObject["$set"]["userProfile.lastName"] = userProject[0].userProfile.lastName;
+                }
+
                 updateObject["$set"]["certificate.reIssuedAt"] = new Date();
                 await projectQueries.findOneAndUpdate(
                     {
