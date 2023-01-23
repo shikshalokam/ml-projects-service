@@ -2483,6 +2483,11 @@ module.exports = class UserProjectsHelper {
         return new Promise(async (resolve, reject) => {
             try {
                 console.log("Certificate issuer Kid: ",CERTIFICATE_ISSUER_KID)
+                
+                if(data.title.length > 75) {
+                    data.title = data.title.substring(0, 75) + '...';
+                }
+                
                 // get downloadable url for certificate template
                 if ( data.certificate.templateUrl && data.certificate.templateUrl !== "" ) {
                     let certificateTemplateDownloadableUrl =
