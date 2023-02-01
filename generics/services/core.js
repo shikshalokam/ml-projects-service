@@ -734,7 +734,7 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
   * @param {String} programId - program id.
   * @returns {JSON} - Program Join Status.
 */
-const programJoin = function (programId,bodyData,userToken,appName,appVersion) {
+const programJoin = function (programId,bodyData,userToken) {
     return new Promise(async (resolve, reject) => {
         try {
             
@@ -745,10 +745,8 @@ const programJoin = function (programId,bodyData,userToken,appName,appVersion) {
                     "content-type": "application/json",
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : userToken,
-                    "x-app-id" :appName,
-                    "x-app-ver":appVersion
                 },
-                json: {userRoleInformation:bodyData}
+                json: bodyData
             };
             request.post(url,options,kendraCallback);
 

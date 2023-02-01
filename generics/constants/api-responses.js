@@ -135,5 +135,5 @@ module.exports = {
     "NOT_ELIGIBLE_FOR_CERTIFICATE" : "Project is not eligible for certificate",
     "ISSUER_KID_NOT_FOUND" : "Failed to fetch certificate issuer kid",
     "PROJECT_SUBMITTED_FOR_REISSUE" : "Submitted for project certificate reIssue",
-    "PROGRAM_JOIN_FAILED": "Program Join Failed"
+    "PROGRAM_JOIN_FAILED" : "Failed to join program",
 };

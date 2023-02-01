@@ -1118,15 +1118,25 @@ module.exports = class UserProjectsHelper {
                     let programJoined = await programUsers.findProgramJoined(solutionDetails.programId,userId)
                     
                     if(programJoined.length == 0){
-                        let programJoinAPI = await coreService.programJoin(solutionDetails.programId,bodyData,userToken,appName,appVersion)
-                        if(!programJoinAPI.success){
-                            throw {
-                                success: HTTP_STATUS_CODE['bad_request'].status,
-                                message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                        if ( appVersion !== "" && appVersion < 5.2 ) {
+                            let programJoinBody = {};
+                            programJoinBody.userRoleInformation = req.body.userRoleInformation;
+                            programJoinBody.isResource = true;
+                            let joinProgramData = await coreService.programJoin (
+                                solutionDetails.programId,
+                                programJoinData,
+                                req.userDetails.userToken  
+                            );
+        
+                            if ( !joinProgramData.success ) {
+                                return resolve({ 
+                                    status: httpStatusCode.bad_request.status, 
+                                    message: messageConstants.apiResponses.PROGRAM_JOIN_FAILED
+                                });
                             }
                         }
                     }
-                   
+                    
                     let projectCreation = 
                     await this.userAssignedProjectCreation(
                         solutionDetails.projectTemplateId,
