@@ -1,8 +1,8 @@
 /**
- * name : updateUserProfileInProjects.js
- * author : Priyanka Pradeep
+ * name : updatePrivateProgramInProject.js
+ * author : Ankit Shahu
  * created-date : 10-Nov-2022
- * Description : Migration script for update userProfile in project
+ * Description : Migration script for update project
  */
 
  const path = require("path");
