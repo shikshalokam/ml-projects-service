@@ -21,6 +21,7 @@ const projectTemplateTaskQueries = require(DB_QUERY_BASE_PATH + "/projectTemplat
 const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 const removeFieldsFromRequest = ["submissionDetails"];
 const programsQueries = require(DB_QUERY_BASE_PATH + "/programs");
+const programUsers = require(DB_QUERY_BASE_PATH + "/programUsers");
 const userProfileService = require(GENERICS_FILES_PATH + "/services/users");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 const certificateTemplateQueries = require(DB_QUERY_BASE_PATH + "/certificateTemplates");
@@ -1113,7 +1114,19 @@ module.exports = class UserProjectsHelper {
                         solutionDetails = solutionDetails.data[0];
                         
                     }
-
+                    // program join API call 
+                    let programJoined = await programUsers.findProgramJoined(solutionDetails.programId,userId)
+                    
+                    if(programJoined.length == 0){
+                        let programJoinAPI = await coreService.programJoin(solutionDetails.programId,bodyData,userToken,appName,appVersion)
+                        if(!programJoinAPI.success){
+                            throw {
+                                success: HTTP_STATUS_CODE['bad_request'].status,
+                                message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                            }
+                        }
+                    }
+                   
                     let projectCreation = 
                     await this.userAssignedProjectCreation(
                         solutionDetails.projectTemplateId,

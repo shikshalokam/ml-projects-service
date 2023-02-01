@@ -725,6 +725,59 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
     })
 }
 
+/**
+  * program Join Api.
+  * @function
+  * @name programJoin
+  * @param {String} token - User token.
+  * @param {Object} bodyData - Requested body data.
+  * @param {String} programId - program id.
+  * @returns {JSON} - Program Join Status.
+*/
+const programJoin = function (programId,bodyData,userToken,appName,appVersion) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ML_CORE_URL + CONSTANTS.endpoints.PROGRAM_JOIN + "/" + programId;
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : userToken,
+                    "x-app-id" :appName,
+                    "x-app-ver":appVersion
+                },
+                json: {userRoleInformation:bodyData}
+            };
+            request.post(url,options,kendraCallback);
+
+            function kendraCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
 module.exports = {
     entityTypesDocuments : entityTypesDocuments,
     rolesDocuments : rolesDocuments,
@@ -738,6 +791,7 @@ module.exports = {
     createSolution: createSolution,
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
-    getDownloadableUrl : getDownloadableUrl
+    getDownloadableUrl : getDownloadableUrl, 
+    programJoin: programJoin
 };
 
