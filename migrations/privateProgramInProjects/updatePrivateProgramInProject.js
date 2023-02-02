@@ -61,10 +61,12 @@
                 if(projectDocuments[counter].hasOwnProperty("solutionId") && projectDocuments[counter].isAPrivateProgram){
                     // find solution document form solution collection
                     let solutionDocument = await db.collection('solutions').find({
-                        _id: projectDocuments[counter].solutionId
+                        _id: projectDocuments[counter].solutionId,
+                        parentSolutionId : {$exists:true},
+                        isAPrivateProgram : true
                     }).project({}).toArray({})
                     //find program document form program collection
-                    if(solutionDocument[0].hasOwnProperty("parentSolutionId")){
+                    if(solutionDocument.length == 1){
                        
                         // find parent solution document in same collection
                         let parentSolutionDocument = await db.collection('solutions').find({
