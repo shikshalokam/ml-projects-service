@@ -119,21 +119,19 @@
                         await db.collection('projects').findOneAndUpdate({
                             "_id" : projectDocuments[counter]._id
                         },updateProjectDocument);
+
+                        await db.collection('solutions').deleteOne({
+                            _id: projectDocuments[counter].solutionId
+                        })
+                        await db.collection('programs').deleteOne({
+                            _id: projectDocuments[counter].programId
+                        })
                     }
                 }
             }
 
             
-            await db.collection('solutions').deleteMany({
-                _id: {
-                    $in: deletedSolutionIds
-                }
-            })
-            await db.collection('programs').deleteMany({
-                _id: {
-                    $in: deletedProgramIds
-                }
-            })
+           
             
 
 
@@ -141,7 +139,7 @@
 
             //write updated project ids to file
             fs.writeFile(
-                'updatedProjectIds.json',
+                'updatedProjectIdsAll.json',
 
                 JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds}),
 
