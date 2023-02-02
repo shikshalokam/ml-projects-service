@@ -58,7 +58,7 @@
             for(let counter = 0; counter < projectDocuments.length; counter++) {
 
 
-                if(projectDocuments[counter].hasOwnProperty("solutionId")){
+                if(projectDocuments[counter].hasOwnProperty("solutionId") && projectDocuments[counter].isAPrivateProgram){
                     // find solution document form solution collection
                     let solutionDocument = await db.collection('solutions').find({
                         _id: projectDocuments[counter].solutionId
@@ -119,9 +119,19 @@
                         },updateProjectDocument);
                     }
                 }
-
-                
             }
+
+            
+            await db.collection('solutions').deleteMany({
+                _id: {
+                    $in: deletedSolutionIds
+                }
+            })
+            await db.collection('programs').deleteMany({
+                _id: {
+                    $in: deletedProgramIds
+                }
+            })
             
 
 
