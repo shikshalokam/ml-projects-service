@@ -32,7 +32,7 @@
 
         
         //get all projectss id where user profile is not there.
-        let projectDocument = await db.collection('projectss').find({
+        let projectDocument = await db.collection('projects').find({
             userRoleInformation: {$exists : false},
             isAPrivateProgram: true,
         }).project({_id:1,userProfile:1}).toArray();
@@ -51,7 +51,7 @@
 
 
             // get project documents from projectss collection in Array
-            let projectDocuments = await db.collection('projectss').find({
+            let projectDocuments = await db.collection('projects').find({
                 _id: { $in :projectIds  }
             }).project({}).toArray();
             //iterate project documents one by one
@@ -60,7 +60,7 @@
 
                 if(projectDocuments[counter].hasOwnProperty("solutionId") && projectDocuments[counter].isAPrivateProgram){
                     // find solution document form solution collection
-                    let solutionDocument = await db.collection('solutionss').find({
+                    let solutionDocument = await db.collection('solutions').find({
                         _id: projectDocuments[counter].solutionId,
                         parentSolutionId : {$exists:true},
                         isAPrivateProgram : true
@@ -69,7 +69,7 @@
                     if(solutionDocument.length == 1){
                        
                         // find parent solution document in same collection
-                        let parentSolutionDocument = await db.collection('solutionss').find({
+                        let parentSolutionDocument = await db.collection('solutions').find({
                             _id: solutionDocument[0].parentSolutionId}).project({}).toArray({});
                         //varibale to update project document
                         let updateProjectDocument = {
@@ -120,11 +120,11 @@
                         deletedProgramIds.push(projectDocuments[counter].programId)
 
                         // update project documents 
-                        await db.collection('projectss').findOneAndUpdate({
+                        await db.collection('projects').findOneAndUpdate({
                             "_id" : projectDocuments[counter]._id
                         },updateProjectDocument);
 
-                        await db.collection('solutionss').deleteOne({
+                        await db.collection('solutions').deleteOne({
                             _id: projectDocuments[counter].solutionId
                         })
                         await db.collection('programs').deleteOne({

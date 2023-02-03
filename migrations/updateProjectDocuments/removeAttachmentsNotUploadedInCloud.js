@@ -28,7 +28,7 @@ const filePathUrl = "https://samikshaprod.blob.core.windows.net/samiksha/";
     let db = connection.db(dbName);
     try {
         // check project attachments for isUploaded = false data and remove the attachment object
-        let collectionDocs = await db.collection('projectsss').find({    
+        let collectionDocs = await db.collection('projects').find({    
             "$or": [
                 {
                     "attachments.isUploaded": false 
@@ -58,7 +58,7 @@ const filePathUrl = "https://samikshaprod.blob.core.windows.net/samiksha/";
                 let id = projectId[projectIdpointer];
                 
                 //pull project Data from DB 
-                let pullProjectData = await db.collection('projectsss').find({
+                let pullProjectData = await db.collection('projects').find({
                     _id: id
                 }).project({}).toArray({})
 
@@ -105,7 +105,7 @@ const filePathUrl = "https://samikshaprod.blob.core.windows.net/samiksha/";
     
                 UpdatedProjectId.push(id)
                 //update project with new varibales
-                await db.collection('projectsss').updateOne({_id:id},updateObject)
+                await db.collection('projects').updateOne({_id:id},updateObject)
             }
             
             
