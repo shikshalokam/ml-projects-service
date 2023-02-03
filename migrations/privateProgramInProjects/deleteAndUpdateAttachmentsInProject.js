@@ -1,3 +1,10 @@
+/**
+ * name : updatePrivateProgramInProject.js
+ * author : Ankit Shahu
+ * created-date : 10-Nov-2022
+ * Description : Migration script for update project
+ */
+
 const path = require("path");
 let rootPath = path.join(__dirname, '../../')
 require('dotenv').config({ path: rootPath+'/.env' })
