@@ -176,7 +176,6 @@ const filePathUrl = "https://samikshaprod.blob.core.windows.net/samiksha/";
                         if (err) {
                             result.success = false;
                         } else {
-                            console.log(data.statusCode)
                             if( data.statusCode === 200 ) {
                                 result.success = true;
                             } else {

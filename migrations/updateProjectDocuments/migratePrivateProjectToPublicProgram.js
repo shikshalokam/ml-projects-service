@@ -53,11 +53,11 @@
             // get project documents from projectss collection in Array
             let projectDocuments = await db.collection('projects').find({
                 _id: { $in :projectIds  }
-            }).project({}).toArray();
+            }).project({_id:1,userProfile:1}).toArray();
             //iterate project documents one by one
             for(let counter = 0; counter < projectDocuments.length; counter++) {
 
-
+               
                 if(projectDocuments[counter].hasOwnProperty("solutionId") && projectDocuments[counter].isAPrivateProgram){
                     // find solution document form solution collection
                     let solutionDocument = await db.collection('solutions').find({
@@ -93,7 +93,7 @@
                             description : parentSolutionDocument[0].programDescription,
                             isAPrivateProgram : parentSolutionDocument[0].isAPrivateProgram
                         }
-                        if(projectDocument[counter].hasOwnProperty("userProfile"))
+                        if(projectDocuments[counter].hasOwnProperty("userProfile"))
                         {
                             let userLocations = projectDocuments[counter].userProfile.userLocations
                             let userRoleInfomration = {}
