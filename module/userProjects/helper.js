@@ -1124,7 +1124,7 @@ module.exports = class UserProjectsHelper {
                             programJoinBody.isResource = true;
                             let joinProgramData = await coreService.programJoin (
                                 solutionDetails.programId,
-                                programJoinData,
+                                programJoinBody,
                                 req.userDetails.userToken  
                             );
         
@@ -1975,6 +1975,8 @@ module.exports = class UserProjectsHelper {
             
             let totalCount = 0;
             let data = [];
+
+            let programJoined = await programUsers.findProgramJoined(userId)
             
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
