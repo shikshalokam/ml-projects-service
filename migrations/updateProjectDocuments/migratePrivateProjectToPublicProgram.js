@@ -120,19 +120,25 @@
                         deletedSolutionIds.push(projectDocuments[counter].solutionId)
                         deletedProgramIds.push(projectDocuments[counter].programId)
 
-                        // update project documents 
-                       
-                        await db.collection('projects').findOneAndUpdate({
-                            "_id" : projectDocuments[counter]._id
-                        },updateProjectDocument);
+                        // update project documents
+                        try{
+                            await db.collection('projects').findOneAndUpdate({
+                                "_id" : projectDocuments[counter]._id
+                            },updateProjectDocument);
+    
+                            await db.collection('solutions').deleteOne({
+                                _id: projectDocuments[counter].solutionId
+                            })
+                            await db.collection('programs').deleteOne({
+                                _id: projectDocuments[counter].programId
+                            })
+                            
 
-                        await db.collection('solutions').deleteOne({
-                            _id: projectDocuments[counter].solutionId
-                        })
-                        await db.collection('programs').deleteOne({
-                            _id: projectDocuments[counter].programId
-                        })
-                        
+                        }catch(err){
+                            console.log(err)
+                        }
+                       
+                      
                     }
                 }
             }
