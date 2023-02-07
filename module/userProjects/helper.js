@@ -1116,25 +1116,25 @@ module.exports = class UserProjectsHelper {
                     }
                     // program join API call 
                     let programJoined = await programUsers.findProgramJoined(solutionDetails.programId,userId)
-                    
+                    console.log(programJoined)
                     if(programJoined.length == 0){
-                        if ( appVersion !== "" && appVersion < 5.2 ) {
-                            let programJoinBody = {};
-                            programJoinBody.userRoleInformation = req.body.userRoleInformation;
-                            programJoinBody.isResource = true;
-                            let joinProgramData = await coreService.programJoin (
-                                solutionDetails.programId,
-                                programJoinBody,
-                                req.userDetails.userToken  
-                            );
-        
-                            if ( !joinProgramData.success ) {
-                                return resolve({ 
-                                    status: httpStatusCode.bad_request.status, 
-                                    message: messageConstants.apiResponses.PROGRAM_JOIN_FAILED
-                                });
-                            }
+                       
+                        let programJoinBody = {};
+                        programJoinBody.userRoleInformation = bodyData;
+                        programJoinBody.isResource = true;
+                        let joinProgramData = await coreService.programJoin (
+                            solutionDetails.programId,
+                            programJoinBody,
+                            userToken
+                        );
+    
+                        if ( !joinProgramData.success ) {
+                            return resolve({ 
+                                status: HTTP_STATUS_CODE.bad_request.status, 
+                                message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                            });
                         }
+                        
                     }
                     
                     let projectCreation = 
@@ -1976,7 +1976,7 @@ module.exports = class UserProjectsHelper {
             let totalCount = 0;
             let data = [];
 
-            let programJoined = await programUsers.findProgramJoined(userId)
+            // let programJoined = await programUsers.findProgramJoined(userId)
             
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
