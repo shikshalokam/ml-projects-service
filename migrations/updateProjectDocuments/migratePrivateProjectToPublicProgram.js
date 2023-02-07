@@ -35,7 +35,7 @@
         let projectDocument = await db.collection('projects').find({
             userRoleInformation: {$exists : false},
             isAPrivateProgram: true,
-        }).project({_id:1,userProfile:1}).toArray();
+        }).project({_id:1}).toArray();
 
 
         let chunkOfProjectDocument = _.chunk(projectDocument, 10);
@@ -53,7 +53,7 @@
             // get project documents from projectss collection in Array
             let projectDocuments = await db.collection('projects').find({
                 _id: { $in :projectIds  }
-            }).project({_id:1,userProfile:1}).toArray();
+            }).project({}).toArray();
             //iterate project documents one by one
             for(let counter = 0; counter < projectDocuments.length; counter++) {
 
@@ -64,13 +64,14 @@
                         _id: projectDocuments[counter].solutionId,
                         parentSolutionId : {$exists:true},
                         isAPrivateProgram : true
-                    }).project({}).toArray({})
+                    }).project({parentSolutionId:1}).toArray({})
                     //find program document form program collection
                     if(solutionDocument.length == 1){
                        
                         // find parent solution document in same collection
                         let parentSolutionDocument = await db.collection('solutions').find({
                             _id: solutionDocument[0].parentSolutionId}).project({}).toArray({});
+                         
                         //varibale to update project document
                         let updateProjectDocument = {
                             "$set" : {}
@@ -120,6 +121,7 @@
                         deletedProgramIds.push(projectDocuments[counter].programId)
 
                         // update project documents 
+                       
                         await db.collection('projects').findOneAndUpdate({
                             "_id" : projectDocuments[counter]._id
                         },updateProjectDocument);
@@ -130,6 +132,7 @@
                         await db.collection('programs').deleteOne({
                             _id: projectDocuments[counter].programId
                         })
+                        
                     }
                 }
             }
