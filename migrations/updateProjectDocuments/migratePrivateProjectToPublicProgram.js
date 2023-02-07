@@ -28,7 +28,8 @@
         let updatedProjectIds = [];
         let deletedSolutionIds = [];
         let deletedProgramIds = [];
-        let skipedProjects = []
+        let skipedProjects = [];
+        let errorProject=[];
         
 
         
@@ -138,6 +139,7 @@
                         }catch(err){
                             console.log(err)
                             skipedProjects.push(projectDocuments[counter]._id)
+                            errorProject.push(JSON.stringify(err))
                         }
                        
                       
@@ -156,7 +158,7 @@
             fs.writeFile(
                 'updatedProjectIdsAll.json',
 
-                JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds,skipedProjects:skipedProjects}),
+                JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds,skipedProjects:skipedProjects,errorProject: errorProject}),
 
                 function (err) {
                     if (err) {
