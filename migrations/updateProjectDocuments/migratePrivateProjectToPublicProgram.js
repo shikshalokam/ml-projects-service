@@ -28,6 +28,7 @@
         let updatedProjectIds = [];
         let deletedSolutionIds = [];
         let deletedProgramIds = [];
+        let skipedProjects = []
         
 
         
@@ -136,6 +137,7 @@
 
                         }catch(err){
                             console.log(err)
+                            skipedProjects.push(projectDocuments[counter]._id)
                         }
                        
                       
@@ -154,7 +156,7 @@
             fs.writeFile(
                 'updatedProjectIdsAll.json',
 
-                JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds}),
+                JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds,skipedProjects:skipedProjects}),
 
                 function (err) {
                     if (err) {
@@ -166,6 +168,7 @@
         console.log("Updated Project Count : ", updatedProjectIds.length)
         console.log("deleted program Count : ", deletedProgramIds.length)
         console.log("deleted solutionId Count : ", deletedSolutionIds.length)
+        console.log("skiped project Count : ", skipedProjects.length)
         console.log("completed")
         connection.close();
     }
