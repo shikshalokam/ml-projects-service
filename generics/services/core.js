@@ -761,6 +761,7 @@ const programJoin = function (programId,bodyData,userToken) {
                 } else {
                     
                     let response = data.body;
+                    console.log(response);
                     if( response.status === HTTP_STATUS_CODE['ok'].status ) {
                         result["data"] = response.result;
                     } else {

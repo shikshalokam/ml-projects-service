@@ -1079,6 +1079,18 @@ module.exports = class ProjectTemplatesHelper {
                         userId : userId,
                         projectTemplateId : templateData[0]._id
                     },["_id"]);
+
+                    //check for program enrollment if enrolled then add programJoined true
+                    let programJoined = await programUsers.findProgramIds(userId)
+                    let projects = project.map((e,i)=>{
+                        let temp = programJoined.find((element)=> {
+                            return element.programId.toString() == e._id.toString()
+                        })
+                        if(temp.programId) {
+                            templateData[0].programJoined = true;
+                        }
+                        return e;
+                    })
     
                     if(project && project.length > 0){
                         templateData[0].projectId = project[0]._id;

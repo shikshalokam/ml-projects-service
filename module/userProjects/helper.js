@@ -1127,7 +1127,6 @@ module.exports = class UserProjectsHelper {
                             programJoinBody,
                             userToken
                         );
-    
                         if ( !joinProgramData.success ) {
                             return resolve({ 
                                 status: HTTP_STATUS_CODE.bad_request.status, 
@@ -1229,88 +1228,88 @@ module.exports = class UserProjectsHelper {
                             projectCreation.data["userRole"] = bodyData.role;
                         }
 
-                        if( 
-                            solutionDetails.entityType && bodyData[solutionDetails.entityType] 
-                        ) {
-                            let entityInformation = 
-                            await surveyService.listEntitiesByLocationIds(
-                                userToken,
-                                [bodyData[solutionDetails.entityType]] 
-                            );
+                        // if( 
+                        //     solutionDetails.entityType && bodyData[solutionDetails.entityType] 
+                        // ) {
+                        //     let entityInformation = 
+                        //     await surveyService.listEntitiesByLocationIds(
+                        //         userToken,
+                        //         [bodyData[solutionDetails.entityType]] 
+                        //     );
 
-                            if( !entityInformation.success ) {
-                                return resolve(entityInformation);
-                            }
+                        //     if( !entityInformation.success ) {
+                        //         return resolve(entityInformation);
+                        //     }
 
-                            let entityDetails = await _entitiesMetaInformation(
-                                entityInformation.data
-                            );
+                        //     let entityDetails = await _entitiesMetaInformation(
+                        //         entityInformation.data
+                        //     );
 
-                            if ( entityDetails && entityDetails.length > 0 ) {
-                                projectCreation.data["entityInformation"] = entityDetails[0];
-                            }
+                        //     if ( entityDetails && entityDetails.length > 0 ) {
+                        //         projectCreation.data["entityInformation"] = entityDetails[0];
+                        //     }
         
-                            projectCreation.data.entityId = entityInformation.data[0]._id;
-                        }
+                        //     projectCreation.data.entityId = entityInformation.data[0]._id;
+                        // }
     
                     }
     
                     projectCreation.data.status = CONSTANTS.common.STARTED;
                     projectCreation.data.lastDownloadedAt = new Date();
                     
-                    // fetch userRoleInformation from observation if referenecFrom is observation
-                    let addReportInfoToSolution = false;
-                    if ( getUserProfileFromObservation ){
+                    // // fetch userRoleInformation from observation if referenecFrom is observation
+                    // let addReportInfoToSolution = false;
+                    // if ( getUserProfileFromObservation ){
 
-                        let observationDetails = await surveyService.observationDetails(
-                            userToken,
-                            bodyData.submissions.observationId
-                        );
+                    //     let observationDetails = await surveyService.observationDetails(
+                    //         userToken,
+                    //         bodyData.submissions.observationId
+                    //     );
 
-                        if( observationDetails.data &&
-                            Object.keys(observationDetails.data).length > 0 && 
-                            observationDetails.data.userRoleInformation &&
-                            Object.keys(observationDetails.data.userRoleInformation).length > 0
-                        ) {
+                    //     if( observationDetails.data &&
+                    //         Object.keys(observationDetails.data).length > 0 && 
+                    //         observationDetails.data.userRoleInformation &&
+                    //         Object.keys(observationDetails.data.userRoleInformation).length > 0
+                    //     ) {
 
-                            userRoleInformation = observationDetails.data.userRoleInformation;
+                    //         userRoleInformation = observationDetails.data.userRoleInformation;
                             
-                        }
+                    //     }
 
-                        if( observationDetails.data &&
-                            Object.keys(observationDetails.data).length > 0 && 
-                            observationDetails.data.userProfile &&
-                            Object.keys(observationDetails.data.userProfile).length > 0
-                        ) {
+                    //     if( observationDetails.data &&
+                    //         Object.keys(observationDetails.data).length > 0 && 
+                    //         observationDetails.data.userProfile &&
+                    //         Object.keys(observationDetails.data.userProfile).length > 0
+                    //     ) {
 
-                            projectCreation.data.userProfile = observationDetails.data.userProfile;
-                            addReportInfoToSolution = true; 
+                    //         projectCreation.data.userProfile = observationDetails.data.userProfile;
+                    //         addReportInfoToSolution = true; 
                             
-                        } else {
-                            //Fetch user profile information by calling sunbird's user read api.
+                    //     } else {
+                    //         //Fetch user profile information by calling sunbird's user read api.
 
-                            let userProfile = await userProfileService.profile(userToken, userId);
-                            if ( userProfile.success && 
-                                 userProfile.data &&
-                                 userProfile.data.response
-                            ) {
-                                    projectCreation.data.userProfile = userProfile.data.response;
-                                    addReportInfoToSolution = true; 
-                            } 
-                        }
+                    //         let userProfile = await userProfileService.profile(userToken, userId);
+                    //         if ( userProfile.success && 
+                    //              userProfile.data &&
+                    //              userProfile.data.response
+                    //         ) {
+                    //                 projectCreation.data.userProfile = userProfile.data.response;
+                    //                 addReportInfoToSolution = true; 
+                    //         } 
+                    //     }
 
-                    } else {
-                        //Fetch user profile information by calling sunbird's user read api.
+                    // } else {
+                    //     //Fetch user profile information by calling sunbird's user read api.
 
-                        let userProfileData = await userProfileService.profile(userToken, userId);
-                        if ( userProfileData.success && 
-                             userProfileData.data &&
-                             userProfileData.data.response
-                        ) {
-                                projectCreation.data.userProfile = userProfileData.data.response;
-                                addReportInfoToSolution = true; 
-                        } 
-                    }
+                    //     let userProfileData = await userProfileService.profile(userToken, userId);
+                    //     if ( userProfileData.success && 
+                    //          userProfileData.data &&
+                    //          userProfileData.data.response
+                    //     ) {
+                    //             projectCreation.data.userProfile = userProfileData.data.response;
+                    //             addReportInfoToSolution = true; 
+                    //     } 
+                    // }
 
                     projectCreation.data.userRoleInformation = userRoleInformation;
                     
@@ -1328,12 +1327,12 @@ module.exports = class UserProjectsHelper {
     
                     let project = await projectQueries.createProject(projectCreation.data);
                     
-                    if ( addReportInfoToSolution && project.solutionId ) {
-                        let updateSolution = await solutionsHelper.addReportInformationInSolution(
-                            project.solutionId,
-                            project.userProfile
-                        ); 
-                    }
+                    // if ( addReportInfoToSolution && project.solutionId ) {
+                    //     let updateSolution = await solutionsHelper.addReportInformationInSolution(
+                    //         project.solutionId,
+                    //         project.userProfile
+                    //     ); 
+                    // }
 
                     await kafkaProducersHelper.pushProjectToKafka(project);
                     
@@ -1976,8 +1975,16 @@ module.exports = class UserProjectsHelper {
             let totalCount = 0;
             let data = [];
 
-            // let programJoined = await programUsers.findProgramJoined(userId)
-            
+            let programJoined = await programUsers.findProgramIds(userId)
+            projects.data.data = projects.data.data.map((e,i)=>{
+                let temp = programJoined.find((element)=> {
+                    return element.programId.toString() == e.programId.toString()
+                })
+                if(temp.programId) {
+                    e.programJoined = true;
+                }
+                return e;
+            })
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
                 totalCount = projects.data.count;
@@ -2291,6 +2298,26 @@ module.exports = class UserProjectsHelper {
                         programAndSolutionInformation.data
                     )
                 }
+
+                let programJoined = await programUsers.findProgramJoined(requestedData.programId,userId)
+                if(programJoined.length == 0){
+                   
+                    let programJoinBody = {};
+                    programJoinBody.isResource = true;
+                    let joinProgramData = await coreService.programJoin (
+                        solutionDetails.programId,
+                        programJoinBody,
+                        userToken
+                    );
+                    if ( !joinProgramData.success ) {
+                        return resolve({ 
+                            status: HTTP_STATUS_CODE.bad_request.status, 
+                            message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                        });
+                    }
+                    
+                }
+
                 //  <- Add certificate template data
                 if ( 
                     libraryProjects.data.certificateTemplateId &&
