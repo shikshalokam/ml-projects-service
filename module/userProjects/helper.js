@@ -2303,6 +2303,7 @@ module.exports = class UserProjectsHelper {
                 if(programJoined.length == 0){
                    
                     let programJoinBody = {};
+                    programJoinBody.userRoleInformation = requestedData.userRoleInformation ? requestedData.userRoleInformation : {};
                     programJoinBody.isResource = true;
                     let joinProgramData = await coreService.programJoin (
                         solutionDetails.programId,
