@@ -2307,6 +2307,10 @@ module.exports = class UserProjectsHelper {
                     libraryProjects.data.endDate = requestedData.endDate;
                 }
 
+                if (requestedData.hasAcceptedTAndC) {
+                    libraryProjects.data.hasAcceptedTAndC = true;
+                }
+
                 libraryProjects.data.projectTemplateId = libraryProjects.data._id;
                 libraryProjects.data.projectTemplateExternalId = libraryProjects.data.externalId;
                 
