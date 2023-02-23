@@ -143,10 +143,7 @@ module.exports = function() {
 }
 
 async function getKid(){
-  if ( enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"] &&
-      enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"].default &&
-      enviromentVariables["PROJECT_CERTIFICATE_ON_OFF"].default === "ON"
-    ) {
+  if ( process.env.PROJECT_CERTIFICATE_ON_OFF === "ON" ) {
       // get certificate issuer kid from sunbird-RC
       let kidData = await certificateService.getCertificateIssuerKid();
       if( !kidData.success ) {
