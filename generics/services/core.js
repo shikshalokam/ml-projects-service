@@ -746,7 +746,7 @@ const programJoin = function (programId,bodyData,userToken) {
                     "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
                     "x-authenticated-user-token" : userToken,
                 },
-                json: bodyData
+               
             };
 
             if ( bodyData.appVersion !== "" ) {
@@ -758,6 +758,9 @@ const programJoin = function (programId,bodyData,userToken) {
                 options.headers.appname = bodyData.appName;
                 delete bodyData.appName
             } 
+
+
+            options.json = bodyData
             request.post(url,options,kendraCallback);
 
             function kendraCallback(err, data) {
