@@ -8,13 +8,18 @@ module.exports = {
       },
       userId: {
         type: String,
-        index: true
+        index: true,
+        required: true,
       },
       noOfResourcesStarted: {
         type:Number,
-        index: true
+        index: true,
+        default: 0
       },
-      userProfile: Object,
+      userProfile: {
+        type : Object,
+        required: true
+      },
       userRoleInformation: Object,
       appInformation: Object
     },

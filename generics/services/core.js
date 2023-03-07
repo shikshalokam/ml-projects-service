@@ -729,7 +729,7 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
   * program Join Api.
   * @function
   * @name programJoin
-  * @param {String} token - User token.
+  * @param {String} userToken - User token.
   * @param {Object} bodyData - Requested body data.
   * @param {String} programId - program id.
   * @returns {JSON} - Program Join Status.
@@ -748,6 +748,16 @@ const programJoin = function (programId,bodyData,userToken) {
                 },
                 json: bodyData
             };
+
+            if ( bodyData.appVersion !== "" ) {
+                options.headers.appversion = bodyData.appVersion;
+                delete bodyData.appVersion
+            }
+
+            if ( bodyData.appName !== "" ) {
+                options.headers.appname = bodyData.appName;
+                delete bodyData.appName
+            } 
             request.post(url,options,kendraCallback);
 
             function kendraCallback(err, data) {

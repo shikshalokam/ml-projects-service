@@ -1115,25 +1115,34 @@ module.exports = class UserProjectsHelper {
                         
                     }
                     // program join API call 
-                    let programJoined = await programUsers.findProgramJoined(solutionDetails.programId,userId)
-                    console.log(programJoined)
-                    if(programJoined.length == 0){
-                       
-                        let programJoinBody = {};
-                        programJoinBody.userRoleInformation = bodyData;
-                        programJoinBody.isResource = true;
-                        let joinProgramData = await coreService.programJoin (
-                            solutionDetails.programId,
-                            programJoinBody,
-                            userToken
-                        );
-                        if ( !joinProgramData.success ) {
-                            return resolve({ 
-                                status: HTTP_STATUS_CODE.bad_request.status, 
-                                message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
-                            });
+                    if ( appVersion === "" || appVersion < 5.2 ) {
+                        let query = {
+                            userId: userId,
+                            programId: solutionDetails.programId
                         }
+                        let programJoined = await programUsers.programUsersDocument(query)
+                        if(programJoined.length == 0){
                         
+                            let programJoinBody = {};
+                            programJoinBody.userRoleInformation = bodyData;
+                            programJoinBody.isResource = true;
+                            let joinProgramData = await coreService.programJoin (
+                                solutionDetails.programId,
+                                programJoinBody,
+                                userToken
+                            );
+                            if ( !joinProgramData.success ) {
+                                return resolve({ 
+                                    status: HTTP_STATUS_CODE.bad_request.status, 
+                                    message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                                });
+                            }
+                        }else{
+                            await programUsers.update(
+                                { _id : programUsers[0]._id },
+                                {  '$inc' : { noOfResourcesStarted : 1 } }
+                            );
+                        }
                     }
                     
                     let projectCreation = 
@@ -1974,16 +1983,17 @@ module.exports = class UserProjectsHelper {
             
             let totalCount = 0;
             let data = [];
-
-            let programJoined = await programUsers.findProgramIds(userId)
-            projects.data.data = projects.data.data.map((e,i)=>{
-                let programsIds = programJoined.find((element)=> {
-                    return element.programId.toString() == e.programId.toString()
+            //this is to check if user has already joined program or not
+            let programJoined = await programUsers.programUsersDocument({userId: userId},["programId"])
+            projects.data.data = projects.data.data.map((project)=>{
+                //maps projects which have joined program
+                let programsIds = programJoined.find((program)=> {
+                    return program.programId.toString() == project.programId.toString()
                 })
                 if(programsIds.programId) {
-                    e.programJoined = true;
+                    project.programJoined = true;
                 }
-                return e;
+                return project;
             })
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
@@ -2299,25 +2309,6 @@ module.exports = class UserProjectsHelper {
                     )
                 }
 
-                let programJoined = await programUsers.findProgramJoined(requestedData.programId,userId)
-                if(programJoined.length == 0){
-                   
-                    let programJoinBody = {};
-                    programJoinBody.userRoleInformation = requestedData.userRoleInformation ? requestedData.userRoleInformation : {};
-                    programJoinBody.isResource = true;
-                    let joinProgramData = await coreService.programJoin (
-                        solutionDetails.programId,
-                        programJoinBody,
-                        userToken
-                    );
-                    if ( !joinProgramData.success ) {
-                        return resolve({ 
-                            status: HTTP_STATUS_CODE.bad_request.status, 
-                            message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
-                        });
-                    }
-                    
-                }
 
                 //  <- Add certificate template data
                 if ( 
