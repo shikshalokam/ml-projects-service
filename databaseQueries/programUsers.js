@@ -1,4 +1,4 @@
-module.exports = class Programs {
+module.exports = class programUsers {
   static programUsersDocument(
     filterData = "all", 
     fieldsArray = "all",
