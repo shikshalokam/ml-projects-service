@@ -1069,10 +1069,16 @@ module.exports = class UserProjectsHelper {
 
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
             if (projectId === "") {
-                
+                const userRoleInformations = userRoleInformation.role.split(",")
+                userRoleInformations.push()
                 const projectDetails = await projectQueries.projectDocument({
                     solutionId: solutionId,
-                    userId: userId
+                    userId: userId,
+                    userRole:{
+                        $regex: userRoleInformations.join("|"), 
+                        $options:  "i"
+                    },
+                    "userRoleInformation.state": userRoleInformation.state
                 }, ["_id"]);
 
                 if( projectDetails.length > 0 ) {
