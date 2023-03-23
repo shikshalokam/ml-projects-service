@@ -349,7 +349,6 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                console.log(entityId)
                 let query = {
                     "userId": userId,
                     programId : {
