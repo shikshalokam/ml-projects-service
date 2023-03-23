@@ -360,15 +360,15 @@ module.exports = class ReportsHelper {
                 if( entityId != "" ) {
                     query.entityId = entityId;
                 } 
-                // not able to find programs which user started it will match only exact string
-                // if (userRole != "") {
-                //     query.userRole = {
-                //         $in : [
-                //             "",
-                //             ...userRole.split(",")
-                //         ]
-                //     }
-                // }
+              
+                if (userRole != "") {
+                    let regex = userRole.split(",");
+                    regex.push("")
+                    query.userRole = {
+                        $regex:regex.join("|"), 
+                        $options:  "i"
+                    }
+                }
 
                 let searchQuery = [];
                 if (search !== "") {
