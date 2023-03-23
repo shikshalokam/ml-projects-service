@@ -349,6 +349,7 @@ module.exports = class ReportsHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
+                console.log(entityId)
                 let query = {
                     "userId": userId,
                     programId : {
@@ -359,15 +360,15 @@ module.exports = class ReportsHelper {
                 if( entityId != "" ) {
                     query.entityId = entityId;
                 } 
-                
-                if (userRole != "") {
-                    query.userRole = {
-                        $in : [
-                            "",
-                            ...userRole.split(",")
-                        ]
-                    }
-                }
+                // not able to find programs which user started it will match only exact string
+                // if (userRole != "") {
+                //     query.userRole = {
+                //         $in : [
+                //             "",
+                //             ...userRole.split(",")
+                //         ]
+                //     }
+                // }
 
                 let searchQuery = [];
                 if (search !== "") {
