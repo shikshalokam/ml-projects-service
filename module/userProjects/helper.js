@@ -1069,16 +1069,13 @@ module.exports = class UserProjectsHelper {
 
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
             if (projectId === "") {
-                const userRoleInformations = userRoleInformation.role.split(",")
-                userRoleInformations.push()
+
+                const targetedSolutionId = await coreService.verifyTargetedSolution(userToken,bodyData,solutionId)
+                
                 const projectDetails = await projectQueries.projectDocument({
                     solutionId: solutionId,
                     userId: userId,
-                    userRole:{
-                        $regex: userRoleInformations.join("|"), 
-                        $options:  "i"
-                    },
-                    "userRoleInformation.state": userRoleInformation.state
+                    isAPrivateProgram: targetedSolutionId.data.isATargetedSolution ? false : true
                 }, ["_id"]);
 
                 if( projectDetails.length > 0 ) {
