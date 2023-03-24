@@ -742,9 +742,9 @@ const verifyTargetedSolution = function ( token,bodyData,solutionId ) {
                 json : bodyData
             };
 
-            request.post(url,options,varifyTergetedSolutionCallbeck);
+            request.post(url,options,verifyTergetedSolutionCallbeck);
 
-            function varifyTergetedSolutionCallbeck(err, data) {
+            function verifyTergetedSolutionCallbeck(err, data) {
 
                 let result = {
                     success : true
