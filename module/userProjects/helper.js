@@ -1069,9 +1069,9 @@ module.exports = class UserProjectsHelper {
 
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
             if (projectId === "") {
-
+                // This is used to check solution is targetted or not
                 const targetedSolutionId = await coreService.isTargetedBasedOnUserProfile(userToken,bodyData,solutionId)
-                
+                //based on above api will check for projects wether its is private project or public project
                 const projectDetails = await projectQueries.projectDocument({
                     solutionId: solutionId,
                     userId: userId,

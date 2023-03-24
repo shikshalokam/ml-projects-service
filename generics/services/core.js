@@ -742,9 +742,9 @@ const isTargetedBasedOnUserProfile = function ( token,bodyData,solutionId ) {
                 json : bodyData
             };
 
-            request.post(url,options,verifyTergetedSolutionCallbeck);
+            request.post(url,options,verifyTargetedSolutionCallbeck);
 
-            function verifyTergetedSolutionCallbeck(err, data) {
+            function verifyTargetedSolutionCallbeck(err, data) {
 
                 let result = {
                     success : true
