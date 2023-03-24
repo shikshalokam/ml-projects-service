@@ -1070,7 +1070,7 @@ module.exports = class UserProjectsHelper {
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
             if (projectId === "") {
 
-                const targetedSolutionId = await coreService.verifyTargetedSolution(userToken,bodyData,solutionId)
+                const targetedSolutionId = await coreService.isTargetedBasedOnUserProfile(userToken,bodyData,solutionId)
                 
                 const projectDetails = await projectQueries.projectDocument({
                     solutionId: solutionId,

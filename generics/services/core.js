@@ -726,12 +726,12 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
 }
 
 
-const verifyTargetedSolution = function ( token,bodyData,solutionId ) {
+const isTargetedBasedOnUserProfile = function ( token,bodyData,solutionId ) {
     return new Promise(async (resolve, reject) => {
         try {
             
             const url = 
-            ML_CORE_URL + CONSTANTS.endpoints.VERIFY_TARGETED_SOLUTION + "/" + solutionId;
+            ML_CORE_URL + CONSTANTS.endpoints.IS_TARGETED_BASED_ON_USER_PROFILE + "/" + solutionId;
 
             const options = {
                 headers : {
@@ -790,6 +790,6 @@ module.exports = {
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
     getDownloadableUrl : getDownloadableUrl,
-    verifyTargetedSolution:verifyTargetedSolution
+    isTargetedBasedOnUserProfile:isTargetedBasedOnUserProfile
 };
 
