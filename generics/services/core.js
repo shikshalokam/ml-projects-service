@@ -726,7 +726,7 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
 }
 
 
-const isTargetedBasedOnUserProfile = function ( token,bodyData,solutionId ) {
+const checkIfSolutionIsTargetedForUserProfile = function ( token,bodyData,solutionId ) {
     return new Promise(async (resolve, reject) => {
         try {
             
@@ -790,6 +790,6 @@ module.exports = {
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
     getDownloadableUrl : getDownloadableUrl,
-    isTargetedBasedOnUserProfile:isTargetedBasedOnUserProfile
+    checkIfSolutionIsTargetedForUserProfile:checkIfSolutionIsTargetedForUserProfile
 };
 
