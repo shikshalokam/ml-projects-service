@@ -1071,12 +1071,18 @@ module.exports = class UserProjectsHelper {
             if (projectId === "") {
                 // This is used to check solution is targetted or not
                 const targetedSolutionId = await coreService.checkIfSolutionIsTargetedForUserProfile(userToken,bodyData,solutionId)
-                //based on above api will check for projects wether its is private project or public project
-                const projectDetails = await projectQueries.projectDocument({
+
+                let projectDocumentQuery = {
                     solutionId: solutionId,
                     userId: userId,
-                    isAPrivateProgram: targetedSolutionId.data.isATargetedSolution ? false : true
-                }, ["_id"]);
+                }
+
+                if(targetedSolutionId.data.isATargetedSolution){
+                    projectDocumentQuery.isAPrivateProgram = false
+                }
+                //based on above api will check for projects wether its is private project or public project
+                const projectDetails = await projectQueries.projectDocument(projectDocumentQuery, ["_id"]);
+
 
                 if( projectDetails.length > 0 ) {
                     projectId = projectDetails[0]._id;

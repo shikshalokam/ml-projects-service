@@ -742,9 +742,9 @@ const checkIfSolutionIsTargetedForUserProfile = function ( token,bodyData,soluti
                 json : bodyData
             };
 
-            request.post(url,options,verifyTargetedSolutionCallbeck);
+            request.post(url,options,verifyTargetedSolutionCallback);
 
-            function verifyTargetedSolutionCallbeck(err, data) {
+            function verifyTargetedSolutionCallback(err, data) {
 
                 let result = {
                     success : true
