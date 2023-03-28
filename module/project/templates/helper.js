@@ -1074,11 +1074,18 @@ module.exports = class ProjectTemplatesHelper {
                 if( !templateData[0].isReusable && userId !== "") {
                         
                     templateData[0].projectId = "";
-    
-                    let project = await projectQueries.projectDocument({
+
+                    const projectIdQuery = {
                         userId : userId,
                         projectTemplateId : templateData[0]._id,
-                        isAPrivateProgram : isAPrivateProgram
+                    }
+
+                    if( isAPrivateProgram !== ""){
+                        projectIdQuery.isAPrivateProgram = isAPrivateProgram
+                    }
+    
+                    let project = await projectQueries.projectDocument({
+                       projectIdQuery
                     },["_id"]);
     
                     if(project && project.length > 0){
