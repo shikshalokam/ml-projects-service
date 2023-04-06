@@ -1114,35 +1114,22 @@ module.exports = class UserProjectsHelper {
                         solutionDetails = solutionDetails.data[0];
                         
                     }
-                    // program join API call 
-                    if ( appVersion === "" || appVersion < 5.2 ) {
-                        let query = {
-                            userId: userId,
-                            programId: solutionDetails.programId
-                        }
-                        let programJoined = await programUsers.programUsersDocument(query)
-                        if(programJoined.length == 0){
-                        
-                            let programJoinBody = {};
-                            programJoinBody.userRoleInformation = bodyData;
-                            programJoinBody.isResource = true;
-                            let joinProgramData = await coreService.programJoin (
-                                solutionDetails.programId,
-                                programJoinBody,
-                                userToken
-                            );
-                            if ( !joinProgramData.success ) {
-                                return resolve({ 
-                                    status: HTTP_STATUS_CODE.bad_request.status, 
-                                    message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
-                                });
-                            }
-                        }else{
-                            await programUsers.update(
-                                { _id : programUsers[0]._id },
-                                {  '$inc' : { noOfResourcesStarted : 1 } }
-                            );
-                        }
+                    
+                    // program join API call it will increment the noOfResourcesStarted counter and will make user join program
+                    // before creating any project this api has to called 
+                    let programJoinBody = {};
+                    programJoinBody.userRoleInformation = bodyData;
+                    programJoinBody.isResource = true;
+                    let joinProgramData = await coreService.joinProgram (
+                        solutionDetails.programId,
+                        programJoinBody,
+                        userToken
+                    );
+                    if ( !joinProgramData.success ) {
+                        return resolve({ 
+                            status: HTTP_STATUS_CODE.bad_request.status, 
+                            message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                        });
                     }
                     
                     let projectCreation = 

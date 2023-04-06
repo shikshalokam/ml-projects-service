@@ -728,13 +728,13 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
 /**
   * program Join Api.
   * @function
-  * @name programJoin
+  * @name joinProgram
   * @param {String} userToken - User token.
   * @param {Object} bodyData - Requested body data.
   * @param {String} programId - program id.
   * @returns {JSON} - Program Join Status.
 */
-const programJoin = function (programId,bodyData,userToken) {
+const joinProgram = function (programId,bodyData,userToken) {
     return new Promise(async (resolve, reject) => {
         try {
             
@@ -803,6 +803,6 @@ module.exports = {
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
     getDownloadableUrl : getDownloadableUrl, 
-    programJoin: programJoin
+    joinProgram: joinProgram
 };
 
