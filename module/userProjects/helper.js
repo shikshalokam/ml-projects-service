@@ -1970,18 +1970,6 @@ module.exports = class UserProjectsHelper {
             
             let totalCount = 0;
             let data = [];
-            //this is to check if user has already joined program or not
-            let programJoined = await programUsers.programUsersDocument({userId: userId},["programId"])
-            projects.data.data = projects.data.data.map((project)=>{
-                //maps projects which have joined program
-                let programsIds = programJoined.find((program)=> {
-                    return program.programId.toString() == project.programId.toString()
-                })
-                if(programsIds.programId) {
-                    project.programJoined = true;
-                }
-                return project;
-            })
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
 
                 totalCount = projects.data.count;
