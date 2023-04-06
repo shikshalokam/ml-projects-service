@@ -975,7 +975,7 @@ module.exports = class ProjectTemplatesHelper {
       * @returns {Array} Project templates data.
      */
 
-    static details( templateId="", link="", userId="" ) {
+    static details( templateId="", link="", userId="", isAPrivateProgram ) {
         return new Promise(async (resolve, reject) => {
             try {
                 let solutionsResult = {};
@@ -1074,10 +1074,18 @@ module.exports = class ProjectTemplatesHelper {
                 if( !templateData[0].isReusable && userId !== "") {
                         
                     templateData[0].projectId = "";
+
+                    const projectIdQuery = {
+                        userId : userId,
+                        projectTemplateId : templateData[0]._id,
+                    }
+
+                    if( isAPrivateProgram !== ""){
+                        projectIdQuery.isAPrivateProgram = isAPrivateProgram
+                    }
     
                     let project = await projectQueries.projectDocument({
-                        userId : userId,
-                        projectTemplateId : templateData[0]._id
+                       projectIdQuery
                     },["_id"]);
     
                     if(project && project.length > 0){

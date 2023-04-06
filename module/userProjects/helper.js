@@ -1069,6 +1069,7 @@ module.exports = class UserProjectsHelper {
 
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
             if (projectId === "") {
+<<<<<<< HEAD
                 const userRoleInformations = userRoleInformation.role.split(",")
                 userRoleInformations.push()
                 const projectDetails = await projectQueries.projectDocument({
@@ -1079,8 +1080,16 @@ module.exports = class UserProjectsHelper {
                         $options:  "i"
                     },
                     "userRoleInformation.state": userRoleInformation.state
+=======
+                // This will check wether the user user is targeted to solution or not based on his userRoleInformation
+                const targetedSolutionId = await coreService.checkIfSolutionIsTargetedForUserProfile(userToken,bodyData,solutionId)
+                //based on above api will check for projects wether its is private project or public project
+                const projectDetails = await projectQueries.projectDocument({
+                    solutionId: solutionId,
+                    userId: userId,
+                    isAPrivateProgram: targetedSolutionId.data.isATargetedSolution ? false : true
+>>>>>>> refs/remotes/origin/master
                 }, ["_id"]);
-
                 if( projectDetails.length > 0 ) {
                     projectId = projectDetails[0]._id;
                 } else {

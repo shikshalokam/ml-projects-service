@@ -725,6 +725,57 @@ const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solution
     })
 }
 
+
+const checkIfSolutionIsTargetedForUserProfile = function ( token,bodyData,solutionId ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = 
+            ML_CORE_URL + CONSTANTS.endpoints.IS_TARGETED_BASED_ON_USER_PROFILE + "/" + solutionId;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : token
+                },
+                json : bodyData
+            };
+
+            request.post(url,options,verifyTargetedSolutionCallback);
+
+            function verifyTargetedSolutionCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+
+
+
+
+
 module.exports = {
     entityTypesDocuments : entityTypesDocuments,
     rolesDocuments : rolesDocuments,
@@ -738,6 +789,7 @@ module.exports = {
     createSolution: createSolution,
     solutionBasedOnRoleAndLocation : solutionBasedOnRoleAndLocation,
     solutionDetailsBasedOnRoleAndLocation : solutionDetailsBasedOnRoleAndLocation,
-    getDownloadableUrl : getDownloadableUrl
+    getDownloadableUrl : getDownloadableUrl,
+    checkIfSolutionIsTargetedForUserProfile:checkIfSolutionIsTargetedForUserProfile
 };
 
