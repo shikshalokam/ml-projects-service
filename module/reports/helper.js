@@ -359,13 +359,13 @@ module.exports = class ReportsHelper {
                 if( entityId != "" ) {
                     query.entityId = entityId;
                 } 
-                
+              
                 if (userRole != "") {
+                    let regex = userRole.split(",");
+                    regex.push("")
                     query.userRole = {
-                        $in : [
-                            "",
-                            ...userRole.split(",")
-                        ]
+                        $regex:regex.join("|"), 
+                        $options:  "i"
                     }
                 }
 
