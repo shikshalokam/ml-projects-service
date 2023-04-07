@@ -1,4 +1,21 @@
+/**
+ * name : programUsers.js
+ * author : Ankit Shahu
+ * created-date : 07-04-2023
+ * Description : program users helper for DB interactions.
+ */
 module.exports = class programUsers {
+
+   /**
+     * program users details.
+     * @method
+     * @name programUsersDocument
+     * @param {Array} [filterData = "all"] - program users filter query.
+     * @param {Array} [fieldsArray = "all"] - projected fields.
+     * @param {Array} [skipFields = "none"] - field not to include
+     * @returns {Array} program users details.
+    */
+    
   static programUsersDocument(
     filterData = "all", 
     fieldsArray = "all",

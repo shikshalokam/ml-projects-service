@@ -2285,8 +2285,6 @@ module.exports = class UserProjectsHelper {
                         programAndSolutionInformation.data
                     )
                 }
-
-
                 //  <- Add certificate template data
                 if ( 
                     libraryProjects.data.certificateTemplateId &&
