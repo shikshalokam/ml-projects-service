@@ -1079,6 +1079,7 @@ module.exports = class ProjectTemplatesHelper {
                         userId : userId,
                         projectTemplateId : templateData[0]._id,
                     }
+
                     if( isAPrivateProgram !== ""){
                         projectIdQuery.isAPrivateProgram = isAPrivateProgram
                     }
@@ -1086,7 +1087,6 @@ module.exports = class ProjectTemplatesHelper {
                     let project = await projectQueries.projectDocument({
                        projectIdQuery
                     },["_id"]);
-
     
                     if(project && project.length > 0){
                         templateData[0].projectId = project[0]._id;
