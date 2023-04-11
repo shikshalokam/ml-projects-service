@@ -11,10 +11,10 @@ module.exports = {
         index: true,
         required: true,
       },
-      noOfResourcesStarted: {
-        type:Number,
+      resourcesStarted: {
+        type: Boolean,
         index: true,
-        default: 0
+        default: false
       },
       userProfile: {
         type : Object,
