@@ -18,10 +18,15 @@ var fs = require('fs');
 let mongoUrlOfOCIDb = process.env.MONGODB_URL;
 let ociDbName = mongoUrlOfOCIDb.split("/").pop();
 let DbUrl = mongoUrlOfOCIDb.split(ociDbName)[0];
-let azureDbName = "sl-prod-old";
+let azureDbName = process.argv[2];
 
 (async () => {
-    // Azure DB connection && OCI db connection
+
+    if ( azureDbName === undefined ) {
+        console.log("Sorry! Please pass Azure Database name with node command.")
+        process.exit();
+    }
+   
     let connection = await MongoClient.connect(DbUrl, { useNewUrlParser: true });
     let db_Azure = connection.db(azureDbName);
     let db_OCI = connection.db(ociDbName);
@@ -37,7 +42,7 @@ let azureDbName = "sl-prod-old";
 
         // Get project Ids 
         projectIdsFromAzureDb = await getArrayOfMongoIds(projectsDetailsFromAzureDb);
-
+        
         // Get data from OCI-mongo database
         let projectsDetailsFromOCIDb = await db_OCI.collection('projects').find({
         }).project({_id:1}).toArray();
