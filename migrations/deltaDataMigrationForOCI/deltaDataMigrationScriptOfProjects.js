@@ -26,7 +26,7 @@ let azureDbName = process.argv[2];
         console.log("Sorry! Please pass Azure Database name with node command.")
         process.exit();
     }
-   
+    // Azure DB connection && OCI db connection
     let connection = await MongoClient.connect(DbUrl, { useNewUrlParser: true });
     let db_Azure = connection.db(azureDbName);
     let db_OCI = connection.db(ociDbName);
