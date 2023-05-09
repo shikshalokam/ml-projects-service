@@ -1121,7 +1121,7 @@ module.exports = class UserProjectsHelper {
                     queryData["_id"] = solutionDetails.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,["requestForPIIConsent"]);
                     
-                    // if requestForPIIConsent not there programDetails will be an empty array
+                    // if requestForPIIConsent not there do not call program join
                     if ( programDetails.length > 0 && programDetails[0].hasOwnProperty('requestForPIIConsent')) {
                         
                         // program join API call it will increment the noOfResourcesStarted counter and will make user join program
