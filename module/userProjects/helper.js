@@ -1068,7 +1068,7 @@ module.exports = class UserProjectsHelper {
                 solutionExternalId = templateDocuments[0].solutionExternalId;
             }
             
-            let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
+            let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC","link"]);
             
             if (projectId === "") {
                 // This will check wether the user user is targeted to solution or not based on his userRoleInformation
@@ -1082,7 +1082,7 @@ module.exports = class UserProjectsHelper {
                 if( projectDetails.length > 0 ) {
                     projectId = projectDetails[0]._id;
                 } else {
-                
+                    let isAPrivateSolution = (targetedSolutionId.data.isATargetedSolution === false)  ? true : false;
                     let solutionDetails = {}
 
                     if( templateId === "" ) {
@@ -1091,7 +1091,8 @@ module.exports = class UserProjectsHelper {
                         await coreService.solutionDetailsBasedOnRoleAndLocation(
                             userToken,
                             bodyData,
-                            solutionId
+                            solutionId,
+                            isAPrivateSolution
                         );
 
                         if( !solutionDetails.success || (solutionDetails.data.data && !solutionDetails.data.data.length > 0) ) {
@@ -1167,7 +1168,7 @@ module.exports = class UserProjectsHelper {
                     if( !projectCreation.success ) {
                         return resolve(projectCreation);
                     }
-    
+                    
                     projectCreation.data["isAPrivateProgram"] = 
                     solutionDetails.isAPrivateProgram;
     
@@ -1236,6 +1237,10 @@ module.exports = class UserProjectsHelper {
 
                         if( bodyData.referenceFrom ) {
                             projectCreation.data.referenceFrom = bodyData.referenceFrom;
+                            // Add link to project Details
+                            if( bodyData.referenceFrom == CONSTANTS.common.LINK && bodyData.link && bodyData.link != "" ) {
+                                projectCreation.data.link = bodyData.link;
+                            } 
                             
                             if( bodyData.submissions ) {
                                 if ( bodyData.submissions.observationId && bodyData.submissions.observationId != "" ) {
@@ -1334,7 +1339,7 @@ module.exports = class UserProjectsHelper {
                                 addReportInfoToSolution = true; 
                         } 
                     }
-
+                    
                     projectCreation.data.userRoleInformation = userRoleInformation;
                     
                     //compare & update userProfile with userRoleInformation
@@ -2156,7 +2161,6 @@ module.exports = class UserProjectsHelper {
   static list( bodyData ) {
     return new Promise(async (resolve, reject) => {
         try {
-
             let projects = await projectQueries.projectDocument(
                 bodyData.query,
                 bodyData.projection,

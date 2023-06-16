@@ -676,15 +676,15 @@ const solutionBasedOnRoleAndLocation = function ( token,bodyData,typeAndSubType,
   * @param {String} token - User token.
   * @param {Object} bodyData - Requested body data.
   * @param {String} solutionId - Targeted solution id.
+  * @param {Boolean} isAPrivateSolution - true/false.
   * @returns {JSON} - List of user targetted solutions.
 */
 
-const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solutionId ) {
+const solutionDetailsBasedOnRoleAndLocation = function ( token,bodyData,solutionId,isAPrivateSolution = false ) {
     return new Promise(async (resolve, reject) => {
         try {
-            
             const url = 
-            ML_CORE_URL + CONSTANTS.endpoints.SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION + "/" + solutionId;
+            ML_CORE_URL + CONSTANTS.endpoints.SOLUTION_DETAILS_BASED_ON_ROLE_LOCATION + "/" + solutionId + "?isAPrivateSolution=" + isAPrivateSolution;
 
             const options = {
                 headers : {
