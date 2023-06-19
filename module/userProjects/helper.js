@@ -1068,7 +1068,7 @@ module.exports = class UserProjectsHelper {
                 solutionExternalId = templateDocuments[0].solutionExternalId;
             }
             
-            let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC","link"]);
+            let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC"]);
             
             if (projectId === "") {
                 // This will check wether the user user is targeted to solution or not based on his userRoleInformation
@@ -1088,11 +1088,11 @@ module.exports = class UserProjectsHelper {
                     if( templateId === "" ) {
                         // If solution Id of a private program is passed, fetch solution details
                         if ( isAPrivateSolution && solutionId != "" ) {
-                            solutionDetails = await database.models.solutions
-                            .find({
+                            solutionDetails = await solutionsHelper.solutionDocuments({
                                 _id: solutionId,
                                 isAPrivateProgram: true
-                            }, [
+                            },
+                            [
                                 "name",
                                 "externalId",
                                 "description",
@@ -1106,8 +1106,7 @@ module.exports = class UserProjectsHelper {
                                 "entityTypeId",
                                 "language",
                                 "creator"
-                              ])
-                            .lean();
+                            ]);
                             if( !solutionDetails.length > 0 ) {
                                 throw {
                                     status : HTTP_STATUS_CODE["bad_request"].status,
@@ -1267,10 +1266,6 @@ module.exports = class UserProjectsHelper {
 
                         if( bodyData.referenceFrom ) {
                             projectCreation.data.referenceFrom = bodyData.referenceFrom;
-                            // Add link to project Details
-                            if( bodyData.referenceFrom == CONSTANTS.common.LINK && bodyData.link && bodyData.link != "" ) {
-                                projectCreation.data.link = bodyData.link;
-                            } 
                             
                             if( bodyData.submissions ) {
                                 if ( bodyData.submissions.observationId && bodyData.submissions.observationId != "" ) {
@@ -1393,7 +1388,7 @@ module.exports = class UserProjectsHelper {
                         ); 
                     }
 
-                    // await kafkaProducersHelper.pushProjectToKafka(project);
+                    await kafkaProducersHelper.pushProjectToKafka(project);
                     
                     projectId = project._id;
                 }
