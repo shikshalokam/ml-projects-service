@@ -1086,23 +1086,53 @@ module.exports = class UserProjectsHelper {
                     let solutionDetails = {}
 
                     if( templateId === "" ) {
-                    
-                        solutionDetails = 
-                        await coreService.solutionDetailsBasedOnRoleAndLocation(
-                            userToken,
-                            bodyData,
-                            solutionId,
-                            isAPrivateSolution
-                        );
-
-                        if( !solutionDetails.success || (solutionDetails.data.data && !solutionDetails.data.data.length > 0) ) {
-                            throw {
-                                status : HTTP_STATUS_CODE["bad_request"].status,
-                                message : CONSTANTS.apiResponses.SOLUTION_DOES_NOT_EXISTS_IN_SCOPE
+                        // If solution Id of a private program is passed, fetch solution details
+                        if ( isAPrivateSolution && solutionId != "" ) {
+                            solutionDetails = await database.models.solutions
+                            .find({
+                                _id: solutionId,
+                                isAPrivateProgram: true
+                            }, [
+                                "name",
+                                "externalId",
+                                "description",
+                                "programId",
+                                "programName",
+                                "programDescription",
+                                "programExternalId",
+                                "isAPrivateProgram",
+                                "projectTemplateId",
+                                "entityType",
+                                "entityTypeId",
+                                "language",
+                                "creator"
+                              ])
+                            .lean();
+                            if( !solutionDetails.length > 0 ) {
+                                throw {
+                                    status : HTTP_STATUS_CODE["bad_request"].status,
+                                    message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
+                                }
                             }
-                        }
+                            solutionDetails = solutionDetails[0];
+                        } else {
+                            solutionDetails = 
+                            await coreService.solutionDetailsBasedOnRoleAndLocation(
+                                userToken,
+                                bodyData,
+                                solutionId,
+                                isAPrivateSolution
+                            );
 
-                        solutionDetails = solutionDetails.data;
+                            if( !solutionDetails.success || (solutionDetails.data.data && !solutionDetails.data.data.length > 0) ) {
+                                throw {
+                                    status : HTTP_STATUS_CODE["bad_request"].status,
+                                    message : CONSTANTS.apiResponses.SOLUTION_DOES_NOT_EXISTS_IN_SCOPE
+                                }
+                            }
+
+                            solutionDetails = solutionDetails.data;
+                        }
 
                     } else {
                         
@@ -1363,7 +1393,7 @@ module.exports = class UserProjectsHelper {
                         ); 
                     }
 
-                    await kafkaProducersHelper.pushProjectToKafka(project);
+                    // await kafkaProducersHelper.pushProjectToKafka(project);
                     
                     projectId = project._id;
                 }
