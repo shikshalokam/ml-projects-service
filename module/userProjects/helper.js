@@ -580,12 +580,13 @@ module.exports = class UserProjectsHelper {
 
                 result.programInformation._id =
                     ObjectId(result.programInformation._id);
-
+                // Get link from parent solution
                 let solutionData = await solutionsHelper.solutionDocuments({
                     _id: solutionDetails.parentSolutionId,
                 },
                 ["link"]);
-                result["link"] = (solutionData.length > 0 && solutionData[0].link ) ? solutionData[0].link : "";
+
+                result["link"] = ( solutionData.length > 0 && solutionData[0].link ) ? solutionData[0].link : "";
 
                 return resolve({
                     success: true,
