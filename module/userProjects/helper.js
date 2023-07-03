@@ -455,7 +455,7 @@ module.exports = class UserProjectsHelper {
                         userToken,
                         isATargetedSolution
                     );
-
+                
                 if (!solutionAndProgramCreation.success) {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
@@ -490,6 +490,102 @@ module.exports = class UserProjectsHelper {
                     result["link"] = solutionAndProgramCreation.data.parentSolutionInformation.link ? solutionAndProgramCreation.data.parentSolutionInformation.link : "";
                 }
 
+                return resolve({
+                    success: true,
+                    data: result
+                });
+
+            } catch (error) {
+                return resolve({
+                    status:
+                        error.status ?
+                            error.status : HTTP_STATUS_CODE['internal_server_error'].status,
+                    success: false,
+                    message: error.message,
+                    data: {}
+                });
+            }
+        });
+    }
+
+     /**
+     * Program and solution information
+     * @method
+     * @name getProgramAndSolutionDetails
+     * @param {String} solutionId - solutionId.
+     * @returns {Object} return program and solution data.
+    */
+
+     static getProgramAndSolutionDetails(       
+        solutionId
+    ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let result = {};
+                // Fetch private solution details from DB
+                let solutionDetails = await solutionsHelper.solutionDocuments({
+                    _id: solutionId,
+                    isAPrivateProgram: true
+                },
+                [
+                    "_id",
+                    "name",
+                    "externalId",
+                    "description",
+                    "programId",
+                    "programName",
+                    "programDescription",
+                    "programExternalId",
+                    "isAPrivateProgram",
+                    "projectTemplateId",
+                    "entityType",
+                    "certificateTemplateId",
+                    "parentSolutionId"
+                ]);
+                
+                if (!solutionDetails.length > 0 || !solutionDetails[0].parentSolutionId ) {
+                    throw {
+                        status: HTTP_STATUS_CODE['bad_request'].status,
+                        message: CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED
+                    };
+                }
+
+                solutionDetails = solutionDetails[0];
+                // Adding solution information
+                result.solutionInformation = _.pick(
+                    solutionDetails,
+                    ["name", "externalId", "description", "_id", "entityType", "certificateTemplateId"]
+                );
+                
+                result.solutionInformation._id =
+                    ObjectId(result.solutionInformation._id);
+
+                result["solutionId"] = ObjectId(result.solutionInformation._id);
+                result["solutionExternalId"] = result.solutionInformation.externalId;
+                
+                // Adding program informations
+                result.programInformation = {
+                    _id: solutionDetails.programId,
+                    description: solutionDetails.programDescription,
+                    externalId: solutionDetails.programExternalId,
+                    isAPrivateProgram: solutionDetails.isAPrivateProgram,
+                    name: solutionDetails.programName
+                };
+                  
+
+                result["programId"] = ObjectId(result.programInformation._id);
+                result["programExternalId"] = result.programInformation.externalId;
+                result["isAPrivateProgram"] = result.programInformation.isAPrivateProgram;
+
+                result.programInformation._id =
+                    ObjectId(result.programInformation._id);
+
+                let solutionData = await solutionsHelper.solutionDocuments({
+                    _id: solutionDetails.parentSolutionId,
+                },
+                ["link"]);
+                result["link"] = (solutionData.length > 0 && solutionData[0].link ) ? solutionData[0].link : "";
 
                 return resolve({
                     success: true,
@@ -2288,8 +2384,21 @@ module.exports = class UserProjectsHelper {
                 }
 
                 if( requestedData.solutionId && requestedData.solutionId !== "" && isATargetedSolution === false ){
-
-                    let programAndSolutionInformation =
+                    let programAndSolutionInformation = {};
+                    // Check if solutionId passed is private or not, if private and data is present, create program and solution information.
+                    let solutionDetails = await solutionsHelper.solutionDocuments({
+                        _id: requestedData.solutionId,
+                        isAPrivateProgram: true
+                    },
+                    [
+                        "_id"
+                    ]);
+                    // private solution exists
+                    if ( solutionDetails.length > 0 ) {
+                        // This function will return programAndSolutionInformation
+                        programAndSolutionInformation = await this.getProgramAndSolutionDetails(requestedData.solutionId);
+                    } else {
+                        programAndSolutionInformation =
                         await this.createProgramAndSolution(
                             requestedData.programId,
                             requestedData.programName,
@@ -2298,7 +2407,8 @@ module.exports = class UserProjectsHelper {
                             requestedData.solutionId,
                             isATargetedSolution
                         );
-
+                    }
+                    
                     if (!programAndSolutionInformation.success) {
                         return resolve(programAndSolutionInformation);
                     }
