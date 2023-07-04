@@ -2379,6 +2379,12 @@ module.exports = class UserProjectsHelper {
                     // private solution exists
                     if ( solutionDetails.length > 0 && solutionDetails[0].parentSolutionId ) {
                         // This function will return programAndSolutionInformation
+                        /**
+                         * function privateProgramAndSolutionDetails 
+                         * Request:
+                         * @param {solutionDetails} solution data
+                         * @response Program and solution details
+                        */
                         programAndSolutionInformation = await this.getProgramAndSolutionDetails(solutionDetails[0]);
                     } else {
                         programAndSolutionInformation =
