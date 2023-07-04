@@ -512,47 +512,17 @@ module.exports = class UserProjectsHelper {
      * Program and solution information
      * @method
      * @name getProgramAndSolutionDetails
-     * @param {String} solutionId - solutionId.
+     * @param {Object} solutionDetails - solution details.
      * @returns {Object} return program and solution data.
     */
 
      static getProgramAndSolutionDetails(       
-        solutionId
+        solutionDetails
     ) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let result = {};
-                // Fetch private solution details from DB
-                let solutionDetails = await solutionsHelper.solutionDocuments({
-                    _id: solutionId,
-                    isAPrivateProgram: true
-                },
-                [
-                    "_id",
-                    "name",
-                    "externalId",
-                    "description",
-                    "programId",
-                    "programName",
-                    "programDescription",
-                    "programExternalId",
-                    "isAPrivateProgram",
-                    "projectTemplateId",
-                    "entityType",
-                    "certificateTemplateId",
-                    "parentSolutionId"
-                ]);
-                
-                if (!solutionDetails.length > 0 || !solutionDetails[0].parentSolutionId ) {
-                    throw {
-                        status: HTTP_STATUS_CODE['bad_request'].status,
-                        message: CONSTANTS.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED
-                    };
-                }
-
-                solutionDetails = solutionDetails[0];
-                // Adding solution information
                 result.solutionInformation = _.pick(
                     solutionDetails,
                     ["name", "externalId", "description", "_id", "entityType", "certificateTemplateId"]
@@ -2392,12 +2362,24 @@ module.exports = class UserProjectsHelper {
                         isAPrivateProgram: true
                     },
                     [
-                        "_id"
+                        "_id",
+                        "name",
+                        "externalId",
+                        "description",
+                        "programId",
+                        "programName",
+                        "programDescription",
+                        "programExternalId",
+                        "isAPrivateProgram",
+                        "projectTemplateId",
+                        "entityType",
+                        "certificateTemplateId",
+                        "parentSolutionId"
                     ]);
                     // private solution exists
-                    if ( solutionDetails.length > 0 ) {
+                    if ( solutionDetails.length > 0 && solutionDetails[0].parentSolutionId ) {
                         // This function will return programAndSolutionInformation
-                        programAndSolutionInformation = await this.getProgramAndSolutionDetails(requestedData.solutionId);
+                        programAndSolutionInformation = await this.getProgramAndSolutionDetails(solutionDetails[0]);
                     } else {
                         programAndSolutionInformation =
                         await this.createProgramAndSolution(
