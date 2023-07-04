@@ -514,6 +514,32 @@ module.exports = class UserProjectsHelper {
      * @name getProgramAndSolutionDetails
      * @param {Object} solutionDetails - solution details.
      * @returns {Object} return program and solution data.
+     * example : 
+     * response : {
+        "success":true,
+        "data":{
+            "solutionInformation":{
+                "name":"Keep Our Schools Alive (Petition) - With Certificate 2",
+                "externalId":"IDEAIMP-4-1687489894154-PROJECT-SOLUTION-1688365299788",
+                "description":"Leveraging the huge number of private schools to show the significance of the financial problem by creating a petition and presenting to the authorities.",
+                "_id":64a268f34b9d0c124fd8ed80,
+                "certificateTemplateId":64950d67955f600008e2aff3
+            },
+            "solutionId":64a268f34b9d0c124fd8ed80,
+            "solutionExternalId":"IDEAIMP-4-1687489894154-PROJECT-SOLUTION-1688365299788",
+            "programInformation":{
+                "_id":64a268f34b9d0c124fd8ed7d,
+                "description":"Certificate Test Program 6.0",
+                "externalId":"Pgm_Certificate_Test_Program_6.0_QA-1688365299788",
+                "isAPrivateProgram":true,
+                "name":"Certificate Test Program 6.0"
+            },
+            "programId":64a268f34b9d0c124fd8ed7d,
+            "programExternalId":"Pgm_Certificate_Test_Program_6.0_QA-1688365299788",
+            "isAPrivateProgram":true,
+            "link":"750f4f6ebb390ad5f7038a8fbc8e1c3f"
+        }
+        }
     */
 
      static getProgramAndSolutionDetails(       
