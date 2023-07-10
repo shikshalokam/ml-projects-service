@@ -2245,7 +2245,8 @@ module.exports = class UserProjectsHelper {
                     "programInformation",
                     "title",
                     "description",
-                    "projectTemplateId"
+                    "projectTemplateId",
+                    "certificate.templateId"
                 ]
             );
             
