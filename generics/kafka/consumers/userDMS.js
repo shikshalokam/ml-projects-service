@@ -1,12 +1,11 @@
 /**
- * name : submissions.js
- * author : Aman Jung Karki
- * created-date : 22-Nov-2020
- * Description : Submission consumer.
+ * name : projectCertificate.js
+ * author : Vishnu
+ * created-date : 10-Oct-2022
+ * Description : Project certificates submission consumer.
  */
 
 //dependencies
-
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
 
 /**
@@ -20,23 +19,12 @@ const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
 var messageReceived = function (message) {
   return new Promise(async function (resolve, reject) {
     try {
+      // This consumer is consuming from an old topic : PROJECT_CERTIFICATE_TOPIC, which is no more used by data team. ie) using existig topic instead of creating new one.
       let parsedMessage = JSON.parse(message.value);
-
-      let submissionDocument = {
-        _id: parsedMessage._id.toString(),
-        status: parsedMessage.status,
-        completedDate: parsedMessage.submissionDate
-          ? parsedMessage.submissionDate
-          : "",
-      };
-
-      await userProjectsHelper.pushSubmissionToTask(
-        parsedMessage.projectId,
-        parsedMessage.taskId,
-        submissionDocument
-      );
-
-      return resolve("Message Received");
+      if (parsedMessage.edata.action === "delete-user") {
+        await userProjectsHelper.userDelete(parsedMessage);
+      }
+      //   return resolve("Message Received");
     } catch (error) {
       return reject(error);
     }
