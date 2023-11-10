@@ -193,7 +193,7 @@ const userReadEndpoint = "/private/user/v1/read";
 
       // Update Project with user Profile if userRoleInformation is present
       if (projectSeggregate.userProfileMissing.length > 0) {
-        let updateProjectWithuUserProfile = [];
+        let updateProjectWithUserProfile = [];
         for (
           let count = 0;
           count < projectSeggregate.userProfileMissing.length;
@@ -285,7 +285,7 @@ const userReadEndpoint = "/private/user/v1/read";
               },
             };
 
-            updateProjectWithuUserProfile.push(updateObject);
+            updateProjectWithUserProfile.push(updateObject);
             updatedProjectIds.userProfileMissingProjectIds.push(
               projectIdWithoutUserProfile
             );
@@ -296,10 +296,10 @@ const userReadEndpoint = "/private/user/v1/read";
           }
         }
         // will create BulkWrite Query to otimize excution
-        if (updateProjectWithuUserProfile.length > 0) {
+        if (updateProjectWithUserProfile.length > 0) {
           await db
             .collection("projects")
-            .bulkWrite(updateProjectWithuUserProfile);
+            .bulkWrite(updateProjectWithUserProfile);
         }
       }
       //write updated project ids to file

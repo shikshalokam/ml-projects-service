@@ -2,13 +2,15 @@
 
 #### Steps to run the script files
 
+This script is intended to address a particular bug in Diksha Prod, and it is unrelated to the 6.0.0 release.
+
 In order to execute this migration script, we need to first log in to the pod where the service is running and then proceed with the provided instructions.
 
 This script will update projects in cases where the user profile is missing and there is a mismatch between userProfile and userRoleInformations.
 
 ### Step 1:
 
-    Navigate to /opt/projects/updateUserProfileAndMissMatchOfRoleInformation/
+    Navigate to /opt/projects/migrations/updateUserProfileAndMissMatchOfRoleInformation/
 
 ### Step 2:
 
