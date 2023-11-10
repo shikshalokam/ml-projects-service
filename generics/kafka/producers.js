@@ -16,7 +16,9 @@ const projectSubmissionTopic =
   process.env.PROJECT_SUBMISSION_TOPIC != "OFF"
     ? process.env.PROJECT_SUBMISSION_TOPIC
     : "sl-improvement-project-submission-dev";
-
+const telemetryEventTopic = process.env.TELEMETRY_TOPIC
+  ? process.env.TELEMETRY_TOPIC
+  : "sl-telemetry-dev";
 const userDeleteTopic = process.env.USER_DELETE_TOPIC;
 
 /**
@@ -32,6 +34,29 @@ const pushProjectToKafka = function (message) {
       let kafkaPushStatus = await pushMessageToKafka([
         {
           topic: projectSubmissionTopic,
+          messages: JSON.stringify(message),
+        },
+      ]);
+
+      return resolve(kafkaPushStatus);
+    } catch (error) {
+      return reject(error);
+    }
+  });
+};
+
+/**
+ * Push message to telemetry.
+ * @function
+ * @name pushTelemetryEventToKafka
+ * @param {Object} message - Message data.
+ */
+const pushTelemetryEventToKafka = function (message) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let kafkaPushStatus = await pushMessageToKafka([
+        {
+          topic: telemetryEventTopic,
           messages: JSON.stringify(message),
         },
       ]);
@@ -155,4 +180,5 @@ const pushMessageToKafka = function (payload) {
 module.exports = {
   pushProjectToKafka: pushProjectToKafka,
   pushEventToKafka: pushEventToKafka,
+  pushTelemetryEventToKafka: pushTelemetryEventToKafka,
 };

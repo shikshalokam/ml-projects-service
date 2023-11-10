@@ -19,6 +19,7 @@ const USER_DELETE_TOPIC = process.env.USER_DELETE_TOPIC;
 const connect = function () {
   const Producer = kafka.Producer;
   KeyedMessage = kafka.KeyedMessage;
+  const Consumer = kafka.Consumer;
 
   const client = new kafka.KafkaClient({
     kafkaHost: process.env.KAFKA_URL,
@@ -43,7 +44,27 @@ const connect = function () {
   //  project certificate details consumer
   _sendToKafkaConsumers(CERTIFICATE_TOPIC, process.env.KAFKA_URL);
 
-  _sendToKafkaConsumers(USER_DELETE_TOPIC, process.env.KAFKA_URL);
+  const topics = [{ topic: process.env.USER_DELETE_TOPIC }];
+
+  const options = {
+    autoCommit: true,
+  };
+
+  const consumer = new Consumer(client, topics, options);
+
+  consumer.on("message", function (message) {
+    console.log("-------Kafka consumer log starts here------------------");
+    console.log("Topic Name: ", USER_DELETE_TOPIC);
+    console.log("Message: ", JSON.stringify(message));
+    console.log("-------Kafka consumer log ends here------------------");
+
+    userDMSConsumer.messageReceived(message);
+  });
+
+  consumer.on("error", function (err) {
+    userDMSConsumer.errorTriggered(err);
+  });
+
   return {
     kafkaProducer: producer,
     kafkaClient: client,
@@ -82,11 +103,6 @@ var _sendToKafkaConsumers = function (topic, host) {
       if (message && message.topic === CERTIFICATE_TOPIC) {
         projectCertificateConsumer.messageReceived(message);
       }
-
-      //call userDMSConsumer
-      if (message && message.topic === USER_DELETE_TOPIC) {
-        userDMSConsumer.messageReceived(message);
-      }
     });
 
     consumer.on("error", async function (error) {
@@ -95,9 +111,6 @@ var _sendToKafkaConsumers = function (topic, host) {
       }
       if (error.topics && error.topics[0] === CERTIFICATE_TOPIC) {
         projectCertificateConsumer.errorTriggered(error);
-      }
-      if (error.topics && error.topics[0] === USER_DELETE_TOPIC) {
-        userDMSConsumer.errorTriggered(error);
       }
     });
   }

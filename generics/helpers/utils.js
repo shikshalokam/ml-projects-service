@@ -3,16 +3,18 @@
  * author : Aman Karki
  * Date : 13-July-2020
  * Description : All utility functions.
-*/
+ */
 // Dependencies
-const {validate : uuidValidate,v4 : uuidV4} = require('uuid');
+const { validate: uuidValidate, v4: uuidV4 } = require("uuid");
+const packageData = require(PROJECT_ROOT_DIRECTORY + "/package.json");
+
 /**
-  * convert camel case to title case.
-  * @function
-  * @name camelCaseToTitleCase
-  * @param {String} in_camelCaseString - String of camel case.
-  * @returns {String} returns a titleCase string. ex: helloThereMister, o/p: Hello There Mister
-*/
+ * convert camel case to title case.
+ * @function
+ * @name camelCaseToTitleCase
+ * @param {String} in_camelCaseString - String of camel case.
+ * @returns {String} returns a titleCase string. ex: helloThereMister, o/p: Hello There Mister
+ */
 
 function camelCaseToTitleCase(in_camelCaseString) {
   var result = in_camelCaseString // "ToGetYourGEDInTimeASongAboutThe26ABCsIsOfTheEssenceButAPersonalIDCardForUser456InRoom26AContainingABC26TimesIsNotAsEasyAs123ForC3POOrR2D2Or2R2D"
@@ -35,135 +37,141 @@ function camelCaseToTitleCase(in_camelCaseString) {
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
- /**
-  * Convert hyphen case string to camelCase.
-  * @function
-  * @name hyphenCaseToCamelCase
-  * @param {String} string - String in hyphen case.
-  * @returns {String} returns a camelCase string.
-*/
+/**
+ * Convert hyphen case string to camelCase.
+ * @function
+ * @name hyphenCaseToCamelCase
+ * @param {String} string - String in hyphen case.
+ * @returns {String} returns a camelCase string.
+ */
 
 function hyphenCaseToCamelCase(string) {
-  return string.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
-}
-
- /**
-  * convert string to lowerCase.
-  * @function
-  * @name lowerCase
-  * @param {String} str 
-  * @returns {String} returns a lowercase string. ex: HELLO, o/p: hello
-*/
-
-function lowerCase(str) {
-  return str.toLowerCase()
-}
-
- /**
-  * check whether the given string is url.
-  * @function
-  * @name checkIfStringIsUrl - check whether string is url or not.
-  * @param {String} str 
-  * @returns {Boolean} returns a Boolean value. ex:"http://example.com:3000/pathname/?search=test" , o/p:true
-*/
-
-function checkIfStringIsUrl(str) {
-  var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // domain name
-    '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-    '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-    '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
-  return pattern.test(str);
-}
-
- /**
-  * Parse a single column.
-  * @function
-  * @name valueParser - Parse value
-  * @param {String} dataToBeParsed - data to be parsed. 
-  * @returns {Object} returns parsed data
-*/
-
-function valueParser(dataToBeParsed) {
-
-  let parsedData = {}
-
-  Object.keys(dataToBeParsed).forEach(eachDataToBeParsed => {
-    parsedData[eachDataToBeParsed] = dataToBeParsed[eachDataToBeParsed].trim()
-  })
-
-  if(parsedData._arrayFields && parsedData._arrayFields.split(",").length > 0) {
-    parsedData._arrayFields.split(",").forEach(arrayTypeField => {
-      if (parsedData[arrayTypeField]) {
-        parsedData[arrayTypeField] = parsedData[arrayTypeField].split(",")
-      }
-    })
-  }
-
-  return parsedData
+  return string.replace(/-([a-z])/g, function (g) {
+    return g[1].toUpperCase();
+  });
 }
 
 /**
-     * Convert string to boolean.
-     * @method
-     * @name convertStringToBoolean
-     * @param {String} stringData -String data.         
-     * @returns {Boolean} - Boolean data.  
-   */
-  
-  function convertStringToBoolean(stringData) {
-    let stringToBoolean = (stringData === "TRUE" || stringData === "true" || stringData === true );
-    return stringToBoolean;
-  }
+ * convert string to lowerCase.
+ * @function
+ * @name lowerCase
+ * @param {String} str
+ * @returns {String} returns a lowercase string. ex: HELLO, o/p: hello
+ */
 
-    /**
-   * List of boolean data from a given model.
-   * @method
-   * @name getAllBooleanDataFromModels  
-   * @param schema - schema    
-   * @returns {Array} Boolean data.
-   */
+function lowerCase(str) {
+  return str.toLowerCase();
+}
 
-  function getAllBooleanDataFromModels(schema) {
+/**
+ * check whether the given string is url.
+ * @function
+ * @name checkIfStringIsUrl - check whether string is url or not.
+ * @param {String} str
+ * @returns {Boolean} returns a Boolean value. ex:"http://example.com:3000/pathname/?search=test" , o/p:true
+ */
 
-    let defaultSchema = Object.keys(schema);
+function checkIfStringIsUrl(str) {
+  var pattern = new RegExp(
+    "^(https?:\\/\\/)?" + // protocol
+      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|" + // domain name
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+      "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+      "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+      "(\\#[-a-z\\d_]*)?$",
+    "i"
+  ); // fragment locator
+  return pattern.test(str);
+}
 
-    let booleanValues = [];
+/**
+ * Parse a single column.
+ * @function
+ * @name valueParser - Parse value
+ * @param {String} dataToBeParsed - data to be parsed.
+ * @returns {Object} returns parsed data
+ */
 
-    defaultSchema.forEach(singleSchemaKey=>{
+function valueParser(dataToBeParsed) {
+  let parsedData = {};
 
-      let currentSchema = schema[singleSchemaKey];
+  Object.keys(dataToBeParsed).forEach((eachDataToBeParsed) => {
+    parsedData[eachDataToBeParsed] = dataToBeParsed[eachDataToBeParsed].trim();
+  });
 
-      if( 
-        currentSchema.hasOwnProperty('default') && 
-        typeof currentSchema.default === "boolean" 
-      ) {
-        booleanValues.push(singleSchemaKey);
+  if (
+    parsedData._arrayFields &&
+    parsedData._arrayFields.split(",").length > 0
+  ) {
+    parsedData._arrayFields.split(",").forEach((arrayTypeField) => {
+      if (parsedData[arrayTypeField]) {
+        parsedData[arrayTypeField] = parsedData[arrayTypeField].split(",");
       }
     });
-
-    return booleanValues;
   }
 
-   /**
-    * check whether id is mongodbId or not.
-    * @function
-    * @name isValidMongoId
-    * @param {String} id 
-    * @returns {Boolean} returns whether id is valid mongodb id or not.  
-  */
+  return parsedData;
+}
 
-  function isValidMongoId(id) {
-    return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
-  }
+/**
+ * Convert string to boolean.
+ * @method
+ * @name convertStringToBoolean
+ * @param {String} stringData -String data.
+ * @returns {Boolean} - Boolean data.
+ */
 
-  /**
-  * Get epoch time from current date.
-  * @function
-  * @name epochTime
-  * @returns {Date} returns epoch time.  
-  */
+function convertStringToBoolean(stringData) {
+  let stringToBoolean =
+    stringData === "TRUE" || stringData === "true" || stringData === true;
+  return stringToBoolean;
+}
+
+/**
+ * List of boolean data from a given model.
+ * @method
+ * @name getAllBooleanDataFromModels
+ * @param schema - schema
+ * @returns {Array} Boolean data.
+ */
+
+function getAllBooleanDataFromModels(schema) {
+  let defaultSchema = Object.keys(schema);
+
+  let booleanValues = [];
+
+  defaultSchema.forEach((singleSchemaKey) => {
+    let currentSchema = schema[singleSchemaKey];
+
+    if (
+      currentSchema.hasOwnProperty("default") &&
+      typeof currentSchema.default === "boolean"
+    ) {
+      booleanValues.push(singleSchemaKey);
+    }
+  });
+
+  return booleanValues;
+}
+
+/**
+ * check whether id is mongodbId or not.
+ * @function
+ * @name isValidMongoId
+ * @param {String} id
+ * @returns {Boolean} returns whether id is valid mongodb id or not.
+ */
+
+function isValidMongoId(id) {
+  return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
+}
+
+/**
+ * Get epoch time from current date.
+ * @function
+ * @name epochTime
+ * @returns {Date} returns epoch time.
+ */
 
 function epochTime() {
   var currentDate = new Date();
@@ -172,158 +180,152 @@ function epochTime() {
 }
 
 /**
-  * Convert Project Status
-  * @function
-  * @name convertProjectStatus
-  * @returns {String} returns converted project status
-  */
+ * Convert Project Status
+ * @function
+ * @name convertProjectStatus
+ * @returns {String} returns converted project status
+ */
 
 function convertProjectStatus(status) {
+  let convertedStatus;
 
-    let convertedStatus;
- 
-    if ( status == CONSTANTS.common.NOT_STARTED_STATUS ) {
-        convertedStatus = CONSTANTS.common.STARTED;
-    } else if ( status == CONSTANTS.common.COMPLETED_STATUS ) {
-        convertedStatus = CONSTANTS.common.SUBMITTED_STATUS;
-    } else {
-        convertedStatus = status;
-    } 
-    
-    return convertedStatus;
+  if (status == CONSTANTS.common.NOT_STARTED_STATUS) {
+    convertedStatus = CONSTANTS.common.STARTED;
+  } else if (status == CONSTANTS.common.COMPLETED_STATUS) {
+    convertedStatus = CONSTANTS.common.SUBMITTED_STATUS;
+  } else {
+    convertedStatus = status;
+  }
+
+  return convertedStatus;
 }
 
 /**
-  * Revert Project Status For Older App
-  * @function
-  * @name revertProjectStatus
-  * @returns {String} returns reverted project status
-  */
+ * Revert Project Status For Older App
+ * @function
+ * @name revertProjectStatus
+ * @returns {String} returns reverted project status
+ */
 
- function revertProjectStatus(status) {
-
+function revertProjectStatus(status) {
   let revertedStatus;
 
-  if ( status == CONSTANTS.common.STARTED ) {
-      revertedStatus = CONSTANTS.common.NOT_STARTED_STATUS;
-  } else if ( status == CONSTANTS.common.SUBMITTED_STATUS ) {
-      revertedStatus = CONSTANTS.common.COMPLETED_STATUS;
+  if (status == CONSTANTS.common.STARTED) {
+    revertedStatus = CONSTANTS.common.NOT_STARTED_STATUS;
+  } else if (status == CONSTANTS.common.SUBMITTED_STATUS) {
+    revertedStatus = CONSTANTS.common.COMPLETED_STATUS;
   } else {
-      revertedStatus = status;
-  } 
+    revertedStatus = status;
+  }
 
   return revertedStatus;
 }
 
 /**
-   * revert status or not
-   * @method
-   * @name revertStatusorNot 
-   * @param {String} appVersion - app Version.
-   * @returns {Boolean} - true or false
-*/
+ * revert status or not
+ * @method
+ * @name revertStatusorNot
+ * @param {String} appVersion - app Version.
+ * @returns {Boolean} - true or false
+ */
 
-function revertStatusorNot( appVersion ) {
+function revertStatusorNot(appVersion) {
+  let versions = ["4.10", "4.11", "4.12"];
 
-  let versions = ["4.10", "4.11", "4.12" ];
-
-  let appVer = appVersion.split('.',2).join('.');
-  if ( versions.includes(appVer)) {
-      return false
+  let appVer = appVersion.split(".", 2).join(".");
+  if (versions.includes(appVer)) {
+    return false;
   } else {
-
-      let appVersionNo = Number(appVer);
-      if ( !isNaN(appVersionNo) && appVersionNo < 4.7 ) {
-          return true
-      } else {
-          return false
-      }
+    let appVersionNo = Number(appVer);
+    if (!isNaN(appVersionNo) && appVersionNo < 4.7) {
+      return true;
+    } else {
+      return false;
+    }
   }
-
 }
 
 /**
-  * check whether string is valid uuid.
-  * @function
-  * @name checkValidUUID
-  * @param {String} uuids 
-  * @returns {Boolean} returns a Boolean value true/false
-*/
+ * check whether string is valid uuid.
+ * @function
+ * @name checkValidUUID
+ * @param {String} uuids
+ * @returns {Boolean} returns a Boolean value true/false
+ */
 
 function checkValidUUID(uuids) {
-
   var validateUUID = true;
-  if(Array.isArray(uuids)){
-      for (var i = 0; uuids.length > i; i++) {
-          if(!uuidValidate(uuids[i])){
-            validateUUID = false
-          }
+  if (Array.isArray(uuids)) {
+    for (var i = 0; uuids.length > i; i++) {
+      if (!uuidValidate(uuids[i])) {
+        validateUUID = false;
       }
-  }else {
-     validateUUID = uuidValidate(uuids);
+    }
+  } else {
+    validateUUID = uuidValidate(uuids);
   }
   return validateUUID;
 }
 
 /**
-  * make dates comparable
-  * @function
-  * @name createComparableDates
-  * @param {String} dateArg1
-  * @param {String} dateArg2
-  * @returns {Object} - date object
-*/
+ * make dates comparable
+ * @function
+ * @name createComparableDates
+ * @param {String} dateArg1
+ * @param {String} dateArg2
+ * @returns {Object} - date object
+ */
 
 function createComparableDates(dateArg1, dateArg2) {
-  let date1
-  if(typeof dateArg1 === "string") {
-    date1 = new Date(dateArg1.replace( /(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"))
+  let date1;
+  if (typeof dateArg1 === "string") {
+    date1 = new Date(dateArg1.replace(/(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"));
   } else {
-    date1 = new Date(dateArg1)
-  }
-  
-  let date2
-  if(typeof dateArg2 === "string") {
-    date2 = new Date(dateArg2.replace( /(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"))
-  } else {
-    date2 = new Date(dateArg2)
+    date1 = new Date(dateArg1);
   }
 
-  date1.setHours(0)
-  date1.setMinutes(0)
-  date1.setSeconds(0)
-  date2.setHours(0)
-  date2.setMinutes(0)
-  date2.setSeconds(0)
-  return({
+  let date2;
+  if (typeof dateArg2 === "string") {
+    date2 = new Date(dateArg2.replace(/(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"));
+  } else {
+    date2 = new Date(dateArg2);
+  }
+
+  date1.setHours(0);
+  date1.setMinutes(0);
+  date1.setSeconds(0);
+  date2.setHours(0);
+  date2.setMinutes(0);
+  date2.setSeconds(0);
+  return {
     dateOne: date1,
-    dateTwo: date2
-  })
+    dateTwo: date2,
+  };
 }
 
 /**
-  * count attachments
-  * @function
-  * @name noOfElementsInArray
-  * @param {Object} data - data to count
-  * @param {Object} filter -  filter data
-  * @returns {Number} - attachment count
-*/
+ * count attachments
+ * @function
+ * @name noOfElementsInArray
+ * @param {Object} data - data to count
+ * @param {Object} filter -  filter data
+ * @returns {Number} - attachment count
+ */
 
 function noOfElementsInArray(data, filter = {}) {
-  if ( !filter || !Object.keys(filter).length > 0 ) {
+  if (!filter || !Object.keys(filter).length > 0) {
     return data.length;
   }
-  if ( !data.length > 0 ) {
+  if (!data.length > 0) {
     return 0;
   } else {
-    if ( filter.value == "all" ){
+    if (filter.value == "all") {
       return data.length;
     } else {
       let count = 0;
-      for ( let attachment = 0; attachment < data.length; attachment++ ) {
-        if ( data[attachment][filter.key] == filter.value ) {
-          count++
+      for (let attachment = 0; attachment < data.length; attachment++) {
+        if (data[attachment][filter.key] == filter.value) {
+          count++;
         }
       }
       return count;
@@ -332,49 +334,92 @@ function noOfElementsInArray(data, filter = {}) {
 }
 
 /**
-  * validate lhs and rhs using operator passed as String/ Number
-  * @function
-  * @name operatorValidation
-  * @param {Number or String} valueLhs 
-  * @param {Number or String} valueRhs 
-  * @returns {Boolean} - validation result
-*/
+ * validate lhs and rhs using operator passed as String/ Number
+ * @function
+ * @name operatorValidation
+ * @param {Number or String} valueLhs
+ * @param {Number or String} valueRhs
+ * @returns {Boolean} - validation result
+ */
 
 function operatorValidation(valueLhs, valueRhs, operator) {
-  return new Promise(async (resolve, reject) => { 
-      let result = false;
-      if (operator == "==" ) {
-          result = (valueLhs == valueRhs) ? true : false
-      } else if (operator == "!=" ) {
-          result = (valueLhs != valueRhs) ? true : false
-      } else if (operator == ">" ) {
-          result = (valueLhs > valueRhs) ? true : false
-      } else if (operator == "<" ) {
-          result = (valueLhs < valueRhs) ? true : false
-      } else if (operator == "<=" ) {
-        result = (valueLhs <= valueRhs) ? true : false
-      } else if (operator == ">=" ) {
-        result = (valueLhs >= valueRhs) ? true : false
-      } 
-      return resolve(result)
-  })          
+  return new Promise(async (resolve, reject) => {
+    let result = false;
+    if (operator == "==") {
+      result = valueLhs == valueRhs ? true : false;
+    } else if (operator == "!=") {
+      result = valueLhs != valueRhs ? true : false;
+    } else if (operator == ">") {
+      result = valueLhs > valueRhs ? true : false;
+    } else if (operator == "<") {
+      result = valueLhs < valueRhs ? true : false;
+    } else if (operator == "<=") {
+      result = valueLhs <= valueRhs ? true : false;
+    } else if (operator == ">=") {
+      result = valueLhs >= valueRhs ? true : false;
+    }
+    return resolve(result);
+  });
+}
+function getTelemetryEvent(message) {
+  let telemetryEvent = {
+    eid: "AUDIT",
+    ets: epochTime(),
+    ver: "3.0",
+    mid: generateUUId(),
+    actor: { id: message.edata.userId, type: "User" },
+    context: {
+      channel: "0135261634806579203",
+      pdata: {
+        id: process.env.ID,
+        pid: "manage-learn",
+        ver: packageData.version,
+      },
+      env: "User",
+      cdata: [{ id: generateUUId(), type: "Request" }],
+      rollup: {},
+    },
+    object: {
+      id: message.edata.userId,
+      type: "User",
+    },
+    edata: {
+      state: "Delete",
+      type: "DeleteUserStatus",
+      props: [
+        "{keycloakCredentials:false, userLookUpTable:true, userExternalIdTable:true, userTable:true}",
+      ],
+    },
+  };
+  return telemetryEvent;
+}
+/**
+ * generate uuid
+ * @function
+ * @name generateUUId
+ * @returns {String} returns uuid.
+ */
+
+function generateUUId() {
+  return uuidV4();
 }
 
 module.exports = {
-  camelCaseToTitleCase : camelCaseToTitleCase,
-  lowerCase : lowerCase,
-  checkIfStringIsUrl : checkIfStringIsUrl,
-  hyphenCaseToCamelCase : hyphenCaseToCamelCase,
-  valueParser : valueParser,
-  convertStringToBoolean : convertStringToBoolean,
-  getAllBooleanDataFromModels : getAllBooleanDataFromModels,
-  epochTime : epochTime,
-  isValidMongoId : isValidMongoId,
-  convertProjectStatus : convertProjectStatus,
-  revertProjectStatus:revertProjectStatus,
-  revertStatusorNot:revertStatusorNot,
-  checkValidUUID : checkValidUUID,
-  createComparableDates : createComparableDates,
-  noOfElementsInArray : noOfElementsInArray,
-  operatorValidation : operatorValidation
+  camelCaseToTitleCase: camelCaseToTitleCase,
+  lowerCase: lowerCase,
+  checkIfStringIsUrl: checkIfStringIsUrl,
+  hyphenCaseToCamelCase: hyphenCaseToCamelCase,
+  valueParser: valueParser,
+  convertStringToBoolean: convertStringToBoolean,
+  getAllBooleanDataFromModels: getAllBooleanDataFromModels,
+  epochTime: epochTime,
+  isValidMongoId: isValidMongoId,
+  convertProjectStatus: convertProjectStatus,
+  revertProjectStatus: revertProjectStatus,
+  revertStatusorNot: revertStatusorNot,
+  checkValidUUID: checkValidUUID,
+  createComparableDates: createComparableDates,
+  noOfElementsInArray: noOfElementsInArray,
+  operatorValidation: operatorValidation,
+  getTelemetryEvent: getTelemetryEvent,
 };

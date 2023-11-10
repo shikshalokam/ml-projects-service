@@ -7,7 +7,7 @@
 
 //dependencies
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
-
+const kafkaProducersHelper = require(GENERICS_FILES_PATH + "/kafka/producers");
 /**
  * submission consumer message received.
  * @function
@@ -22,7 +22,25 @@ var messageReceived = function (message) {
       // This consumer is consuming from an old topic : PROJECT_CERTIFICATE_TOPIC, which is no more used by data team. ie) using existig topic instead of creating new one.
       let parsedMessage = JSON.parse(message.value);
       if (parsedMessage.edata.action === "delete-user") {
-        await userProjectsHelper.userDelete(parsedMessage);
+        let userDataDeleteStatus = await userProjectsHelper.userDelete(
+          parsedMessage
+        );
+        if (userDataDeleteStatus.success === true) {
+          let msgData = await UTILS.getTelemetryEvent(parsedMessage);
+          let telemetryEvent = {
+            timestamp: new Date(),
+            msg: JSON.stringify(msgData),
+            lname: "TelemetryEventLogger",
+            tname: "",
+            level: "INFO",
+            HOSTNAME: "",
+            "application.home": "",
+          };
+          await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+          return resolve("Message Processed.");
+        } else {
+          return resolve("Message Processed.");
+        }
       }
       //   return resolve("Message Received");
     } catch (error) {

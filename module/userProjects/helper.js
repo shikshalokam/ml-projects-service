@@ -56,9 +56,11 @@ module.exports = class UserProjectsHelper {
         ["userProfile"],
         "none"
       );
+      if (userProjectData.length === 0) {
+        return resolve({ success: false });
+      }
       if (userProjectData.length > 0) {
         userProjectData.forEach((userProfile) => {
-          let updatedUserProfile = userProfile.userProfile;
           let updateProfile = {
             updateOne: {
               filter: { _id: userProfile._id },
