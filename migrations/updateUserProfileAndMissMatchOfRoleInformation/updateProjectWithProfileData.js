@@ -1,7 +1,7 @@
 /**
- * name : updateUserProfileInProjects.js
- * author : Priyanka Pradeep
- * created-date : 10-Nov-2022
+ * name : updateProjectWithProfileData.js
+ * author : Ankit Shahu
+ * created-date : 10-Nov-2023
  * Description : Migration script for update userProfile in project
  */
 
@@ -409,8 +409,6 @@ const userReadEndpoint = "/private/user/v1/read";
       return new Promise(async (resolve, reject) => {
         try {
           //  <--- Important : This url endpoint is private do not use it for regular workflows --->
-          let url = "";
-
           let url = userServiceUrl + userReadEndpoint + "/" + userId;
           const options = {
             headers: {
@@ -447,3 +445,5 @@ const userReadEndpoint = "/private/user/v1/read";
     console.log(error);
   }
 })().catch((err) => console.error(err));
+
+let;

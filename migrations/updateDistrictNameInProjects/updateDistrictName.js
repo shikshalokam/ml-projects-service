@@ -1,8 +1,8 @@
 /**
- * name : updateUserProfileInProjects.js
- * author : Priyanka Pradeep
+ * name : updateDistrictName.js
+ * author : Ankit Shahu
  * created-date : 10-Nov-2022
- * Description : Migration script for update userProfile in project
+ * Description : Update District Name in projects where district name miss matching
  */
 
 const path = require("path");
@@ -19,8 +19,7 @@ var ObjectId = require("mongodb").ObjectID;
 var fs = require("fs");
 const request = require("request");
 
-// const userServiceUrl = "http://learner-service:9000";
-const userServiceUrl = "https://staging.sunbirded.org/api/data/";
+const userServiceUrl = "http://learner-service:9000";
 const endPoint = "/v1/location/search";
 
 (async () => {
