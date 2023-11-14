@@ -28,7 +28,10 @@ const userReadEndpoint = "/private/user/v1/read";
     let updatedProjectIds = [];
     let failedToGetProfileProjectIds = [];
 
-    let projectIds = [new ObjectId("6094b974437a217a81589bb5")];
+    let projectIds = [
+      new ObjectId("638ef0d0be39f5000813f984"),
+      new ObjectId("63b3b13d01da8e0008597faa"),
+    ];
 
     //get project information from db
     let projectDocuments = await db

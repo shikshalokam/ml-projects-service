@@ -10,6 +10,8 @@ In order to execute this migration script, we need to first log in to the pod wh
 
 This script is designed to update project documents specifically for cases where there is a mismatch in district names. It will only affect the IDs specified in the script.
 
+This script is intended to correct inconsistencies in district names within project documents.
+
 ### Step 1:
 
     Navigate to /opt/projects/migrations/updateDistrictNameInProjects/
@@ -19,3 +21,15 @@ This script is designed to update project documents specifically for cases where
 Run the script to update projects.
 
     node updateDistrictName.js
+
+This script is designed to refresh project documents by incorporating the most recent profile information along with the individual's previous role in the project.
+
+### Step 1:
+
+    Navigate to /opt/projects/migrations/updateDistrictNameInProjects/
+
+### Step 2:
+
+Run the script to update projects.
+
+    node updateUserProfileDistrictNameMissing.js
