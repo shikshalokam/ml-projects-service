@@ -22,6 +22,32 @@ Run the script to update projects.
 
     node updateDistrictName.js
 
+#### Validation 
+
+After the script has been executed in the production environment, we can validate the data by utilizing the DBfind API.
+
+Retrieve the project IDs from `updateDistrictName.json` and include them in the body of the DBfind API request as follows.
+
+{
+    "query": {
+        "_id": {
+            "$in": [
+               //Add Project Ids here
+            ]
+        }
+    },
+    "mongoIdKeys": [
+        "_id"
+    ],
+    "projection": [
+        "userProfile.userLocations"
+    ],
+    "limit": 200,
+    "skip": 0
+}
+
+After receiving the response, ensure that the userLocations does not include a district named `Gaurela-Pendra-Marvahi` or `Bastar` instead, it should have either `Gourela Pendra Marvahi` and `Baster`.
+
 ### Step 3:
 
 This script is designed to refresh project documents by incorporating the most recent profile information along with the individual's previous role in the project.
@@ -29,3 +55,29 @@ This script is designed to refresh project documents by incorporating the most r
 Run the script to update projects.
 
     node updateUserProfileDistrictNameMissing.js
+
+#### Validation 
+
+After the script has been executed in the production environment, we can validate the data by utilizing the DBfind API.
+
+Retrieve the project IDs from `updateUserProfileDistrictNameMissing.json` and include them in the body of the DBfind API request as follows.
+
+{
+    "query": {
+        "_id": {
+            "$in": [
+                //Add Project Ids here
+            ]
+        }
+    },
+    "mongoIdKeys": [
+        "_id"
+    ],
+    "projection": [
+        "userProfile.userLocations", "userRoleInformation"
+    ],
+    "limit": 200,
+    "skip": 0
+}
+
+Upon receiving the response from the DBfind API, ensure that `userProfile.userLocations` and `userRoleInformation` contain valid entries for both district names and corresponding IDs.

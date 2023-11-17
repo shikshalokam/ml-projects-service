@@ -19,3 +19,79 @@ This script will update projects in cases where the user profile is missing and 
 Run the script to update projects.
 
     node updateProjectWithProfileData.js
+
+### Setp 3: Validations 
+
+upon executing this script we can validate the data using DBfind api 
+
+#### check for userRoleInformation missing in projects 
+
+Open the `updatedProjectIds.json` file and extract the project IDs from `userRoleInformationMissingProjectIds`. Utilize these project IDs in the following DBfind API to retrieve the corresponding projects.
+
+{
+    "query": {
+        "_id": {
+            "$in": [
+                // Add project ids here
+            ]
+        }
+    },
+    "mongoIdKeys": [
+        "_id"
+    ],
+    "projection": [
+        "userRoleInformation"
+    ],
+    "limit": 200,
+    "skip": 0
+}
+
+After obtaining the response, validate that all projects include userRoleInformation entries.
+
+#### check for userProfile missing in projects 
+
+Open the `updatedProjectIds.json` file and extract the project IDs from `userProfileMissingProjectIds`. Utilize these project IDs in the following DBfind API to retrieve the corresponding projects.
+
+{
+    "query": {
+        "_id": {
+            "$in": [
+                // Add project ids here
+            ]
+        }
+    },
+    "mongoIdKeys": [
+        "_id"
+    ],
+    "projection": [
+        "userProfile"
+    ],
+    "limit": 200,
+    "skip": 0
+}
+
+After obtaining the response, validate that all projects include userProfile entries.
+
+#### check for userRoleInformation and userProfile missing in projects 
+
+Open the `updatedProjectIds.json` file and extract the project IDs from `bothDataMissingProjectIds`. Utilize these project IDs in the following DBfind API to retrieve the corresponding projects.
+
+{
+    "query": {
+        "_id": {
+            "$in": [
+                // Add project ids here
+            ]
+        }
+    },
+    "mongoIdKeys": [
+        "_id"
+    ],
+    "projection": [
+        "userRoleInformation","userProfile"
+    ],
+    "limit": 200,
+    "skip": 0
+}
+
+After obtaining the response, validate that all projects include both userRoleInformation and userProfile entries.

@@ -100,7 +100,7 @@ const endPoint = "/v1/location/search";
       await db.collection("projects").bulkWrite(updateProjectDocument);
     }
     fs.writeFile(
-      `updatedProjectIds.json`,
+      `updateDistrictName.json`,
 
       JSON.stringify(updatedProjectIds),
 

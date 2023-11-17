@@ -93,7 +93,7 @@ const userReadEndpoint = "/private/user/v1/read";
     }
     //write updated project ids to file
     fs.writeFile(
-      `updatedProjectIds.json`,
+      `updateUserProfileDistrictNameMissing.json`,
 
       JSON.stringify({
         updatedProjectIds: updatedProjectIds,
