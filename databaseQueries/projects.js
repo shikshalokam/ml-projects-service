@@ -128,14 +128,12 @@ module.exports = class Projects {
    * @param {Object} [projectData] - project Data along with filter and quries.
    * @returns {Object} - status of bulk operation.
    */
-  static bulkUpdate(profileData) {
+  static bulkUpdate(Data) {
     return new Promise(async (resolve, reject) => {
       try {
-        let userProjectProfileUpdate = await database.models.projects.bulkWrite(
-          profileData
-        );
-        if (userProjectProfileUpdate.result.ok) {
-          return resolve(userProjectProfileUpdate);
+        let bulkUpdates = await database.models.projects.bulkWrite(Data);
+        if (bulkUpdates.result.ok) {
+          return resolve(bulkUpdates);
         }
       } catch (error) {
         return reject(error);
