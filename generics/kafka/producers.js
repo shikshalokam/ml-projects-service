@@ -67,65 +67,6 @@ const pushTelemetryEventToKafka = function (message) {
     }
   });
 };
-const pushEventToKafka = function () {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let userID = "39c5d6f8-8f62-48e2-8780-3eab65e502e8";
-      let orgid = "0126796199493140480";
-      let message = {
-        eid: "BE_JOB_REQUEST",
-        ets: 1619527882745,
-        mid: "LP.1619527882745.32dc378a-430f-49f6-83b5-bd73b767ad36",
-        actor: {
-          id: "delete-user",
-          type: "System",
-        },
-        context: {
-          channel: "01309282781705830427",
-          pdata: {
-            id: "org.sunbird.platform",
-            ver: "1.0",
-          },
-          env: "dev",
-        },
-        object: {
-          id: "<deleted-userId>",
-          type: "User",
-        },
-        edata: {
-          organisationId: orgid,
-          userId: userID,
-          suggested_users: [
-            {
-              role: "ORG_ADMIN",
-              users: ["<orgAdminUserId>"],
-            },
-            {
-              role: "CONTENT_CREATOR",
-              users: ["<contentCreatorUserId>"],
-            },
-            {
-              role: "COURSE_MENTOR",
-              users: ["<courseMentorUserId>"],
-            },
-          ],
-          action: "delete-user",
-          iteration: 1,
-        },
-      };
-      let kafkaPushStatus = await pushMessageToKafka([
-        {
-          topic: userDeleteTopic,
-          messages: JSON.stringify(message),
-        },
-      ]);
-
-      return resolve(kafkaPushStatus);
-    } catch (error) {
-      return reject(error);
-    }
-  });
-};
 
 /**
  * Push message to kafka.
@@ -179,6 +120,5 @@ const pushMessageToKafka = function (payload) {
 
 module.exports = {
   pushProjectToKafka: pushProjectToKafka,
-  pushEventToKafka: pushEventToKafka,
   pushTelemetryEventToKafka: pushTelemetryEventToKafka,
 };
