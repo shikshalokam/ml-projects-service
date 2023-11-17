@@ -22,13 +22,9 @@ Run the script to update projects.
 
     node updateDistrictName.js
 
+### Step 3:
+
 This script is designed to refresh project documents by incorporating the most recent profile information along with the individual's previous role in the project.
-
-### Step 1:
-
-    Navigate to /opt/projects/migrations/updateDistrictNameInProjects/
-
-### Step 2:
 
 Run the script to update projects.
 
