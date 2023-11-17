@@ -121,7 +121,14 @@ module.exports = class Projects {
     });
   }
 
-  static bulkProfileUpdate(profileData) {
+  /**
+   * bulkUpdate function is used to do bulk operations.
+   * @method
+   * @name bulkUpdate
+   * @param {Object} [projectData] - project Data along with filter and quries.
+   * @returns {Object} - status of bulk operation.
+   */
+  static bulkUpdate(profileData) {
     return new Promise(async (resolve, reject) => {
       try {
         let userProjectProfileUpdate = await database.models.projects.bulkWrite(

@@ -157,22 +157,6 @@ module.exports = class UserProjects extends Abstract {
     });
   }
 
-  async pushEventInKafka(req) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let createdProject = await userProjectsHelper.pushEventInKafka();
-
-        return resolve(createdProject);
-      } catch (error) {
-        return reject({
-          status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
-          message:
-            error.message || HTTP_STATUS_CODE.internal_server_error.message,
-          errorObject: error,
-        });
-      }
-    });
-  }
   /**
     * @api {post} /improvement-project/api/v1/userProjects/details/:projectId?programId=:programId&solutionId=:solutionId&templateId=:templateId 
     * Project Details.

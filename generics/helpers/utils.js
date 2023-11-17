@@ -361,35 +361,33 @@ function operatorValidation(valueLhs, valueRhs, operator) {
     return resolve(result);
   });
 }
-function getTelemetryEvent(message) {
+
+/**
+ * generate telemetry raw event
+ * @function
+ * @name getTelemetryEvent
+ * @returns {Object} returns uuid.
+ */
+function getTelemetryEvent() {
   let telemetryEvent = {
-    eid: "AUDIT",
+    eid: "",
     ets: epochTime(),
     ver: "3.0",
     mid: generateUUId(),
-    actor: { id: message.edata.userId, type: "User" },
+    actor: {},
     context: {
-      channel: "0135261634806579203",
+      channel: "",
       pdata: {
         id: process.env.ID,
         pid: "manage-learn",
         ver: packageData.version,
       },
-      env: "User",
+      env: "",
       cdata: [{ id: generateUUId(), type: "Request" }],
       rollup: {},
     },
-    object: {
-      id: message.edata.userId,
-      type: "User",
-    },
-    edata: {
-      state: "Delete",
-      type: "DeleteUserStatus",
-      props: [
-        "{keycloakCredentials:false, userLookUpTable:true, userExternalIdTable:true, userTable:true}",
-      ],
-    },
+    object: {},
+    edata: {},
   };
   return telemetryEvent;
 }

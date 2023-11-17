@@ -36,6 +36,7 @@ const certificateService = require(GENERICS_FILES_PATH +
 const certificateValidationsHelper = require(MODULES_BASE_PATH +
   "/certificateValidations/helper");
 const _ = require("lodash");
+
 const programUsersQueries = require(DB_QUERY_BASE_PATH + "/programUsers");
 
 /**
@@ -44,9 +45,63 @@ const programUsersQueries = require(DB_QUERY_BASE_PATH + "/programUsers");
  */
 
 module.exports = class UserProjectsHelper {
-  static userDelete(kafkaEvent) {
+  /**
+   * userDelete function to delete users Data.
+   * @method
+   * @name userDelete
+   * @param {userDeleteEvent} - userDeleteEvent message object 
+   * {
+      "eid": "BE_JOB_REQUEST",
+      "ets": 1619527882745,
+      "mid": "LP.1619527882745.32dc378a-430f-49f6-83b5-bd73b767ad36",
+      "actor": {
+        "id": "delete-user",
+        "type": "System"
+      },
+      "context": {
+        "channel": "01309282781705830427",
+        "pdata": {
+          "id": "org.sunbird.platform",
+          "ver": "1.0"
+        },
+        "env": "dev"
+      },
+      "object": {
+        "id": "<deleted-userId>",
+        "type": "User"
+      },
+      "edata": {
+        "organisationId": "0126796199493140480",
+        "userId": "a102c136-c6da-4c6c-b6b7-0f0681e1aab9",
+        "suggested_users": [
+          {
+            "role": "ORG_ADMIN",
+            "users": [
+              "<orgAdminUserId>"
+            ]
+          },
+          {
+            "role": "CONTENT_CREATOR",
+            "users": [
+              "<contentCreatorUserId>"
+            ]
+          },
+          {
+            "role": "COURSE_MENTOR",
+            "users": [
+              "<courseMentorUserId>"
+            ]
+          }
+        ],
+        "action": "delete-user",
+        "iteration": 1
+      }
+    }
+   * @returns {Promise} success Data.
+   */
+  static userDelete(userDeleteEvent) {
     return new Promise(async (resolve, reject) => {
-      let userId = kafkaEvent.edata.userId;
+      let userId = userDeleteEvent.edata.userId;
       let userProfileUpdateData = [];
       let userProjectData = await projectQueries.projectDocument(
         {
@@ -65,7 +120,9 @@ module.exports = class UserProjectsHelper {
             updateOne: {
               filter: { _id: userProfile._id },
               update: {
-                $set: { "userProfile.firstName": "deletedUser" },
+                $set: {
+                  "userProfile.firstName": CONSTANTS.common.DELETED_USER,
+                },
                 $unset: {
                   "userProfile.email": 1,
                   "userProfile.maskedEmail": 1,
@@ -84,13 +141,39 @@ module.exports = class UserProjectsHelper {
           userProfileUpdateData.push(updateProfile);
         });
       }
-      let updateUserProfile = await projectQueries.bulkProfileUpdate(
+      let updateUserProfile = await projectQueries.bulkUpdate(
         userProfileUpdateData
       );
       if (updateUserProfile) {
-        return resolve({
-          success: true,
-        });
+        /**
+         * Telemetry Raw Event
+         * {"eid":"","ets":1700188609568,"ver":"3.0","mid":"e55a91cd-7964-46bc-b756-18750787fb32","actor":{},"context":{"channel":"","pdata":{"id":"projectservice","pid":"manage-learn","ver":"7.0.0"},"env":"","cdata":[{"id":"adf3b621-619b-4195-a82d-d814eecdb21f","type":"Request"}],"rollup":{}},"object":{},"edata":{}}
+         */
+        let rawEvent = await UTILS.getTelemetryEvent();
+        rawEvent.eid = CONSTANTS.common.AUDIT;
+        rawEvent.context.channel = userDeleteEvent.context.channel;
+        rawEvent.context.env = "User";
+        rawEvent.edata.state = CONSTANTS.common.DELETE_STATE;
+        rawEvent.edata.type = CONSTANTS.common.USER_DELETE_TYPE;
+        rawEvent.edata.props = [];
+        let userObject = {
+          id: userId,
+          type: "User",
+        };
+        rawEvent.actor = userObject;
+        rawEvent.object = userObject;
+
+        let telemetryEvent = {
+          timestamp: new Date(),
+          msg: JSON.stringify(rawEvent),
+          lname: CONSTANTS.common.TELEMTRY_EVENT_LOGGER,
+          tname: "",
+          level: CONSTANTS.common.INFO_LEVEL,
+          HOSTNAME: "",
+          "application.home": "",
+        };
+        await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+        return resolve({ success: true });
       }
     });
   }
@@ -144,28 +227,6 @@ module.exports = class UserProjectsHelper {
     });
 
     return mongooseIds;
-  }
-  static pushEventInKafka() {
-    return new Promise(async (resolve, reject) => {
-      try {
-        //  push project details to kafka
-        await kafkaProducersHelper.pushEventToKafka();
-
-        return resolve({
-          success: true,
-          message: CONSTANTS.apiResponses.USER_PROJECT_UPDATED,
-        });
-      } catch (error) {
-        return resolve({
-          status: error.status
-            ? error.status
-            : HTTP_STATUS_CODE["internal_server_error"].status,
-          success: false,
-          message: error.message,
-          data: {},
-        });
-      }
-    });
   }
 
   /**
