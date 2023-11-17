@@ -8,7 +8,7 @@
 //dependencies
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
 /**
- * submission consumer message received.
+ * consumer message received.
  * @function
  * @name messageReceived
  * @param {Object} message - consumer data
