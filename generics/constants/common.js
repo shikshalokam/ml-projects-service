@@ -51,5 +51,16 @@ module.exports = {
     "SERVER_TIME_OUT" : 5000,
     "OK" : "OK",
     "PROJECT" : "project",
-    "PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY" : "Certificate generated successfully"
+    "PROJECT_CERTIFICATE_GENERATED_SUCCESSFULLY" : "Certificate generated successfully",
+    "TELEMETRY_VERSION": "3.0",
+    "DELETED_USER": "Deleted User",
+    "TELEMTRY_EVENT_LOGGER": "TelemetryEventLogger",
+    "INFO_LEVEL": "INFO",
+    "DELETE_STATE": "Delete",
+    "USER_DELETE_TYPE": "DeleteUserStatus",
+    "AUDIT": "AUDIT",
+    "DELETE_USER": "delete-user",
+    "USER": "User",
+    "USER_DELETE_MODULE": "userDelete",
+    "OFF" : "OFF",
 };
