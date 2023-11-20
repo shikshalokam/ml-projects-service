@@ -115,7 +115,7 @@ module.exports = class UserProjectsHelper {
                 },
                 };
                 let deleteUserPIIDataResult = await projectQueries.updateMany(filter, updateProfile)
-                if (deleteUserPIIDataResult) {
+                if (deleteUserPIIDataResult && deleteUserPIIDataResult.nModified > 0) {
                     if(telemetryEventOnOff !== CONSTANTS.common.OFF){
                         /**
                          * Telemetry Raw Event
@@ -142,6 +142,8 @@ module.exports = class UserProjectsHelper {
 
                         await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
                     }
+                    return resolve({ success: true });
+                }else{
                     return resolve({ success: true });
                 }
             } catch (error) {
