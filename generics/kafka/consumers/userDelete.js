@@ -27,8 +27,8 @@ var messageReceived = function (message) {
   return new Promise(async function (resolve, reject) {
     try {
       let parsedMessage = JSON.parse(message.value);
-      if (parsedMessage.edata.action === "delete-user") {
-        let userDataDeleteStatus = await userProjectsHelper.userDelete(
+      if (parsedMessage.edata.action === CONSTANTS.common.DELETE_USER) {
+        let userDataDeleteStatus = await userProjectsHelper.deleteUserPIIData(
           parsedMessage
         );
         if (userDataDeleteStatus.success === true) {
