@@ -112,6 +112,7 @@ module.exports = class UserProjectsHelper {
                     "userProfile.prevUsedPhone": 1,
                     "userProfile.prevUsedEmail": 1,
                     "userProfile.recoveryPhone": 1,
+                    "userProfile.dob": 1
                 },
                 };
                 let deleteUserPIIDataResult = await projectQueries.updateMany(filter, updateProfile)

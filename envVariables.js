@@ -77,6 +77,7 @@
    "TELEMETRY_ON_OFF":{
      message: "Required telemetry on/off status",
      optional: false,
+     default: "ON"
    },
    "TELEMETRY_TOPIC": {
      message: "Required telemetry topic",
