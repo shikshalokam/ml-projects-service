@@ -141,13 +141,13 @@ module.exports = class Projects {
         return new Promise(async (resolve, reject) => {
             try {
             
-                let projectsData = await database.models.projects.updateMany(
+                let updatedProjectCount = await database.models.projects.updateMany(
                     query, 
                     update,
                     options
                 );
-                if( projectsData) {
-                    return resolve(projectsData);
+                if( updatedProjectCount) {
+                    return resolve(updatedProjectCount);
                 }
             } catch (error) {
                 return reject(error);
