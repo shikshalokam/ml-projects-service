@@ -1292,7 +1292,7 @@ module.exports = class UserProjectsHelper {
                     userId: userId,
                     isAPrivateProgram: targetedSolutionId.data.isATargetedSolution ? false : true
                 }, ["_id"]);
-                if( projectDetails.length < 0 ) {
+                if( projectDetails.length > 0 ) {
                     projectId = projectDetails[0]._id;
                 } 
                 else {
@@ -1391,7 +1391,6 @@ module.exports = class UserProjectsHelper {
                                 programJoinBody,
                                 userToken
                             );
-                            console.log(joinProgramData,"this is join program data")
                             if ( !joinProgramData.success ) {
                                 return resolve({ 
                                     status: HTTP_STATUS_CODE.bad_request.status, 
@@ -3999,13 +3998,7 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
 
 
             let updateUserProfileRoleInformation = false;   // Flag to see if roleInformation i.e. userProfile.profileUserTypes has to be updated based on userRoleInfromation.roles
-             //check the data in userRoleInformation
-             if(!userRoleInformation  ){
-                throw {
-                    message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-                    status: HTTP_STATUS_CODE["failed_dependency"].status,
-                }; 
-            }
+          
             if(userRoleInformation.role) { // Check if userRoleInformation has role value.
                 let rolesInUserRoleInformation = userRoleInformation.role.split(","); // userRoleInfomration.role can be multiple with comma separated.
 
@@ -4083,24 +4076,29 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
             // Create location only object from userRoleInformation
             let userRoleInformationLocationObject = _.omit(userRoleInformation, ['role']);
 
-//check whether userRoleInformation(reqbody) and (db )data matches
+            // To check all the keys of userRoleInformation is there in an userProfile.userLocation
+             const missingUserLocationstypeKeys = Object.keys(userRoleInformationLocationObject).filter(key => !userProfile.userLocations.some(eachLocation => eachLocation.type === key));
 
-for (const key in userRoleInformationLocationObject) {
-    const matchingUserLocationData= userProfile.userLocations.find(eachLocation => {
-        if (key === 'school') {
-            return eachLocation.type === 'school' && eachLocation.code === userRoleInformationLocationObject[key];
-          } else {
-            return eachLocation.type === key && eachLocation.id === userRoleInformationLocationObject[key];
-          }
-        }
-    )  
-    if (!matchingUserLocationData) {
-      throw {
-        message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-        status: HTTP_STATUS_CODE["failed_dependency"].status,
-    }; 
-    }
-  }
+            //check whether userRoleInformation(reqbody) and (db )data matches
+
+            for (const key in userRoleInformationLocationObject) {
+                  const matchingUserLocationData= userProfile.userLocations.find(eachLocation => {
+                  if (key === 'school') {
+                         return eachLocation.type === 'school' && eachLocation.code === userRoleInformationLocationObject[key];
+                  } else {
+                         return eachLocation.type === key && eachLocation.id === userRoleInformationLocationObject[key];
+                  }
+                  }
+                    )  
+            //check the data in userRoleInformation 
+
+                if (!userRoleInformation || !matchingUserLocationData  || missingUserLocationstypeKeys.length > 0 ) {
+                         throw {
+                               message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+                               status: HTTP_STATUS_CODE["failed_dependency"].status,
+                               }; 
+                }
+            }
 
             // All location keys from userRoleInformation
 
