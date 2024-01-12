@@ -1610,8 +1610,9 @@ module.exports = class UserProjectsHelper {
                         if (updatedUserProfile && updatedUserProfile.success == true && updatedUserProfile.profileMismatchFound == true) {
                             projectCreation.data.userProfile = updatedUserProfile.data;
                         }
+                        // checking the reqbody data and userLocation type matches or not 
                         for(let i = 0; i <= locationsDataKeys.length; i++){
-                                let dataPresent = projectCreation.data.userProfile.userLocations.find(e=> locationsDataKeys[i] === e.type)
+                                let dataPresent = projectCreation.data.userProfile.userLocations.find(eachLocationType=> locationsDataKeys[i] === eachLocationType.type)
                                 if(!dataPresent){
                                     throw {
                                         message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
