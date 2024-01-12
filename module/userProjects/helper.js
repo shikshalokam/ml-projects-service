@@ -834,8 +834,7 @@ module.exports = class UserProjectsHelper {
                     aggregateData.push({
                         $group: groupBy
                     });
-                } 
-                else {
+                } else {
                     aggregateData.push({
                         $project: projection
                     });
@@ -866,7 +865,6 @@ module.exports = class UserProjectsHelper {
                 let result =
                     await projectQueries.getAggregate(aggregateData);
 
-       
                 return resolve({
                     success: true,
                     message: CONSTANTS.apiResponses.PROJECTS_FETCHED,
@@ -1283,6 +1281,7 @@ module.exports = class UserProjectsHelper {
             }
             
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC","link"]);
+            
             if (projectId === "") {
                 // This will check wether the user user is targeted to solution or not based on his userRoleInformation
                 const targetedSolutionId = await coreService.checkIfSolutionIsTargetedForUserProfile(userToken,userRoleInformation,solutionId)
@@ -1294,9 +1293,7 @@ module.exports = class UserProjectsHelper {
                 }, ["_id"]);
                 if( projectDetails.length > 0 ) {
                     projectId = projectDetails[0]._id;
-                } 
-                else {
-
+                } else {
                     let isAPrivateSolution = (targetedSolutionId.data.isATargetedSolution === false)  ? true : false;
                     let solutionDetails = {}
 
@@ -1338,7 +1335,6 @@ module.exports = class UserProjectsHelper {
                                 isAPrivateSolution
                             );
 
-
                             if( !solutionDetails.success || (solutionDetails.data.data && !solutionDetails.data.data.length > 0) ) {
                                 throw {
                                     status : HTTP_STATUS_CODE["bad_request"].status,
@@ -1350,6 +1346,7 @@ module.exports = class UserProjectsHelper {
                         }
 
                     } else {
+                        
                         solutionDetails =
                         await surveyService.listSolutions([solutionExternalId]);
                         if( !solutionDetails.success ) {
@@ -1366,6 +1363,7 @@ module.exports = class UserProjectsHelper {
                     let queryData = {};
                     queryData["_id"] = solutionDetails.programId;
                     let programDetails = await programsQueries.programsDocument(queryData,["requestForPIIConsent"]);
+                    
                     // if requestForPIIConsent not there do not call program join
                     if ( programDetails.length > 0 && programDetails[0].hasOwnProperty('requestForPIIConsent')) {
                         
@@ -1381,6 +1379,7 @@ module.exports = class UserProjectsHelper {
                                 "resourcesStarted"
                             ]
                         );
+        
                         if (!programUsers.length > 0 || ( programUsers.length > 0 && programUsers[0].resourcesStarted == false)) {
                             let programJoinBody = {};
                             programJoinBody.userRoleInformation = userRoleInformation;
@@ -1529,7 +1528,6 @@ module.exports = class UserProjectsHelper {
                     
                     // fetch userRoleInformation from observation if referenecFrom is observation
                     let addReportInfoToSolution = false;
-
                     if ( getUserProfileFromObservation ){
 
                         let observationDetails = await surveyService.observationDetails(
@@ -1576,8 +1574,9 @@ module.exports = class UserProjectsHelper {
 
                     } else {
                         //Fetch user profile information by calling sunbird's user read api.
+
                         let userProfileData = await userProfileService.profile(userToken, userId);
-                  if ( userProfileData.success && 
+                        if ( userProfileData.success && 
                              userProfileData.data &&
                              userProfileData.data.response
                         ) {
@@ -1590,18 +1589,37 @@ module.exports = class UserProjectsHelper {
                             };
                         }
                     }
+                    
                     projectCreation.data.userRoleInformation = userRoleInformation;
-                
+                    
+                    //compare & update userProfile with userRoleInformation
                     if ( projectCreation.data.userProfile && userRoleInformation && Object.keys(userRoleInformation).length > 0 && Object.keys(projectCreation.data.userProfile).length > 0 ) {
+
+                        if(!userRoleInformation){
+                            throw {
+                                message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+                                status: HTTP_STATUS_CODE["failed_dependency"].status,
+                            };
+                        }
+                        let locationsDataKeys = Object.keys(_.omit(userRoleInformation,["role"]))
                         let updatedUserProfile = await _updateUserProfileBasedOnUserRoleInfo(
                             projectCreation.data.userProfile,
                             userRoleInformation
                         );
+
                         if (updatedUserProfile && updatedUserProfile.success == true && updatedUserProfile.profileMismatchFound == true) {
                             projectCreation.data.userProfile = updatedUserProfile.data;
                         }
+                        for(let i = 0; i <= locationsDataKeys.length; i++){
+                                let dataPresent = projectCreation.data.userProfile.userLocations.find(e=> locationsDataKeys[i] === e.type)
+                                if(!dataPresent){
+                                    throw {
+                                        message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+                                        status: HTTP_STATUS_CODE["failed_dependency"].status,
+                                    };
+                                }
+                        }
                     }
-    
                     let project = await projectQueries.createProject(projectCreation.data);
                     
                     if ( addReportInfoToSolution && project.solutionId ) {
@@ -1616,7 +1634,7 @@ module.exports = class UserProjectsHelper {
                     projectId = project._id;
                 }
             }
-        
+
             let projectDetails = await this.details(
                 projectId, 
                 userId,
@@ -2227,6 +2245,7 @@ module.exports = class UserProjectsHelper {
                     query["referenceFrom"] = CONSTANTS.common.LINK;
                 }
             }
+            
             let projects = await this.projects(
                 query,
                 pageSize,
@@ -2247,6 +2266,7 @@ module.exports = class UserProjectsHelper {
                     "certificate"
                 ]
             );
+            
             let totalCount = 0;
             let data = [];
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
@@ -3998,7 +4018,7 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
 
 
             let updateUserProfileRoleInformation = false;   // Flag to see if roleInformation i.e. userProfile.profileUserTypes has to be updated based on userRoleInfromation.roles
-          
+
             if(userRoleInformation.role) { // Check if userRoleInformation has role value.
                 let rolesInUserRoleInformation = userRoleInformation.role.split(","); // userRoleInfomration.role can be multiple with comma separated.
 
@@ -4072,36 +4092,10 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
                 userProfile.userRoleMismatchFoundAndUpdated = true;
             }
 
-
             // Create location only object from userRoleInformation
             let userRoleInformationLocationObject = _.omit(userRoleInformation, ['role']);
-
-            // To check all the keys of userRoleInformation is there in an userProfile.userLocation
-             const missingUserLocationstypeKeys = Object.keys(userRoleInformationLocationObject).filter(key => !userProfile.userLocations.some(eachLocation => eachLocation.type === key));
-
-            //check whether userRoleInformation(reqbody) and (db )data matches
-
-            for (const key in userRoleInformationLocationObject) {
-                  const matchingUserLocationData= userProfile.userLocations.find(eachLocation => {
-                  if (key === 'school') {
-                         return eachLocation.type === 'school' && eachLocation.code === userRoleInformationLocationObject[key];
-                  } else {
-                         return eachLocation.type === key && eachLocation.id === userRoleInformationLocationObject[key];
-                  }
-                  }
-                    )  
-            //check the data in userRoleInformation 
-
-                if (!userRoleInformation || !matchingUserLocationData  || missingUserLocationstypeKeys.length > 0 ) {
-                         throw {
-                               message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-                               status: HTTP_STATUS_CODE["failed_dependency"].status,
-                               }; 
-                }
-            }
-
+            
             // All location keys from userRoleInformation
-
             let userRoleInfomrationLocationKeys = Object.keys(userRoleInformationLocationObject);
 
             let updateUserProfileLocationInformation = false;   // Flag to see if userLocations i.e. userProfile.userLocations has to be updated based on userRoleInfromation location values
