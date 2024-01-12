@@ -818,7 +818,6 @@ module.exports = class UserProjectsHelper {
                 if (searchQuery && searchQuery.length > 0) {
                     matchQuery["$match"]["$or"] = searchQuery;
                 }
-                console.log(pageSize, pageNo, searchQuery, fieldsArray, groupBy,"this is filed array")
 
                 let projection = {}
                 fieldsArray.forEach(field => {
@@ -867,7 +866,6 @@ module.exports = class UserProjectsHelper {
                 let result =
                     await projectQueries.getAggregate(aggregateData);
 
-                    console.log(result,"after aggregation")
        
                 return resolve({
                     success: true,
@@ -1305,7 +1303,6 @@ module.exports = class UserProjectsHelper {
                     if( templateId === "" ) {
                         // If solution Id of a private program is passed, fetch solution details
                         if ( isAPrivateSolution && solutionId != "" ) {
-                            console.log("entering private solution")
                             solutionDetails = await solutionsHelper.solutionDocuments({
                                 _id: solutionId,
                                 isAPrivateProgram: true
@@ -1333,8 +1330,6 @@ module.exports = class UserProjectsHelper {
                             }
                             solutionDetails = solutionDetails[0];
                         } else {
-                            console.log("entering core solution")
-
                             solutionDetails = 
                             await coreService.solutionDetailsBasedOnRoleAndLocation(
                                 userToken,
@@ -1343,7 +1338,6 @@ module.exports = class UserProjectsHelper {
                                 isAPrivateSolution
                             );
 
-                            console.log(solutionDetails,"this is solution Details based")
 
                             if( !solutionDetails.success || (solutionDetails.data.data && !solutionDetails.data.data.length > 0) ) {
                                 throw {
@@ -1356,8 +1350,6 @@ module.exports = class UserProjectsHelper {
                         }
 
                     } else {
-                        console.log("entering survey solution")
-
                         solutionDetails =
                         await surveyService.listSolutions([solutionExternalId]);
                         if( !solutionDetails.success ) {
@@ -1389,7 +1381,6 @@ module.exports = class UserProjectsHelper {
                                 "resourcesStarted"
                             ]
                         );
-                       console.log(programUsers,"this ijs programm userrrrrrr")
                         if (!programUsers.length > 0 || ( programUsers.length > 0 && programUsers[0].resourcesStarted == false)) {
                             let programJoinBody = {};
                             programJoinBody.userRoleInformation = userRoleInformation;
@@ -1592,7 +1583,6 @@ module.exports = class UserProjectsHelper {
                             //  userProfileData.data.response
                             userProfileData.data
                         ) {
-                            console.log("Enteredthe if statement")
                                 projectCreation.data.userProfile = userProfileData.data.response;
                                 addReportInfoToSolution = true; 
                         } else {
@@ -1603,38 +1593,12 @@ module.exports = class UserProjectsHelper {
                         }
                     }
                     projectCreation.data.userRoleInformation = userRoleInformation;
-                    //compare & update userProfile with userRoleInformation
-                    
-                   let getUserLocationfromuserProfile= projectCreation.data.userProfile.userLocations;
-// check wherther data passing in body or not
-                    if(!userRoleInformation  ){
-                        throw {
-                            message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-                            status: HTTP_STATUS_CODE["failed_dependency"].status,
-                        }; 
-                    }
-                   
- ////check whether userRoleInformation(reqbody) and (db )data matches
-
-const matchingDistrict = getUserLocationfromuserProfile.find(eachLocation => eachLocation.type === 'district' && eachLocation.id === userRoleInformation.district);
-const matchingState = getUserLocationfromuserProfile.find(eachLocation => eachLocation.type === 'state' && eachLocation.id === userRoleInformation.state);
-const matchingBlock = getUserLocationfromuserProfile.find(eachLocation => eachLocation.type === 'block' && eachLocation.id === userRoleInformation.block);
-const matchingSchool= getUserLocationfromuserProfile.find(eachLocation => eachLocation.type === 'school' &&eachLocation.code === userRoleInformation.school)
-// Throw an error if there is no match
-if (!matchingDistrict || !matchingState || !matchingBlock || !matchingSchool) {
-    throw {
-        message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-        status: HTTP_STATUS_CODE["failed_dependency"].status,
-    }; }
-
-
-                    ///////////
+                
                     if ( projectCreation.data.userProfile && userRoleInformation && Object.keys(userRoleInformation).length > 0 && Object.keys(projectCreation.data.userProfile).length > 0 ) {
                         let updatedUserProfile = await _updateUserProfileBasedOnUserRoleInfo(
                             projectCreation.data.userProfile,
                             userRoleInformation
                         );
-                         console.log(updatedUserProfile,"updated user profile")
                         if (updatedUserProfile && updatedUserProfile.success == true && updatedUserProfile.profileMismatchFound == true) {
                             projectCreation.data.userProfile = updatedUserProfile.data;
                         }
@@ -2285,7 +2249,6 @@ if (!matchingDistrict || !matchingState || !matchingBlock || !matchingSchool) {
                     "certificate"
                 ]
             );
-            console.log("================================",projects)
             let totalCount = 0;
             let data = [];
             if( projects.success && projects.data && projects.data.data && Object.keys(projects.data.data).length > 0 ) {
@@ -4037,7 +4000,13 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
 
 
             let updateUserProfileRoleInformation = false;   // Flag to see if roleInformation i.e. userProfile.profileUserTypes has to be updated based on userRoleInfromation.roles
-             console.log(userRoleInformation,userProfile,"this is on api call inside update")
+             //check the data in userRoleInformation
+             if(!userRoleInformation  ){
+                throw {
+                    message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+                    status: HTTP_STATUS_CODE["failed_dependency"].status,
+                }; 
+            }
             if(userRoleInformation.role) { // Check if userRoleInformation has role value.
                 let rolesInUserRoleInformation = userRoleInformation.role.split(","); // userRoleInfomration.role can be multiple with comma separated.
 
@@ -4111,13 +4080,42 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
                 userProfile.userRoleMismatchFoundAndUpdated = true;
             }
 
+
             // Create location only object from userRoleInformation
             let userRoleInformationLocationObject = _.omit(userRoleInformation, ['role']);
-             console.log(userRoleInformationLocationObject,"===================this is ====================")
-            // All location keys from userRoleInformation
-            let userRoleInfomrationLocationKeys = Object.keys(userRoleInformationLocationObject);
-            console.log(userRoleInfomrationLocationKeys,"this is userRoleInformationObject")
 
+////check whether userRoleInformation(reqbody) and (db )data matches
+let matchingDistrict, matchingState, matchingBlock, matchingSchool;
+
+for (const eachLocation of userProfile.userLocations) {
+  if (!matchingDistrict && eachLocation.type === 'district' && eachLocation.id === userRoleInformationLocationObject.district) {
+    matchingDistrict = eachLocation;
+  }
+
+  if (!matchingState && eachLocation.type === 'state' && eachLocation.id === userRoleInformationLocationObject.state) {
+    matchingState = eachLocation;
+  }
+
+  if (!matchingBlock && eachLocation.type === 'block' && eachLocation.id === userRoleInformationLocationObject.block) {
+    matchingBlock = eachLocation;
+  }
+
+  if (!matchingSchool && eachLocation.type === 'school' && eachLocation.code === userRoleInformationLocationObject.school) {
+    matchingSchool = eachLocation;
+  }
+
+  // Break the loop if all variables have been assigned
+  if (matchingDistrict && matchingState && matchingBlock && matchingSchool) {
+    throw {
+        message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+        status: HTTP_STATUS_CODE["failed_dependency"].status,
+    }; 
+  }
+}
+
+            // All location keys from userRoleInformation
+
+            let userRoleInfomrationLocationKeys = Object.keys(userRoleInformationLocationObject);
 
             let updateUserProfileLocationInformation = false;   // Flag to see if userLocations i.e. userProfile.userLocations has to be updated based on userRoleInfromation location values
 
