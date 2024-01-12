@@ -1292,10 +1292,10 @@ module.exports = class UserProjectsHelper {
                     userId: userId,
                     isAPrivateProgram: targetedSolutionId.data.isATargetedSolution ? false : true
                 }, ["_id"]);
-                // if( projectDetails.length < 0 ) {
-                //     projectId = projectDetails[0]._id;
-                // } 
-                // else {
+                if( projectDetails.length < 0 ) {
+                    projectId = projectDetails[0]._id;
+                } 
+                else {
 
                     let isAPrivateSolution = (targetedSolutionId.data.isATargetedSolution === false)  ? true : false;
                     let solutionDetails = {}
@@ -1386,18 +1386,18 @@ module.exports = class UserProjectsHelper {
                             programJoinBody.userRoleInformation = userRoleInformation;
                             programJoinBody.isResource = true;
                             programJoinBody.consentShared = true;
-                            // let joinProgramData = await coreService.joinProgram (
-                            //     solutionDetails.programId,
-                            //     programJoinBody,
-                            //     userToken
-                            // );
-                            // console.log(joinProgramData,"this is join program data")
-                            // if ( !joinProgramData.success ) {
-                            //     return resolve({ 
-                            //         status: HTTP_STATUS_CODE.bad_request.status, 
-                            //         message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
-                            //     });
-                            // }
+                            let joinProgramData = await coreService.joinProgram (
+                                solutionDetails.programId,
+                                programJoinBody,
+                                userToken
+                            );
+                            console.log(joinProgramData,"this is join program data")
+                            if ( !joinProgramData.success ) {
+                                return resolve({ 
+                                    status: HTTP_STATUS_CODE.bad_request.status, 
+                                    message: CONSTANTS.apiResponses.PROGRAM_JOIN_FAILED
+                                });
+                            }
                         }
                     }
                     
@@ -1580,8 +1580,7 @@ module.exports = class UserProjectsHelper {
                         let userProfileData = await userProfileService.profile(userToken, userId);
                   if ( userProfileData.success && 
                              userProfileData.data &&
-                            //  userProfileData.data.response
-                            userProfileData.data
+                             userProfileData.data.response
                         ) {
                                 projectCreation.data.userProfile = userProfileData.data.response;
                                 addReportInfoToSolution = true; 
@@ -1616,9 +1615,9 @@ module.exports = class UserProjectsHelper {
                     await kafkaProducersHelper.pushProjectToKafka(project);
                     
                     projectId = project._id;
-                // }
+                }
             }
-
+        
             let projectDetails = await this.details(
                 projectId, 
                 userId,
@@ -4084,34 +4083,24 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
             // Create location only object from userRoleInformation
             let userRoleInformationLocationObject = _.omit(userRoleInformation, ['role']);
 
-////check whether userRoleInformation(reqbody) and (db )data matches
-let matchingDistrict, matchingState, matchingBlock, matchingSchool;
+//check whether userRoleInformation(reqbody) and (db )data matches
 
-for (const eachLocation of userProfile.userLocations) {
-  if (!matchingDistrict && eachLocation.type === 'district' && eachLocation.id === userRoleInformationLocationObject.district) {
-    matchingDistrict = eachLocation;
-  }
-
-  if (!matchingState && eachLocation.type === 'state' && eachLocation.id === userRoleInformationLocationObject.state) {
-    matchingState = eachLocation;
-  }
-
-  if (!matchingBlock && eachLocation.type === 'block' && eachLocation.id === userRoleInformationLocationObject.block) {
-    matchingBlock = eachLocation;
-  }
-
-  if (!matchingSchool && eachLocation.type === 'school' && eachLocation.code === userRoleInformationLocationObject.school) {
-    matchingSchool = eachLocation;
-  }
-
-  // Break the loop if all variables have been assigned
-  if (matchingDistrict && matchingState && matchingBlock && matchingSchool) {
-    throw {
+for (const key in userRoleInformationLocationObject) {
+    const matchingUserLocationData= userProfile.userLocations.find(eachLocation => {
+        if (key === 'school') {
+            return eachLocation.type === 'school' && eachLocation.code === userRoleInformationLocationObject[key];
+          } else {
+            return eachLocation.type === key && eachLocation.id === userRoleInformationLocationObject[key];
+          }
+        }
+    )  
+    if (!matchingUserLocationData) {
+      throw {
         message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
         status: HTTP_STATUS_CODE["failed_dependency"].status,
     }; 
+    }
   }
-}
 
             // All location keys from userRoleInformation
 
