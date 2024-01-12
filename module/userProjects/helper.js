@@ -1280,6 +1280,13 @@ module.exports = class UserProjectsHelper {
                 solutionExternalId = templateDocuments[0].solutionExternalId;
             }
             
+            if(bodyData.hasOwnProperty("detailsPayload")){
+                let detailsPayload = {...bodyData.detailsPayload}
+                delete bodyData.detailsPayload
+                bodyData = {...detailsPayload, ...bodyData}
+
+            }
+            
             let userRoleInformation = _.omit(bodyData,["referenceFrom","submissions","hasAcceptedTAndC","link"]);
             
             if (projectId === "") {
@@ -1487,38 +1494,61 @@ module.exports = class UserProjectsHelper {
                                     getUserProfileFromObservation = true;
                                 }
                                 projectCreation.data.submissions = bodyData.submissions;
+
+                                let entityInformation = 
+                                await surveyService.listEntitiesByLocationIds(
+                                    userToken,
+                                    [bodyData.submissions.entityId] 
+                                );
+    
+                                if( !entityInformation.success ) {
+                                    throw {
+                                        message : CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+                                        status : HTTP_STATUS_CODE['bad_request'].status
+                                    }
+                                }
+    
+                                let entityDetails = await _entitiesMetaInformation(
+                                    entityInformation.data
+                                );
+    
+                                if ( entityDetails && entityDetails.length > 0 ) {
+                                    projectCreation.data["entityInformation"] = entityDetails[0];
+                                }
+            
+                                projectCreation.data.entityId = entityInformation.data[0]._id;
+                            }
+                        } else {
+                            if( 
+                                solutionDetails.entityType && bodyData[solutionDetails.entityType] 
+                            ) {
+                                let entityInformation = 
+                                await surveyService.listEntitiesByLocationIds(
+                                    userToken,
+                                    [bodyData[solutionDetails.entityType]] 
+                                );
+    
+                                if( !entityInformation.success ) {
+                                    throw {
+                                        message : CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+                                        status : HTTP_STATUS_CODE['bad_request'].status
+                                    }
+                                }
+    
+                                let entityDetails = await _entitiesMetaInformation(
+                                    entityInformation.data
+                                );
+    
+                                if ( entityDetails && entityDetails.length > 0 ) {
+                                    projectCreation.data["entityInformation"] = entityDetails[0];
+                                }
+            
+                                projectCreation.data.entityId = entityInformation.data[0]._id;
                             }
                         }
     
                         if( bodyData.role ) {
                             projectCreation.data["userRole"] = bodyData.role;
-                        }
-
-                        if( 
-                            solutionDetails.entityType && bodyData[solutionDetails.entityType] 
-                        ) {
-                            let entityInformation = 
-                            await surveyService.listEntitiesByLocationIds(
-                                userToken,
-                                [bodyData[solutionDetails.entityType]] 
-                            );
-
-                            if( !entityInformation.success ) {
-                                throw {
-                                    message : CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
-                                    status : HTTP_STATUS_CODE['bad_request'].status
-                                }
-                            }
-
-                            let entityDetails = await _entitiesMetaInformation(
-                                entityInformation.data
-                            );
-
-                            if ( entityDetails && entityDetails.length > 0 ) {
-                                projectCreation.data["entityInformation"] = entityDetails[0];
-                            }
-        
-                            projectCreation.data.entityId = entityInformation.data[0]._id;
                         }
     
                     }
