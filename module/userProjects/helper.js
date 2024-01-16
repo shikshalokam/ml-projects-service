@@ -29,6 +29,7 @@ const certificateValidationsHelper = require(MODULES_BASE_PATH + "/certificateVa
 const _ = require("lodash");  
 const programUsersQueries = require(DB_QUERY_BASE_PATH + "/programUsers");
 const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF
+const entitieHelper = require(MODULES_BASE_PATH + "/entities/helper")
 /**
     * UserProjectsHelper
     * @class
@@ -1496,8 +1497,7 @@ module.exports = class UserProjectsHelper {
                                 projectCreation.data.submissions = bodyData.submissions;
 
                                 let entityInformation = 
-                                await surveyService.listEntitiesByLocationIds(
-                                    userToken,
+                                await entitieHelper.listByLocationIds(
                                     [bodyData.submissions.entityId] 
                                 );
     
@@ -1523,8 +1523,7 @@ module.exports = class UserProjectsHelper {
                                 solutionDetails.entityType && bodyData[solutionDetails.entityType] 
                             ) {
                                 let entityInformation = 
-                                await surveyService.listEntitiesByLocationIds(
-                                    userToken,
+                                await entitieHelper.listByLocationIds(
                                     [bodyData[solutionDetails.entityType]] 
                                 );
     
