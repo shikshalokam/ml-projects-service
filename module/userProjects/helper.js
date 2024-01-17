@@ -1624,7 +1624,6 @@ module.exports = class UserProjectsHelper {
                     //compare & update userProfile with userRoleInformation
                     if ( projectCreation.data.userProfile && userRoleInformation && Object.keys(userRoleInformation).length > 0 && Object.keys(projectCreation.data.userProfile).length > 0 ) {
 
-                        let locationsDataKeys = Object.keys(_.omit(userRoleInformation,["role"]))
                         let updatedUserProfile = await _updateUserProfileBasedOnUserRoleInfo(
                             projectCreation.data.userProfile,
                             userRoleInformation
@@ -1633,16 +1632,25 @@ module.exports = class UserProjectsHelper {
                         if (updatedUserProfile && updatedUserProfile.success == true && updatedUserProfile.profileMismatchFound == true) {
                             projectCreation.data.userProfile = updatedUserProfile.data;
                         }
-                        // checking the reqbody data and userLocation type matches or not 
-                        for(let i = 0; i <= locationsDataKeys.length; i++){
-                                let dataPresent = projectCreation.data.userProfile.userLocations.find(eachLocationType=> userRoleInformation[eachLocationType] === eachLocationType[i])
-                                if(!dataPresent){
-                                    throw {
-                                        message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-                                        status: HTTP_STATUS_CODE["failed_dependency"].status,
-                                    };
-                                }
-                        }
+                        // checking the reqbody data and userLocation type matches or not
+                        for (let key in userRoleInformation) {
+                            // Skip role validation
+                            if (key === 'role') {
+                                continue;
+                            }
+                            let dataPresent;
+                            if (key === 'school') {
+                                dataPresent = projectCreation.data.userProfile.userLocations.find(location => location.code === userRoleInformation[key]);
+                            } else {
+                                dataPresent = projectCreation.data.userProfile.userLocations.find(location => location.id === userRoleInformation[key]);
+                            }
+                            if (!dataPresent) {
+                                throw {
+                                    message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+                                    status: HTTP_STATUS_CODE["failed_dependency"].status,
+                                };
+                            }
+                        } 
                     }
                     let project = await projectQueries.createProject(projectCreation.data);
                     
