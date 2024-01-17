@@ -1624,12 +1624,6 @@ module.exports = class UserProjectsHelper {
                     //compare & update userProfile with userRoleInformation
                     if ( projectCreation.data.userProfile && userRoleInformation && Object.keys(userRoleInformation).length > 0 && Object.keys(projectCreation.data.userProfile).length > 0 ) {
 
-                        if(!userRoleInformation){
-                            throw {
-                                message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
-                                status: HTTP_STATUS_CODE["failed_dependency"].status,
-                            };
-                        }
                         let locationsDataKeys = Object.keys(_.omit(userRoleInformation,["role"]))
                         let updatedUserProfile = await _updateUserProfileBasedOnUserRoleInfo(
                             projectCreation.data.userProfile,
@@ -1641,7 +1635,7 @@ module.exports = class UserProjectsHelper {
                         }
                         // checking the reqbody data and userLocation type matches or not 
                         for(let i = 0; i <= locationsDataKeys.length; i++){
-                                let dataPresent = projectCreation.data.userProfile.userLocations.find(eachLocationType=> locationsDataKeys[i] === eachLocationType.type)
+                                let dataPresent = projectCreation.data.userProfile.userLocations.find(eachLocationType=> userRoleInformation[eachLocationType] === eachLocationType[i])
                                 if(!dataPresent){
                                     throw {
                                         message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
