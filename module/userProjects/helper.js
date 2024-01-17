@@ -1651,6 +1651,11 @@ module.exports = class UserProjectsHelper {
                                 };
                             }
                         } 
+                    } else {
+                        throw {
+                            message: CONSTANTS.apiResponses.FAILED_TO_START_RESOURCE,
+                            status: HTTP_STATUS_CODE["failed_dependency"].status,
+                        };
                     }
                     let project = await projectQueries.createProject(projectCreation.data);
                     
