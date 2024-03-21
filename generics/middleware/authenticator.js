@@ -101,7 +101,7 @@ module.exports = async function (req, res, next, token = "") {
 
   const kid = decoded.header.kid
   let cert = "";
-  let path = keyCloakPublicKeyPath + kid;
+  let path = keyCloakPublicKeyPath + kid.replace(/\.\.\//g, '');
     
   if (fs.existsSync(path)) {
 
