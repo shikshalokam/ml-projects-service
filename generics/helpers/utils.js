@@ -312,10 +312,10 @@ function createComparableDates(dateArg1, dateArg2) {
 */
 
 function noOfElementsInArray(data, filter = {}) {
-  if ( !filter || !Object.keys(filter).length > 0 ) {
+  if ( !filter || !(Object.keys(filter).length > 0) ) {
     return data.length;
   }
-  if ( !data.length > 0 ) {
+  if ( !(data.length > 0) ) {
     return 0;
   } else {
     if ( filter.value == "all" ){

@@ -192,7 +192,7 @@ module.exports = class LibraryCategoriesHelper {
                         "isDeleted" : false,
                     }, "all", ["__v"]);
 
-                if( !projectsData.length > 0 ) {
+                if( !(projectsData.length > 0 )) {
                     throw {
                         status : HTTP_STATUS_CODE['bad_request'].status,
                         message : CONSTANTS.apiResponses.PROJECT_NOT_FOUND,

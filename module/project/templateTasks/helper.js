@@ -97,7 +97,7 @@ module.exports = class ProjectTemplateTasksHelper {
                     _id : projectTemplateId
                 },["_id","entityType","externalId", "taskSequence"]);
 
-                if( !projectTemplate.length > 0 ) {
+                if( !(projectTemplate.length > 0) ) {
                     throw {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
                         status : HTTP_STATUS_CODE['bad_request'].status
@@ -627,7 +627,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                     if ( 
                         !currentData._SYSTEM_ID || 
-                        !currentData._SYSTEM_ID === "" || 
+                        !(currentData._SYSTEM_ID === "")|| 
                         !csvData.data.tasks[currentData["_SYSTEM_ID"]] 
                     ) {
                         currentData.STATUS = 
@@ -815,7 +815,7 @@ module.exports = class ProjectTemplateTasksHelper {
 
                 let taskDocument = await projectTemplateTaskQueries.taskDocuments(findQuery, ["_id"]);
 
-                if ( !taskDocument.length > 0 ) {
+                if ( !(taskDocument.length > 0) ) {
                     throw {
                         status : HTTP_STATUS_CODE.bad_request.status,
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_TASKS_NOT_FOUND

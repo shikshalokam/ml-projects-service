@@ -80,7 +80,7 @@ module.exports = class ProjectTemplatesHelper {
             ["externalId", "name"]
           );
 
-          if (!categories.length > 0) {
+          if (!(categories.length > 0)) {
             throw {
               status: HTTP_STATUS_CODE["bad_request"].status,
               message: CONSTANTS.apiResponses.LIBRARY_CATEGORIES_NOT_FOUND,
@@ -553,7 +553,7 @@ module.exports = class ProjectTemplatesHelper {
           }
         );
 
-        if (!projectTemplateData.length > 0) {
+        if (!(projectTemplateData.length > 0)) {
           throw new Error(CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND);
         }
 
@@ -939,7 +939,7 @@ module.exports = class ProjectTemplatesHelper {
           ["title", "metaInformation.goal", "externalId"]
         );
 
-        if (!templateData.length > 0) {
+        if (!(templateData.length > 0)) {
           throw {
             status: HTTP_STATUS_CODE.bad_request.status,
             message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
@@ -998,7 +998,7 @@ module.exports = class ProjectTemplatesHelper {
             ]
           );
 
-          if (!solutionDocument.length > 0) {
+          if (!(solutionDocument.length > 0)) {
             throw {
               message: CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
               status: HTTP_STATUS_CODE["bad_request"].status,
@@ -1044,7 +1044,7 @@ module.exports = class ProjectTemplatesHelper {
           ]
         );
 
-        if (!templateData.length > 0) {
+        if (!(templateData.length > 0)) {
           throw {
             status: HTTP_STATUS_CODE.bad_request.status,
             message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
@@ -1063,7 +1063,7 @@ module.exports = class ProjectTemplatesHelper {
             );
 
           //certificate template data do not exists.
-          if (!certificateTemplateDetails.length > 0) {
+          if (!(certificateTemplateDetails.length > 0)) {
             throw {
               message: CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND,
             };
@@ -1211,7 +1211,7 @@ module.exports = class ProjectTemplatesHelper {
           ["_id"]
         );
 
-        if (!templateDocument.length > 0) {
+        if (!(templateDocument.length > 0)) {
           throw {
             status: HTTP_STATUS_CODE.bad_request.status,
             message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
