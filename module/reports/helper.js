@@ -102,7 +102,7 @@ module.exports = class ReportsHelper {
                 });
 
 
-                if ( !projectDetails.length > 0 ) {
+                if ( !(projectDetails.length > 0)) {
 
                   
                     if (getPdf == true) {
@@ -522,7 +522,7 @@ module.exports = class ReportsHelper {
                     []
                 );
 
-                if (!projectDetails.length > 0) {
+                if (!(projectDetails.length > 0)) {
 
                     return resolve({
                         message: CONSTANTS.apiResponses.REPORTS_DATA_NOT_FOUND,

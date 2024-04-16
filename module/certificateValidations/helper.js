@@ -167,7 +167,7 @@ function _validateCriteriaConditions(condition, data) {
                         } else {
                             return resolve(result)
                         }
-                        if ( !tasksAttachments.length > 0 ) {
+                        if ( !(tasksAttachments.length > 0) ) {
                             return resolve(result)
                         }
                         // get task attachments count
@@ -207,8 +207,8 @@ function _criteriaExpressionValidation(expression, keys, result) {
         try {
             
             if( expression == "" ||
-                !keys.length > 0 ||
-                !result.length > 0 ||
+                !(keys.length > 0) ||
+                !(result.length > 0) ||
                 keys.length != result.length ) {
                 return resolve(false);
             }

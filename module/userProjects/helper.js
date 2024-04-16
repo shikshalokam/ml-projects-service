@@ -243,7 +243,7 @@ module.exports = class UserProjectsHelper {
                     "status"
                 ]);
                 
-                if (!userProject.length > 0) {
+                if (!(userProject.length > 0)) {
 
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
@@ -751,7 +751,7 @@ module.exports = class UserProjectsHelper {
                         "__v"
                     ]);
 
-                if (!projectDetails.length > 0) {
+                if (!(projectDetails.length > 0)) {
 
                     throw {
                         status: HTTP_STATUS_CODE["bad_request"].status,
@@ -761,7 +761,7 @@ module.exports = class UserProjectsHelper {
 
                 if (Object.keys(userRoleInformation).length > 0) {
 
-                    if (!projectDetails[0].userRoleInformation || !Object.keys(projectDetails[0].userRoleInformation).length > 0) {
+                    if (!projectDetails[0].userRoleInformation || !(Object.keys(projectDetails[0].userRoleInformation).length > 0)) {
                         await projectQueries.findOneAndUpdate({
                             _id: projectId
                         },{
@@ -967,7 +967,7 @@ module.exports = class UserProjectsHelper {
 
                 let tasks = await this.tasks(projectId, taskIds);
 
-                if (!tasks.success || !tasks.data.length > 0) {
+                if (!tasks.success || !(tasks.data.length > 0)) {
 
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
@@ -1083,7 +1083,7 @@ module.exports = class UserProjectsHelper {
                 let submissions = currentTask.submissions && currentTask.submissions.length > 0 ? currentTask.submissions : [] ;
                 
                 // if submission array is empty
-                if ( !submissions && !submissions.length > 0 ) {
+                if ( !submissions && !(submissions.length > 0) ) {
                     updateSubmission.push(updatedData);
                 }
                 
@@ -1149,7 +1149,7 @@ module.exports = class UserProjectsHelper {
                     "projectTemplateId"
                 ]
                 );
-                if (!project.length > 0) {
+                if (!(project.length > 0)) {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
@@ -1270,7 +1270,7 @@ module.exports = class UserProjectsHelper {
                     "solutionId" : { $exists : true }
                 },["solutionId","solutionExternalId"]);
 
-                if( !templateDocuments.length > 0 ) {
+                if( !(templateDocuments.length > 0) ) {
                     throw {
                         message : CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
                         status : HTTP_STATUS_CODE['bad_request'].status
@@ -1327,7 +1327,7 @@ module.exports = class UserProjectsHelper {
                                 "language",
                                 "creator"
                             ]);
-                            if( !solutionDetails.length > 0 ) {
+                            if( !(solutionDetails.length > 0) ) {
                                 throw {
                                     status : HTTP_STATUS_CODE["bad_request"].status,
                                     message : CONSTANTS.apiResponses.SOLUTION_NOT_FOUND
@@ -1343,7 +1343,7 @@ module.exports = class UserProjectsHelper {
                                 isAPrivateSolution
                             );
 
-                            if( !solutionDetails.success || (solutionDetails.data.data && !solutionDetails.data.data.length > 0) ) {
+                            if( !solutionDetails.success || (solutionDetails.data.data && !(solutionDetails.data.data.length > 0)) ) {
                                 throw {
                                     status : HTTP_STATUS_CODE["bad_request"].status,
                                     message : CONSTANTS.apiResponses.SOLUTION_DOES_NOT_EXISTS_IN_SCOPE
@@ -1388,7 +1388,7 @@ module.exports = class UserProjectsHelper {
                             ]
                         );
         
-                        if (!programUsers.length > 0 || ( programUsers.length > 0 && programUsers[0].resourcesStarted == false)) {
+                        if (!(programUsers.length > 0) || ( programUsers.length > 0 && programUsers[0].resourcesStarted == false)) {
                             let programJoinBody = {};
                             programJoinBody.userRoleInformation = userRoleInformation;
                             programJoinBody.isResource = true;
@@ -1563,6 +1563,7 @@ module.exports = class UserProjectsHelper {
                             userToken,
                             bodyData.submissions.observationId
                         );
+                        console.log(observationDetails)
 
                         if( observationDetails.data &&
                             Object.keys(observationDetails.data).length > 0 && 
@@ -1744,7 +1745,7 @@ module.exports = class UserProjectsHelper {
                             "averageRating"
                         ]);
 
-                if (!projectTemplateData.length > 0) {
+                if (!(projectTemplateData.length > 0)) {
                     throw {
                         message: CONSTANTS.apiResponses.SOLUTION_NOT_FOUND,
                         status: HTTP_STATUS_CODE['bad_request'].status
@@ -1915,7 +1916,7 @@ module.exports = class UserProjectsHelper {
                                 "isAPrivateProgram"
                             ]
                     );
-                    if( !programDetails.length > 0 ){
+                    if( !(programDetails.length > 0) ){
                         throw {
                             status: HTTP_STATUS_CODE['bad_request'].status,
                             message: CONSTANTS.apiResponses.PROGRAM_NOT_FOUND
@@ -2510,7 +2511,7 @@ module.exports = class UserProjectsHelper {
             
                 if (
                     libraryProjects.data &&
-                    !Object.keys(libraryProjects.data).length > 0
+                    !(Object.keys(libraryProjects.data).length > 0)
                 ) {
                     throw {
                         message: CONSTANTS.apiResponses.PROJECT_TEMPLATE_NOT_FOUND,
@@ -2755,7 +2756,7 @@ module.exports = class UserProjectsHelper {
                     _id: projectId,
                 }, "all");
 
-                if (!projectDetails.length > 0) {
+                if (!(projectDetails.length > 0)) {
 
                     throw {
                         status: HTTP_STATUS_CODE["bad_request"].status,
@@ -2901,7 +2902,7 @@ module.exports = class UserProjectsHelper {
                     },["issuer","solutionId","programId"]);
 
                     //certificate template data do not exists.
-                    if ( !certificateTemplateDetails.length > 0 ) {
+                    if ( !(certificateTemplateDetails.length > 0) ) {
                         throw {
                             message:  CONSTANTS.apiResponses.CERTIFICATE_TEMPLATE_NOT_FOUND
                         };
@@ -3051,7 +3052,7 @@ module.exports = class UserProjectsHelper {
                     updateObject
                 );
 
-                if ( projectDetails == null || !Object.keys(projectDetails).length > 0 ) {
+                if ( projectDetails == null || !(Object.keys(projectDetails).length > 0) ) {
                     throw {
                         status: HTTP_STATUS_CODE["bad_request"].status,
                         message: CONSTANTS.apiResponses.PROJECT_NOT_FOUND
@@ -3108,7 +3109,7 @@ module.exports = class UserProjectsHelper {
                     "completedDate"
                 ]);
                 
-                if ( !userProject.length > 0 ) {
+                if ( !(userProject.length > 0 )) {
                     throw {
                         status: HTTP_STATUS_CODE["bad_request"].status,
                         message: CONSTANTS.apiResponses.PROJECT_WITH_CERTIFICATE_NOT_FOUND
@@ -3192,7 +3193,7 @@ module.exports = class UserProjectsHelper {
                 });
 
                 //  if project details not found.
-                if (!userProject.length > 0) {
+                if (!(userProject.length > 0)) {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.USER_PROJECT_NOT_FOUND
@@ -3610,7 +3611,7 @@ function _projectCategories(categories) {
                         _id: { $in: categoryIds }
                     }, ["name", "externalId"]);
 
-                if (!categoryData.length > 0) {
+                if (!(categoryData.length > 0)) {
                     throw {
                         status: HTTP_STATUS_CODE['bad_request'].status,
                         message: CONSTANTS.apiResponses.CATEGORY_NOT_FOUND
@@ -3707,7 +3708,7 @@ function _entitiesInformation(entityIds) {
                 }
             }
            
-            if ( !entityInformations.length > 0 ) {
+            if ( !(entityInformations.length > 0) ) {
                 throw {
                     status: HTTP_STATUS_CODE['bad_request'].status,
                     message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND

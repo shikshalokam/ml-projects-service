@@ -1,6 +1,6 @@
 {
   "name": "sl-improvement-service",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "description": "Improvement service",
   "main": "app.js",
   "bin": {
@@ -51,7 +51,7 @@
     "keycloak-auth-utils": "^3.3.0",
     "lodash": "^4.17.15",
     "log": "^1.4.0",
-    "mocha": "^6.2.2",
+    "mocha": "^10.1.0",
     "moment-timezone": "^0.5.31",
     "mongoose": "^5.9.4",
     "mongoose-autopopulate": "^0.12.0",
