@@ -1065,7 +1065,10 @@ module.exports = class UserProjects extends Abstract {
         return new Promise(async (resolve, reject) => {
                 try {
                     // fetch projects data of user, whish has certificate on completion
-                    let projectDetails = await userProjectsHelper.certificates( req.userDetails.userInformation.userId );
+                    let projectDetails = await userProjectsHelper.certificates( 
+                        req.userDetails.userInformation.userId,
+                        req.params._id ? req.params._id : ""
+                    );
                     return resolve({
                         message: projectDetails.message,
                         result: projectDetails.data
