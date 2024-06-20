@@ -52,6 +52,8 @@ module.exports = class Projects {
                    queryObject, 
                    projection
                ).lean();
+               console.log({                   queryObject, 
+                projection},database.models.projects,'<---')
                return resolve(projects);
            
            } catch (error) {

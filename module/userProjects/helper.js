@@ -1256,6 +1256,7 @@ module.exports = class UserProjectsHelper {
     */
 
    static detailsV2( projectId,solutionId,userId,userToken,bodyData,appName = "",appVersion = "",templateId = "" ) {
+    console.log({projectId,solutionId,userId,userToken,bodyData,appName,appVersion,templateId})
     return new Promise(async (resolve, reject) => {
         try {
             
@@ -2499,7 +2500,6 @@ module.exports = class UserProjectsHelper {
     static importFromLibrary(projectTemplateId, requestedData, userToken, userId, isATargetedSolution = "" ) {
         return new Promise(async (resolve, reject) => {
             try {
-
                 isATargetedSolution = UTILS.convertStringToBoolean(isATargetedSolution);
 
                 let libraryProjects =
@@ -3272,6 +3272,38 @@ module.exports = class UserProjectsHelper {
             }
         })
     }
+
+        /**
+     * Template details.
+     * @method
+     * @name details
+     * @param {String} templateId - Project template id.
+     * @param {String} userId - logged in user id.
+     * @params {String} link - solution link.
+     * @returns {Array} Project templates data.
+     */
+  
+        static details({
+            user_id,
+            type
+        }) {
+          return new Promise(async (resolve, reject) => {
+            try{
+    
+                const projectIdQuery = {
+                    userId: user_id,
+                    status:type
+                  };
+    
+                let projects = await projectQueries.projectDocument(projectIdQuery);
+                console.log(projectIdQuery,projects);
+                resolve(projects)
+            }catch(error){
+                console.log(error)
+            }
+          });
+        }
+    
 
 
 };

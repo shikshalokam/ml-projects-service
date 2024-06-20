@@ -60,7 +60,7 @@ const router = require("./routes");
 
 //add routing
 router(app);
-
+console.log(process.env.APPLICATION_PORT,'<-----process.env.APPLICATION_PORT')
 //listen to given port
 app.listen(process.env.APPLICATION_PORT, () => {
   console.log("Environment : " + process.env.APPLICATION_ENV);

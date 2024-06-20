@@ -89,6 +89,7 @@ const locationSearch = function ( filterData, formatResult = false ) {
         bodyData["request"]["filters"] = filterData;
         const url = 
         userServiceUrl + CONSTANTS.endpoints.GET_LOCATION_DATA;
+        console.log(url,'url')
         const options = {
             headers : {
                 "content-type": "application/json"

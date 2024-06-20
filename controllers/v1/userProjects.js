@@ -8,6 +8,7 @@
 // Dependencies
 const csv = require('csvtojson');
 const userProjectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
+const projectsHelper = require(MODULES_BASE_PATH + "/userProjects/helper");
 
  /**
     * UserProjects
@@ -1114,6 +1115,48 @@ module.exports = class UserProjects extends Abstract {
                     return resolve({
                         message: projectDetails.message,
                         result: projectDetails.data
+                    });
+                    
+                } catch (error) {
+                    return reject({
+                        status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                        message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                        errorObject: error
+                    });
+                }
+        })
+    }
+    /**
+    * @api {post} /improvement-project/api/v1/userProjects/certificateReIssue
+    * ReIssue project certificate (admin api)
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/certificateReIssue
+    * @apiParamExample {json} Response:
+    /**{
+            "message": "Successfully generated project certificate",
+            "status": 200,
+            "result": {
+                "_id": "63446059eeffea2b819f036e"
+            }
+        }
+    /**
+     * ReIssue project certificate
+     * @method
+     * @name certificateReIssue
+     * @returns {JSON} Reissued details
+    */
+
+    async listPendingProjects(req) {
+        return new Promise(async (resolve, reject) => {
+                try {
+                    let listOfProjects = await projectsHelper.details({
+                        user_id:req.userDetails.userInformation.userId,
+                        type:req.query.status
+                    })
+                    return resolve({
+                        message: 'success',
+                        result: listOfProjects
                     });
                     
                 } catch (error) {
