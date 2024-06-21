@@ -1256,7 +1256,7 @@ module.exports = class UserProjectsHelper {
     */
 
    static detailsV2( projectId,solutionId,userId,userToken,bodyData,appName = "",appVersion = "",templateId = "" ) {
-    console.log({projectId,solutionId,userId,userToken,bodyData,appName,appVersion,templateId})
+    
     return new Promise(async (resolve, reject) => {
         try {
             
@@ -1564,7 +1564,7 @@ module.exports = class UserProjectsHelper {
                             userToken,
                             bodyData.submissions.observationId
                         );
-                        console.log(observationDetails)
+                        
 
                         if( observationDetails.data &&
                             Object.keys(observationDetails.data).length > 0 && 
@@ -3273,33 +3273,35 @@ module.exports = class UserProjectsHelper {
         })
     }
 
-        /**
-     * Template details.
+    /**
+     * Fetches project details based on the provided query.
      * @method
      * @name details
-     * @param {String} templateId - Project template id.
-     * @param {String} userId - logged in user id.
-     * @params {String} link - solution link.
-     * @returns {Array} Project templates data.
+     * @param {Object} args - Query object for fetching project details.
+     * @returns {Array} - A promise that resolves to an array of project details matching the query.
      */
-  
-        static details({
-            user_id,
-            type
-        }) {
+        static details(args,fields='all') {
           return new Promise(async (resolve, reject) => {
             try{
     
                 const projectIdQuery = {
-                    userId: user_id,
-                    status:type
+                    ...args
                   };
+
+                  let fieldarray = []
+           
+                  if (fields != "all") {
+                        fields.forEach(field => {
+                        fieldarray.push(field)
+                     });
+                 }
     
-                let projects = await projectQueries.projectDocument(projectIdQuery);
-                console.log(projectIdQuery,projects);
+                let projects = await projectQueries.projectDocument(projectIdQuery,fieldarray);
+                
                 resolve(projects)
             }catch(error){
-                console.log(error)
+                   console.log(error)
+                   throw new Error('Something went wrong!')
             }
           });
         }

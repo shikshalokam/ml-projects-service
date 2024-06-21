@@ -1127,33 +1127,30 @@ module.exports = class UserProjects extends Abstract {
         })
     }
     /**
-    * @api {post} /improvement-project/api/v1/userProjects/certificateReIssue
-    * ReIssue project certificate (admin api)
+    * @api {post} /improvement-project/api/v1/userProjects/listPendingProjects
+    * Lists projects based on the status 
     * @apiVersion 1.0.0
     * @apiGroup User Projects
-    * @apiSampleRequest /improvement-project/api/v1/userProjects/certificateReIssue
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/listPendingProjects
     * @apiParamExample {json} Response:
-    /**{
-            "message": "Successfully generated project certificate",
-            "status": 200,
-            "result": {
-                "_id": "63446059eeffea2b819f036e"
-            }
-        }
     /**
-     * ReIssue project certificate
+
+    /**
+     * Lists projects based on the status
      * @method
-     * @name certificateReIssue
-     * @returns {JSON} Reissued details
+     * @name listPendingProjects
+     * @returns {JSON} Project details
     */
 
     async listPendingProjects(req) {
         return new Promise(async (resolve, reject) => {
+            
                 try {
                     let listOfProjects = await projectsHelper.details({
-                        user_id:req.userDetails.userInformation.userId,
-                        type:req.query.status
-                    })
+                        userId:req.userDetails.userInformation.userId,
+                        status:req.query.status
+                    },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'])
+                    
                     return resolve({
                         message: 'success',
                         result: listOfProjects
@@ -1168,5 +1165,44 @@ module.exports = class UserProjects extends Abstract {
                 }
         })
     }
+    /**
+    * @api {post} /improvement-project/api/v1/userProjects/listCreatedProjects
+    * Lists projects created by the userId
+    * @apiVersion 1.0.0
+    * @apiGroup User Projects
+    * @apiSampleRequest /improvement-project/api/v1/userProjects/listCreatedProjects
+    * @apiParamExample {json} Response:
+    /**
+
+    /**
+     * Lists projects created by the userId
+     * @method
+     * @name listCreatedProjects
+     * @returns {JSON} Project details
+    */
+
+
+    async listCreatedProjects(req) {
+        return new Promise(async (resolve, reject) => {
+                try {
+                    let listOfCreatedProjects = await userProjectsHelper.details({
+                        createdBy:req.userDetails.userInformation.userId
+                    },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'])
+
+                    return resolve({
+                        message: 'success',
+                        result: listOfCreatedProjects
+                    });
+                    
+                } catch (error) {
+                    return reject({
+                        status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                        message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                        errorObject: error
+                    });
+                }
+        })
+    }
+
 
 };
