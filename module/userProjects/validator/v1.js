@@ -41,6 +41,19 @@ module.exports = (req) => {
             .isIn(['started','inProgress','submitted'])
             .withMessage("The 'status' parameter must be either 'started' or 'inProgress' or 'submitted'");
          
+        },
+        listUserProjects:function(){
+            req.checkQuery('userInvolvement')
+            .exists()
+            .withMessage("The 'userInvolvement' parameter is required.")
+            .isIn(['creator','consumed'])
+            .withMessage("The 'userInvolvement' parameter must be either 'creator' or 'consumed'");
+         
+            req.checkQuery('stats')
+            .optional()
+            .isIn(['true','false'])
+            .withMessage("The 'stats' parameter must be either 'true' or 'false' ");
+         
         }
     }
 

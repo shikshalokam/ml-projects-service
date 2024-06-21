@@ -3280,7 +3280,7 @@ module.exports = class UserProjectsHelper {
      * @param {Object} args - Query object for fetching project details.
      * @returns {Array} - A promise that resolves to an array of project details matching the query.
      */
-        static details(args,fields='all') {
+    static userProjectOverview(args,fields='all',stats) {
           return new Promise(async (resolve, reject) => {
             try{
     
@@ -3295,16 +3295,51 @@ module.exports = class UserProjectsHelper {
                         fieldarray.push(field)
                      });
                  }
-    
+
+                if(stats == 'true')
+                {
+                    let count = await projectQueries.countDocuments(projectIdQuery);
+
+                    resolve(count);
+                }
+
                 let projects = await projectQueries.projectDocument(projectIdQuery,fieldarray);
                 
                 resolve(projects)
             }catch(error){
-                   console.log(error)
-                   throw new Error('Something went wrong!')
+                reject(error)
             }
           });
-        }
+    }
+    static listUserProjects({userId,userInvolvement,stats}){
+
+        return new Promise(async (resolve, reject) => {
+            try{
+                switch(userInvolvement)
+                {
+                    case 'creator':
+
+                    let listOfCreatedProjects = await this.userProjectOverview({
+                        createdBy:userId
+                    },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
+
+                    return resolve(listOfCreatedProjects);
+                    case 'consumed':
+                    let listOfProjects = await this.userProjectOverview({
+                        userId:userId
+                    },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
+                    
+                    return resolve(listOfProjects);
+                    default:
+                        throw new Error('Invalid arguments passed.')
+                }
+    
+            }catch(error){
+                   
+                   reject(error)
+            }
+          });
+    }
     
 
 

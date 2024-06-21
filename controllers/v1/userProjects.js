@@ -1203,6 +1203,29 @@ module.exports = class UserProjects extends Abstract {
                 }
         })
     }
-
+    async listUserProjects(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let listOfCreatedProjects = await userProjectsHelper.listUserProjects({
+                    status:req.query.status,
+                    userInvolvement:req.query.userInvolvement,
+                    userId:req.userDetails.userInformation.userId,
+                    stats:req.query.stats
+                })
+                return resolve({
+                    message: 'success',
+                    result: listOfCreatedProjects
+                });
+                
+            } catch (error) {
+                return reject({
+                    status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+                    message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+    }) 
+    }
+    
 
 };
