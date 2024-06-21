@@ -34,7 +34,7 @@ module.exports = class Projects {
                 
                 let queryObject = (filterData != "all") ? filterData : {};
                 let projection = {}
-                console.log(fieldsArray,'fieldsArray')
+                
                 if (fieldsArray != "all") {
                     fieldsArray.forEach(field => {
                         projection[field] = 1;
@@ -52,8 +52,6 @@ module.exports = class Projects {
                    queryObject, 
                    projection
                ).lean();
-               console.log({                   queryObject, 
-                projection},database.models.projects,'<---')
                return resolve(projects);
            
            } catch (error) {
