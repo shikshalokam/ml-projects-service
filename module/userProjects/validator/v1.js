@@ -35,12 +35,6 @@ module.exports = (req) => {
             req.checkBody("data.osid").exists().withMessage("osid is required");
         },
         listUserProjects:function(){
-            req.checkQuery('userInvolvement')
-            .exists()
-            .withMessage("The 'userInvolvement' parameter is required.")
-            .isIn(['creator','consumed'])
-            .withMessage("The 'userInvolvement' parameter must be either 'creator' or 'consumed'");
-         
             req.checkQuery('stats')
             .optional()
             .isIn(['true','false'])

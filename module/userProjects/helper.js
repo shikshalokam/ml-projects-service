@@ -3311,28 +3311,16 @@ module.exports = class UserProjectsHelper {
             }
           });
     }
-    static listUserProjects({userId,userInvolvement,stats}){
+    static listUserProjects({userId,stats}){
 
         return new Promise(async (resolve, reject) => {
             try{
-                switch(userInvolvement)
-                {
-                    case 'creator':
 
-                    let listOfCreatedProjects = await this.userProjectOverview({
-                        createdBy:userId
-                    },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
-
-                    return resolve(listOfCreatedProjects);
-                    case 'consumed':
-                    let listOfProjects = await this.userProjectOverview({
-                        userId:userId
-                    },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
-                    
-                    return resolve(listOfProjects);
-                    default:
-                        throw new Error('Invalid arguments passed.')
-                }
+                let listOfProjects = await this.userProjectOverview({
+                    userId:userId
+                },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
+                
+                return resolve(listOfProjects);
     
             }catch(error){
                    

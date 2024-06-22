@@ -1126,12 +1126,10 @@ module.exports = class UserProjects extends Abstract {
                 }
         })
     }
-    async listUserProjects(req) {
+    async userProjects(req) {
         return new Promise(async (resolve, reject) => {
             try {
                 let listOfCreatedProjects = await userProjectsHelper.listUserProjects({
-                    status:req.query.status,
-                    userInvolvement:req.query.userInvolvement,
                     userId:req.userDetails.userInformation.userId,
                     stats:req.query.stats
                 })
