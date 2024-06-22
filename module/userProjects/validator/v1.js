@@ -34,14 +34,6 @@ module.exports = (req) => {
             req.checkBody("data.transactionId").exists().withMessage("transactionId is required");
             req.checkBody("data.osid").exists().withMessage("osid is required");
         },
-        listPendingProjects : function () {
-            req.checkQuery('status')
-            .exists()
-            .withMessage("The 'status' parameter is required.")
-            .isIn(['started','inProgress','submitted'])
-            .withMessage("The 'status' parameter must be either 'started' or 'inProgress' or 'submitted'");
-         
-        },
         listUserProjects:function(){
             req.checkQuery('userInvolvement')
             .exists()
