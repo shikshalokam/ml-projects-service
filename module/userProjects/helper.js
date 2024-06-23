@@ -3282,32 +3282,33 @@ module.exports = class UserProjectsHelper {
      */
     static userProjectOverview(args,fields='all',stats) {
           return new Promise(async (resolve, reject) => {
-            try{
-    
-                const projectIdQuery = {
-                    ...args
-                  };
+            try {
+              const projectIdQuery = {
+                ...args,
+              };
 
-                  let fieldarray = []
-           
-                  if (fields != "all") {
-                        fields.forEach(field => {
-                        fieldarray.push(field)
-                     });
-                 }
+              let fieldarray = [];
 
-                if(stats == true)
-                {
-                    let count = await projectQueries.countDocuments(projectIdQuery);
+              if (fields != "all") {
+                fields.forEach((field) => {
+                  fieldarray.push(field);
+                });
+              }
 
-                    resolve(count);
-                }
+              if (stats == true) {
+                let count = await projectQueries.countDocuments(projectIdQuery);
 
-                let projects = await projectQueries.projectDocument(projectIdQuery,fieldarray);
-                
-                resolve(projects)
-            }catch(error){
-                reject(error)
+                resolve(count);
+              }
+
+              let projects = await projectQueries.projectDocument(
+                projectIdQuery,
+                fieldarray
+              );
+
+              resolve(projects);
+            } catch (error) {
+              reject(error);
             }
           });
     }
