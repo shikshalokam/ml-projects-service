@@ -1129,6 +1129,12 @@ module.exports = class UserProjects extends Abstract {
     async userProjects(req) {
         return new Promise(async (resolve, reject) => {
             try {
+
+                if (req.query.stats) {
+                    //convert req.query.stats string to Boolean value
+                    req.query.stats = UTILS.convertStringToBoolean(req.query.stats);
+                }
+
                 let listOfCreatedProjects = await userProjectsHelper.listUserProjects({
                     userId:req.userDetails.userInformation.userId,
                     stats:req.query.stats

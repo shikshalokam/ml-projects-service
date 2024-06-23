@@ -3296,7 +3296,7 @@ module.exports = class UserProjectsHelper {
                      });
                  }
 
-                if(stats == 'true')
+                if(stats == true)
                 {
                     let count = await projectQueries.countDocuments(projectIdQuery);
 
