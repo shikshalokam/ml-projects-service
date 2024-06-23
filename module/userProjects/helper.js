@@ -3312,23 +3312,6 @@ module.exports = class UserProjectsHelper {
             }
           });
     }
-    static listUserProjects({userId,stats}){
-
-        return new Promise(async (resolve, reject) => {
-            try{
-
-                let listOfProjects = await this.userProjectOverview({
-                    userId:userId
-                },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
-                
-                return resolve(listOfProjects);
-    
-            }catch(error){
-                   
-                   reject(error)
-            }
-          });
-    }
     
 
 

@@ -1135,10 +1135,10 @@ module.exports = class UserProjects extends Abstract {
                     stats = UTILS.convertStringToBoolean(stats);
                 }
 
-                let listOfCreatedProjects = await userProjectsHelper.listUserProjects({
-                    userId:req.userDetails.userInformation.userId,
-                    stats:stats
-                })
+                let listOfCreatedProjects = await userProjectsHelper.userProjectOverview({
+                    userId:req.userDetails.userInformation.userId
+                },['title','description','_id','userId','isAPrivateProgram','createdBy','status','createdAt','deleted'],stats)
+                
                 return resolve({
                     message: 'success',
                     result: listOfCreatedProjects
