@@ -1126,7 +1126,7 @@ module.exports = class UserProjects extends Abstract {
                 }
         })
     }
-    async userProjects(req) {
+    async overview(req) {
         return new Promise(async (resolve, reject) => {
             try {
 
