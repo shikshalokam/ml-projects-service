@@ -12,7 +12,7 @@ index on the projects collection encforcing unique record requirement and data i
 
 ### Step 1:
 
-    Navigate to /opt/projects/migrations/deleteDuplicateRecordsAcrossCollections/
+    Navigate to /opt/projects/migrations/deleteDuplicateRecordsProjects/
 
 ### Step 2:
 
