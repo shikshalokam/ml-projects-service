@@ -28,6 +28,8 @@
         let updatedProjectIds = [];
         let deletedSolutionIds = [];
         let deletedProgramIds = [];
+        let skipedProjects = [];
+        let errorProject=[];
         
 
         
@@ -35,7 +37,7 @@
         let projectDocument = await db.collection('projects').find({
             userRoleInformation: {$exists : false},
             isAPrivateProgram: true,
-        }).project({_id:1,userProfile:1}).toArray();
+        }).project({_id:1}).toArray();
 
 
         let chunkOfProjectDocument = _.chunk(projectDocument, 10);
@@ -53,7 +55,7 @@
             // get project documents from projectss collection in Array
             let projectDocuments = await db.collection('projects').find({
                 _id: { $in :projectIds  }
-            }).project({_id:1,userProfile:1}).toArray();
+            }).project({}).toArray();
             //iterate project documents one by one
             for(let counter = 0; counter < projectDocuments.length; counter++) {
 
@@ -64,13 +66,14 @@
                         _id: projectDocuments[counter].solutionId,
                         parentSolutionId : {$exists:true},
                         isAPrivateProgram : true
-                    }).project({}).toArray({})
+                    }).project({parentSolutionId:1}).toArray({})
                     //find program document form program collection
                     if(solutionDocument.length == 1){
                        
                         // find parent solution document in same collection
                         let parentSolutionDocument = await db.collection('solutions').find({
                             _id: solutionDocument[0].parentSolutionId}).project({}).toArray({});
+                         
                         //varibale to update project document
                         let updateProjectDocument = {
                             "$set" : {}
@@ -119,17 +122,27 @@
                         deletedSolutionIds.push(projectDocuments[counter].solutionId)
                         deletedProgramIds.push(projectDocuments[counter].programId)
 
-                        // update project documents 
-                        await db.collection('projects').findOneAndUpdate({
-                            "_id" : projectDocuments[counter]._id
-                        },updateProjectDocument);
+                        // update project documents
+                        try{
+                            await db.collection('projects').findOneAndUpdate({
+                                "_id" : projectDocuments[counter]._id
+                            },updateProjectDocument);
+    
+                            await db.collection('solutions').deleteOne({
+                                _id: projectDocuments[counter].solutionId
+                            })
+                            await db.collection('programs').deleteOne({
+                                _id: projectDocuments[counter].programId
+                            })
+                            
 
-                        await db.collection('solutions').deleteOne({
-                            _id: projectDocuments[counter].solutionId
-                        })
-                        await db.collection('programs').deleteOne({
-                            _id: projectDocuments[counter].programId
-                        })
+                        }catch(err){
+                            console.log(err)
+                            skipedProjects.push(projectDocuments[counter]._id)
+                            errorProject.push(JSON.stringify(err))
+                        }
+                       
+                      
                     }
                 }
             }
@@ -145,7 +158,7 @@
             fs.writeFile(
                 'updatedProjectIdsAll.json',
 
-                JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds}),
+                JSON.stringify({updatedProjectIds: updatedProjectIds,deletedProgramIds: deletedProgramIds,deletedSolutionIds: deletedSolutionIds,skipedProjects:skipedProjects,errorProject: errorProject}),
 
                 function (err) {
                     if (err) {
@@ -157,6 +170,7 @@
         console.log("Updated Project Count : ", updatedProjectIds.length)
         console.log("deleted program Count : ", deletedProgramIds.length)
         console.log("deleted solutionId Count : ", deletedSolutionIds.length)
+        console.log("skiped project Count : ", skipedProjects.length)
         console.log("completed")
         connection.close();
     }
