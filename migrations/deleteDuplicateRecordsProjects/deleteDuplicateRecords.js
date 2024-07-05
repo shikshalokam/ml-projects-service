@@ -124,30 +124,25 @@ function generateUUId() {
               }
             }
     
-            for(let record of toBeDeletedRecords)
-                {
-                    try{
-    
-                        let result = await db
-                        .collection("projects")
-                        .deleteOne({
-                            _id:record._id
-                        })
-                        
-                        if(result.deletedCount == 1)
-                        {
-                            successfullyDeletedRecords.push(record._id);
-                        }
-                        else{
-                            failedToDeletedRecords.push(record._id);
-                        }
-                        
-                    }catch(e){
-                        
-                        failedToDeletedRecords.push(record);
-                    }
-    
-                }
+            const idsToDelete = toBeDeletedRecords.map((record) => record._id);
+
+            const result = await db.collection("projects").deleteMany({
+              _id: { $in: idsToDelete },
+            });
+
+            if (result.deletedCount === toBeDeletedRecords.length) {
+              successfullyDeletedRecords.push(...idsToDelete);
+            } else{
+
+              const NotDeletedRecords = await db.collection("observations").find({
+                _id: { $in: idsToDelete },
+              }).toArray();
+
+              const idsFailedToDelete = NotDeletedRecords.map((record) => record._id);
+
+              failedToDeletedRecords.push(...idsFailedToDelete);
+
+            } 
     
           } catch (e) {
             console.log(e);
