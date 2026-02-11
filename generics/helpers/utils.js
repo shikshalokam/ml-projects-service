@@ -357,25 +357,48 @@ function operatorValidation(valueLhs, valueRhs, operator) {
         result = (valueLhs >= valueRhs) ? true : false
       } 
       return resolve(result)
-  })
+  })          
 }
 
-  /**
-   * Convert string to mongodb object id.
-   * @method
-   * @name convertStringToObjectId
-   * @param id - string id
-   * @returns {ObjectId} - returns objectId
-   */
+/**
+ * Normalizes string values to lowercase.
+ *
+ * @function
+ * @name normalizeToLower
+ * @param {string | string[]} input
+ *   - A single string
+ *   - A comma-separated string
+ *   - An array of strings
+ *
+ * @returns {string | string[]}
+ *   Returns the normalized value in the same data structure.
+ */
 
-  function convertStringToObjectId(id) {
-    let checkWhetherIdIsValidMongoId = this.isValidMongoId(id)
-    if (checkWhetherIdIsValidMongoId) {
-      id = ObjectId(id)
+function normalizeToLower(input) {
+  // Case 1: Array of strings
+  if (Array.isArray(input)) {
+    return input.map(value =>
+      typeof value === 'string' ? value.toLowerCase() : value
+    )
+  }
+
+  // Case 2: String
+  if (typeof input === 'string') {
+    // Check if it's a comma-separated string
+    if (input.includes(',')) {
+      return input
+        .split(',')
+        .map(value => value.trim().toLowerCase())
+        .join(',')
     }
 
-    return id
+    // Normal single string
+    return input.toLowerCase()
   }
+
+  // Fallback: return input as-is
+  return input
+}
 
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
@@ -394,5 +417,5 @@ module.exports = {
   createComparableDates : createComparableDates,
   noOfElementsInArray : noOfElementsInArray,
   operatorValidation : operatorValidation,
-  convertStringToObjectId : convertStringToObjectId
+  normalizeToLower : normalizeToLower
 };
