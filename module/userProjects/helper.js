@@ -119,9 +119,7 @@ module.exports = class UserProjectsHelper {
                     "entityInformation._id",
                     "lastDownloadedAt",
                     "appInformation",
-                    "status",
-                    "programId",
-                    "isAPrivateProgram"
+                    "status"
                 ]);
                 
                 if (!userProject.length > 0) {
@@ -160,19 +158,6 @@ module.exports = class UserProjectsHelper {
                 }
                 let createNewProgramAndSolution = false;
                 let solutionExists = false;
-                
-                if (
-                    (userProject[0].programId && !data.programId) ||
-                    (userProject[0].solutionInformation?._id && !data.solutionId)
-                ) {
-                    throw {
-                        status: HTTP_STATUS_CODE['bad_request'].status,
-                        message:
-                        userProject[0].programId && !data.programId
-                                ? CONSTANTS.apiResponses.REQUIRED_PROGRAM_ID
-                                : CONSTANTS.apiResponses.REQUIRED_SOLUTION_ID
-                    };
-                }
 
                 if (data.programId && data.programId !== "") {
 
@@ -244,13 +229,15 @@ module.exports = class UserProjectsHelper {
                         return resolve(programAndSolutionInformation);
                     }
 
-                    if (solutionExists && userProject[0].isAPrivateProgram) {
-
+                    if (solutionExists) {
+                        let checkProgramIdExists = data.programId ? true :false
                         let updateProgram =
                             await surveyService.removeSolutionsFromProgram(
                                 userToken,
                                 userProject[0].programInformation._id,
-                                [userProject[0].solutionInformation._id]
+                                [userProject[0].solutionInformation._id],
+                                checkProgramIdExists,
+                                projectId.toString(),
                             );
 
                         if (!updateProgram.success) {
@@ -377,15 +364,6 @@ module.exports = class UserProjectsHelper {
                     updateProject.completedDate = new Date();
                 }
 
-                // remove restricted keys
-                updateProject = _.omit(updateProject, [
-                                          "programInformation",
-                                          "solutionInformation",
-                                          "programId",
-                                          "solutionId"
-                                        ]);
-                
-                
                 let projectUpdated =
                     await projectQueries.findOneAndUpdate(
                         {
