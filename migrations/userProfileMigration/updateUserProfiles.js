@@ -104,7 +104,7 @@ async function main() {
     let updatedUserIds = [];
     let updatedProjectIds = [];
     // Use a specific ISO date for filtering (e.g., 2025-08-24T00:00:00.000Z)
-    const creationBoundary = '2025-08-24T00:00:00.000Z';
+    const creationBoundary = '2025-09-04T00:00:00.000Z';
 
     for (const chunk of chunks) {
       for (const userId of chunk) {
