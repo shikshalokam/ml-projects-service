@@ -142,7 +142,7 @@ async function main() {
                 userId,
                 createdAt: { $gte: new Date(creationBoundary) }
               },
-              { $set: { userProfile: profileData } }
+              { $set: { userProfile: profileData, userProfileMigratedToCompleteData: true } }
             );
             // Update surveySubmissions (last 6 months only)
             surveyUpdate = await db.collection('surveySubmissions').updateMany(
@@ -150,7 +150,7 @@ async function main() {
                 createdBy: userId,
                 createdAt: { $gte: new Date(creationBoundary) }
               },
-              { $set: { userProfile: profileData } }
+              { $set: { userProfile: profileData, userProfileMigratedToCompleteData: true } }
             );
             // Update observationSubmissions (last 6 months only)
             obsUpdate = await db.collection('observationSubmissions').updateMany(
@@ -158,7 +158,7 @@ async function main() {
                 createdBy: userId,
                 createdAt: { $gte: new Date(creationBoundary) }
               },
-              { $set: { userProfile: profileData } }
+              { $set: { userProfile: profileData, userProfileMigratedToCompleteData: true } }
             );
           } else {
             console.log(`[READ MODE] Would update projects, surveySubmissions, observationSubmissions for userId ${userId}`);
