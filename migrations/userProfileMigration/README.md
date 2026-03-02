@@ -43,33 +43,18 @@ This script updates user profile data in the `projects`, `surveySubmissions`, an
 
 ## How to Run
 
-1. **Install Dependencies**
-   - Ensure Node.js is installed.
-   - Install required packages:
-     ```bash
-     npm install lodash request mongodb dotenv
-     ```
+**Read mode (default, no DB updates):**
 
-2. **Configure Environment**
-   - Create a `.env` file in the project root with:
-     ```env
-     MONGODB_URL=<your-mongodb-connection-string>
-     USER_SERVICE_URL=<your-user-service-url>
-     ```
+```bash
+node updateUserProfiles.js
+```
 
-3. **Prepare Input**
-   - Edit `input.js` to include the user IDs you want to process.
+**Write mode (DB updates enabled):**
 
-4. **Run the Script**
-   ```bash
-   node updateUserProfiles.js
-   ```
+```bash
+node updateUserProfiles.js write
+```
 
-5. **Check Output**
-   - Results will be in the `output` folder.
-   - The input file will be updated to remove processed user IDs.
-
-## Notes
 - The script uses a 1-second delay between API calls to avoid rate limiting.
 - For testing, you can use hardcoded profile data instead of the API call.
 - The script expects MongoDB collections to have a `createdAt` field for date filtering.

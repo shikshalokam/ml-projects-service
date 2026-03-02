@@ -1,3 +1,7 @@
+// Mode: 'read' (default, no DB updates) or 'write' (perform DB updates)
+const argMode = process.argv[2];
+const mode = argMode === 'write' ? 'write' : 'read';
+console.log(`Script running in ${mode.toUpperCase()} mode.`);
 // Script to update user profiles in projects, surveySubmissions, and observationSubmissions collections based on userIds from input.js
 // Variable declarations and dependencies
 const path = require('path');
@@ -128,30 +132,37 @@ async function main() {
             continue;
           }
           eligibleUserIds.push(userId);
-          // Update projects (last 6 months only)
-          const projectUpdate = await db.collection('projects').updateMany(
-            {
+          let projectUpdate = { modifiedCount: 0 };
+          let surveyUpdate = { modifiedCount: 0 };
+          let obsUpdate = { modifiedCount: 0 };
+          if (mode === 'write') {
+            // Update projects (last 6 months only)
+            projectUpdate = await db.collection('projects').updateMany(
+              {
                 userId,
                 createdAt: { $gte: new Date(creationBoundary) }
-            },
-            { $set: { userProfile: profileData } }
-          );
-          // Update surveySubmissions (last 6 months only)
-          const surveyUpdate = await db.collection('surveySubmissions').updateMany(
-            {
-              createdBy: userId,
+              },
+              { $set: { userProfile: profileData } }
+            );
+            // Update surveySubmissions (last 6 months only)
+            surveyUpdate = await db.collection('surveySubmissions').updateMany(
+              {
+                createdBy: userId,
                 createdAt: { $gte: new Date(creationBoundary) }
-            },
-            { $set: { userProfile: profileData } }
-          );
-          // Update observationSubmissions (last 6 months only)
-          const obsUpdate = await db.collection('observationSubmissions').updateMany(
-            {
-              createdBy: userId,
-              createdAt: { $gte: new Date(creationBoundary) }
-            },
-            { $set: { userProfile: profileData } }
-          );
+              },
+              { $set: { userProfile: profileData } }
+            );
+            // Update observationSubmissions (last 6 months only)
+            obsUpdate = await db.collection('observationSubmissions').updateMany(
+              {
+                createdBy: userId,
+                createdAt: { $gte: new Date(creationBoundary) }
+              },
+              { $set: { userProfile: profileData } }
+            );
+          } else {
+            console.log(`[READ MODE] Would update projects, surveySubmissions, observationSubmissions for userId ${userId}`);
+          }
           logEntry.status = 'success';
           logEntry.projectUpdate = projectUpdate.modifiedCount;
           logEntry.surveyUpdate = surveyUpdate.modifiedCount;
