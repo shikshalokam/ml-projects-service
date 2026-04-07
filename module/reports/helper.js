@@ -65,13 +65,14 @@ module.exports = class ReportsHelper {
                     { "syncedAt": { $gte: new Date(startFrom), $lte: new Date(endOf) } },
                     { "tasks": { $elemMatch: { isDeleted: { $ne: true },syncedAt: { $gte: new Date(startFrom), $lte: new Date(endOf) } } } },
                 ]
-                
+                console.log("query", JSON.stringify(query));
                 const projectDetails = await projectQueries.projectDocument(
                     query,
                     ["programId","programInformation.name", "entityInformation.name", "taskReport", "status", "tasks", "categories", "endDate"],
                     []
                 );
-
+                console.log("projectDetails", projectDetails.length);
+                console.log("projectDetails", JSON.stringify(projectDetails));
                 
                 let tasksReport = {
                     "total": 0,
