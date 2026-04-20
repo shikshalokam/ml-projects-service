@@ -62,9 +62,9 @@ let enviromentVariables = {
     "default" : "ON"
   },
   "NORMALISED_FIELDS" : {
-    "message" : "Required user service base url",
+    "message" : "Required comma-separated fields to lowercase-normalise",
     "optional" : false,
-    "default" : ""
+    "default" : "roles"
   }
 }
 
