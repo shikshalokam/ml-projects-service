@@ -60,6 +60,11 @@ let enviromentVariables = {
     "message" : "Enable/Disable project certification",
     "optional" : false,
     "default" : "ON"
+  },
+  "NORMALISED_FIELDS" : {
+    "message" : "Required user service base url",
+    "optional" : false,
+    "default" : ""
   }
 }
 
