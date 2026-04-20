@@ -60,6 +60,11 @@ let enviromentVariables = {
     "message" : "Enable/Disable project certification",
     "optional" : false,
     "default" : "ON"
+  },
+  "NORMALISED_FIELDS" : {
+    "message" : "Required comma-separated fields to lowercase-normalise",
+    "optional" : false,
+    "default" : "roles"
   }
 }
 

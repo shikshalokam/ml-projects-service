@@ -8,6 +8,7 @@
 // Dependencies
 const authenticator = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/authenticator");
 const pagination = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/pagination");
+const normaliseFields = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/normaliseFields");
 const fs = require("fs");
 const inputValidator = require(PROJECT_ROOT_DIRECTORY + "/generics/middleware/validator");
 
@@ -15,6 +16,7 @@ module.exports = function (app) {
   
   app.use(authenticator);
   app.use(pagination);
+  app.use(normaliseFields);
 
   var router = async function (req, res, next) {
 
