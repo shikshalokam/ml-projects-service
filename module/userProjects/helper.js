@@ -3760,7 +3760,7 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
                             // If subRole is teacher or teacher subType
                             if(subRole.toUpperCase().startsWith("TEACHER")) { 
                                 userProfile.profileUserTypes.push({
-                                    "subType" : subRole.toUpperCase() === "TEACHER" ? null : subRole.toLowerCase(),
+                                    "subType" : subRole.toLowerCase(),
                                     "type" : "teacher"
                                 })
                             } else { // If subRole is not teacher
@@ -3777,7 +3777,7 @@ function _updateUserProfileBasedOnUserRoleInfo(userProfile, userRoleInformation)
                         // If subRole is teacher or teacher subType
                         if(subRole.toUpperCase().startsWith("TEACHER")) { 
                             userProfile.profileUserTypes.push({
-                                "subType" : subRole.toUpperCase() === "TEACHER" ? null : subRole.toLowerCase(),
+                                "subType" : subRole.toLowerCase(),
                                 "type" : "teacher"
                             })
                         } else { // If subRole is not teacher
