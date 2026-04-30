@@ -19,7 +19,7 @@ require("dotenv").config({
 });
 
 // ==============================
-const MONGO_URL = process.env.MONGO_URL;
+const MONGO_URL = process.env.MONGODB_URL;
 console.log("🌐 Mongo URL:", MONGO_URL);
 
 const COLLECTION1 = "projects";
@@ -27,15 +27,14 @@ const COLLECTION2 = "surveySubmissions";
 const COLLECTION3 = "observationSubmissions";
 
 const SHOULD_DELETE = process.argv.includes("--deletePaths");
-const BATCH_SIZE = 500;       // Mongo bulkWrite batch size
+const BATCH_SIZE = 500; // Mongo bulkWrite batch size
 const PATHS_PER_FILE = 25000; // Paths per output JSON file
 
 const OUTPUT_DIR = path.join(__dirname, "output");
 
-// ==============================
 const programIds = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "programIds.json"), "utf-8")
-).map((id) => new ObjectId(id));
+  fs.readFileSync(path.join(__dirname, "input.json"), "utf-8"),
+).programIds.map((id) => new ObjectId(id));
 
 // ==============================
 // 📦 BATCH WRITER
@@ -70,17 +69,17 @@ class BatchWriter {
     }
   }
 
-_writeChunk(chunk) {
-  const filePath = path.join(this.dir, `batch${this.batchNum}.json`);
-  fs.writeFileSync(
-    filePath,
-    JSON.stringify({ paths: chunk, count: chunk.length }, null, 2)
-  );
-  console.log(
-    `📁 Written: ${filePath}  (${chunk.length} paths, total so far: ${this.totalCount})`
-  );
-  this.batchNum++;
-}
+  _writeChunk(chunk) {
+    const filePath = path.join(this.dir, `batch${this.batchNum}.json`);
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({ paths: chunk, count: chunk.length }, null, 2),
+    );
+    console.log(
+      `📁 Written: ${filePath}  (${chunk.length} paths, total so far: ${this.totalCount})`,
+    );
+    this.batchNum++;
+  }
 
   summary() {
     return {
@@ -197,8 +196,8 @@ async function processProjects(db) {
   let processed = 0;
 
   const cursor = col.find(
-    { programId: { $in: programIds } },
-    { projection: { attachments: 1, tasks: 1 } }
+    { programId: { $in: programIds }, evidencesRemovedForDatacleanUp: { $exists: false }},
+    { projection: { attachments: 1, tasks: 1 } },
   );
 
   while (await cursor.hasNext()) {
@@ -235,7 +234,8 @@ async function processProjects(db) {
     }
 
     processed++;
-    if (processed % 1000 === 0) console.log(`⏳ [${label}] ${processed} docs processed`);
+    if (processed % 1000 === 0)
+      console.log(`⏳ [${label}] ${processed} docs processed`);
   }
 
   await flushBulkWrites(col, bulkOps, label);
@@ -265,8 +265,8 @@ async function processSubmissions(db, collectionName, subFolder) {
   let processed = 0;
 
   const cursor = col.find(
-    { programId: { $in: programIds } },
-    { projection: { answers: 1, evidences: 1, evidencesStatus: 1 } }
+    { programId: { $in: programIds },evidencesRemovedForDatacleanUp: { $exists: false } },
+    { projection: { answers: 1, evidences: 1, evidencesStatus: 1 } },
   );
 
   while (await cursor.hasNext()) {
@@ -289,7 +289,7 @@ async function processSubmissions(db, collectionName, subFolder) {
 
       if (doc.evidencesStatus) {
         doc.evidencesStatus.forEach((ev) =>
-          ev?.submissions?.forEach((sub) => cleanAnswers(sub.answers))
+          ev?.submissions?.forEach((sub) => cleanAnswers(sub.answers)),
         );
       }
 
@@ -315,7 +315,8 @@ async function processSubmissions(db, collectionName, subFolder) {
     }
 
     processed++;
-    if (processed % 1000 === 0) console.log(`⏳ [${label}] ${processed} docs processed`);
+    if (processed % 1000 === 0)
+      console.log(`⏳ [${label}] ${processed} docs processed`);
   }
 
   await flushBulkWrites(col, bulkOps, label);
@@ -333,9 +334,14 @@ async function processSubmissions(db, collectionName, subFolder) {
 // ==============================
 
 async function main() {
-  const client = new MongoClient(MONGO_URL, {
-    maxPoolSize: 10,
-  });
+const client = new MongoClient(MONGO_URL, {
+  maxPoolSize: 30,              // more connections
+  minPoolSize: 5,
+  socketTimeoutMS: 0,           // NEVER timeout socket
+  connectTimeoutMS: 30000,
+  serverSelectionTimeoutMS: 30000,
+  retryWrites: true,
+});
 
   try {
     await client.connect();
