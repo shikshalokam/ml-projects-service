@@ -108,7 +108,7 @@ Each batch file:
 ### Idempotency
 Once a document is processed in `--deleteType` mode, it is flagged with:
 ```
-profileUserTypesCleanedForDataCleanUp: true
+profileUserTypesUpdated: true
 ```
 Re-running the script will **skip already-processed documents**, making it safe to run multiple times.
  

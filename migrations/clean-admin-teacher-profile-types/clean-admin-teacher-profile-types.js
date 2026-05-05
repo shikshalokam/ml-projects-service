@@ -17,7 +17,7 @@
  *
  *   node clean-admin-teacher-profile-types.js --deleteType
  *       → Removes the matched objects from the array, persists to DB,
- *         marks each doc with profileUserTypesCleanedForDataCleanUp=true,
+ *         marks each doc with profileUserTypesUpdated=true,
  *         and writes deleted records to output/<collection>/deleted/
  *
  * Output format (per batch file):
@@ -49,7 +49,7 @@ const COLLECTION3 = "observationSubmissions";
 const SHOULD_DELETE = process.argv.includes("--deleteType");
 
 const BULK_BATCH_SIZE = 500;   // ops per bulkWrite call
-const RECORDS_PER_FILE = 1000; // doc records per output JSON file
+const RECORDS_PER_FILE = 25000; // doc records per output JSON file
 
 const START_DATE = new Date("2025-05-01T00:00:00.000Z");
 
@@ -167,13 +167,13 @@ async function processCollection(db, collectionName) {
   /**
    * Query:
    *   - createdAt >= 2025-05-01
-   *   - profileUserTypesCleanedForDataCleanUp must NOT exist  (idempotent re-runs)
+   *   - profileUserTypesUpdated must NOT exist  (idempotent re-runs)
    *   - at least one entry in profileUserTypes with subType starting "teacher"
    *     AND type === "administrator"  (DB-side pre-filter to skip unrelated docs)
    */
   const query = {
     createdAt: { $gte: START_DATE },
-    profileUserTypesCleanedForDataCleanUp: { $exists: false },
+    profileUserTypesUpdated: { $exists: false },
     "userProfile.profileUserTypes": {
       $elemMatch: {
         subType: { $regex: /^teacher/i },
@@ -222,7 +222,7 @@ async function processCollection(db, collectionName) {
           update: {
             $set: {
               "userProfile.profileUserTypes": cleanedTypes,
-              profileUserTypesCleanedForDataCleanUp: true, // 🔑 idempotency flag
+              profileUserTypesUpdated: true, // 🔑 idempotency flag
             },
           },
         },
@@ -234,7 +234,7 @@ async function processCollection(db, collectionName) {
     }
 
     processed++;
-    if (processed % 1000 === 0) {
+    if (processed % 25000 === 0) {
       console.log(`⏳ [${label}] ${processed} docs processed (${matched} matched)`);
     }
   }
