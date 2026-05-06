@@ -8,6 +8,8 @@
  *  - --deletePaths: sets evidencesRemovedForDatacleanUp=true on updated docs
  *  - --deletePaths: deleted paths also split into 25k batch files
  *  - BatchWriter class flushes to disk incrementally — safe for 6L+ docs
+ *
+ *  ⚠️  Compatible with Node.js v12 (no optional chaining ?. or nullish coalescing ??)
  */
 
 const { MongoClient, ObjectId } = require("mongodb");
@@ -28,7 +30,7 @@ const COLLECTION3 = "observationSubmissions";
 
 const SHOULD_DELETE = process.argv.includes("--deletePaths");
 const BATCH_SIZE = 500; // Mongo bulkWrite batch size
-const PATHS_PER_FILE = 25000; // Paths per output JSON file
+const PATHS_PER_FILE = 100000; // Paths per output JSON file
 
 const OUTPUT_DIR = path.join(__dirname, "output");
 
@@ -70,13 +72,13 @@ class BatchWriter {
   }
 
   _writeChunk(chunk) {
-    const filePath = path.join(this.dir, `batch${this.batchNum}.json`);
+    const filePath = path.join(this.dir, "batch" + this.batchNum + ".json");
     fs.writeFileSync(
       filePath,
       JSON.stringify({ paths: chunk, count: chunk.length }, null, 2),
     );
     console.log(
-      `📁 Written: ${filePath}  (${chunk.length} paths, total so far: ${this.totalCount})`,
+      "📁 Written: " + filePath + "  (" + chunk.length + " paths, total so far: " + this.totalCount + ")",
     );
     this.batchNum++;
   }
@@ -96,16 +98,23 @@ class BatchWriter {
 function collectProjectPaths(doc) {
   const paths = [];
 
-  doc.attachments?.forEach((att) => {
-    if (att?.sourcePath) paths.push(att.sourcePath);
-  });
+  if (doc.attachments) {
+    doc.attachments.forEach(function(att) {
+      if (att && att.sourcePath) paths.push(att.sourcePath);
+    });
+  }
 
-  function walkTasks(tasks = []) {
+  function walkTasks(tasks) {
+    tasks = tasks || [];
     for (const task of tasks) {
-      task?.attachments?.forEach((att) => {
-        if (att?.sourcePath) paths.push(att.sourcePath);
-      });
-      if (task?.children?.length) walkTasks(task.children);
+      if (task && task.attachments) {
+        task.attachments.forEach(function(att) {
+          if (att && att.sourcePath) paths.push(att.sourcePath);
+        });
+      }
+      if (task && task.children && task.children.length) {
+        walkTasks(task.children);
+      }
     }
   }
 
@@ -113,13 +122,14 @@ function collectProjectPaths(doc) {
   return paths;
 }
 
-function extractFilesFromAnswers(answers = {}) {
+function extractFilesFromAnswers(answers) {
+  answers = answers || {};
   const paths = [];
   for (const ans of Object.values(answers)) {
     if (!ans) continue;
     if (Array.isArray(ans.fileName)) {
-      ans.fileName.forEach((f) => {
-        if (f?.sourcePath) paths.push(f.sourcePath);
+      ans.fileName.forEach(function(f) {
+        if (f && f.sourcePath) paths.push(f.sourcePath);
       });
     }
   }
@@ -133,17 +143,21 @@ function extractSubmissionPaths(doc) {
 
   if (doc.evidences) {
     for (const ev of Object.values(doc.evidences)) {
-      ev?.submissions?.forEach((sub) => {
-        if (sub?.answers) paths.push(...extractFilesFromAnswers(sub.answers));
-      });
+      if (ev && ev.submissions) {
+        ev.submissions.forEach(function(sub) {
+          if (sub && sub.answers) paths.push(...extractFilesFromAnswers(sub.answers));
+        });
+      }
     }
   }
 
   if (doc.evidencesStatus) {
     for (const ev of doc.evidencesStatus) {
-      ev?.submissions?.forEach((sub) => {
-        if (sub?.answers) paths.push(...extractFilesFromAnswers(sub.answers));
-      });
+      if (ev && ev.submissions) {
+        ev.submissions.forEach(function(sub) {
+          if (sub && sub.answers) paths.push(...extractFilesFromAnswers(sub.answers));
+        });
+      }
     }
   }
 
@@ -154,16 +168,18 @@ function extractSubmissionPaths(doc) {
 // CLEANERS
 // ==============================
 
-function cleanAnswers(answers = {}) {
+function cleanAnswers(answers) {
+  answers = answers || {};
   for (const ans of Object.values(answers)) {
-    if (ans?.fileName) ans.fileName = [];
+    if (ans && ans.fileName) ans.fileName = [];
   }
 }
 
-function cleanTasks(tasks = []) {
+function cleanTasks(tasks) {
+  tasks = tasks || [];
   for (const task of tasks) {
-    if (task?.attachments) task.attachments = [];
-    if (task?.children) cleanTasks(task.children);
+    if (task && task.attachments) task.attachments = [];
+    if (task && task.children) cleanTasks(task.children);
   }
 }
 
@@ -174,7 +190,7 @@ function cleanTasks(tasks = []) {
 async function flushBulkWrites(collection, ops, label) {
   if (!ops.length) return;
   await collection.bulkWrite(ops, { ordered: false });
-  console.log(`💾 [${label}] Flushed ${ops.length} bulk ops`);
+  console.log("💾 [" + label + "] Flushed " + ops.length + " bulk ops");
   ops.length = 0; // clear in-place
 }
 
@@ -186,17 +202,16 @@ async function processProjects(db) {
   const label = COLLECTION1;
   const col = db.collection(COLLECTION1);
 
-  // Two separate writers: one for all found paths, one for deleted paths
-  const foundWriter = new BatchWriter(`${COLLECTION1}/found`);
+  const foundWriter = new BatchWriter(COLLECTION1 + "/found");
   const deletedWriter = SHOULD_DELETE
-    ? new BatchWriter(`${COLLECTION1}/deleted`)
+    ? new BatchWriter(COLLECTION1 + "/deleted")
     : null;
 
   const bulkOps = [];
   let processed = 0;
 
   const cursor = col.find(
-    { programId: { $in: programIds }, evidencesRemovedForDatacleanUp: { $exists: false }},
+    { programId: { $in: programIds }, evidencesRemovedForDatacleanUp: { $exists: false } },
     { projection: { attachments: 1, tasks: 1 } },
   );
 
@@ -206,7 +221,7 @@ async function processProjects(db) {
 
     if (paths.length > 0) {
       foundWriter.add(paths);
-      console.log(`📄 [${label}] ${doc._id} → ${paths.length} files`);
+      console.log("📄 [" + label + "] " + doc._id + " → " + paths.length + " files");
     }
 
     if (SHOULD_DELETE && paths.length > 0) {
@@ -235,7 +250,7 @@ async function processProjects(db) {
 
     processed++;
     if (processed % 1000 === 0)
-      console.log(`⏳ [${label}] ${processed} docs processed`);
+      console.log("⏳ [" + label + "] " + processed + " docs processed");
   }
 
   await flushBulkWrites(col, bulkOps, label);
@@ -243,9 +258,9 @@ async function processProjects(db) {
   foundWriter.flush();
   if (deletedWriter) deletedWriter.flush();
 
-  console.log(`✅ [${label}] Done — ${processed} docs`);
-  console.log(`   Found paths:`, foundWriter.summary());
-  if (deletedWriter) console.log(`   Deleted paths:`, deletedWriter.summary());
+  console.log("✅ [" + label + "] Done — " + processed + " docs");
+  console.log("   Found paths:", foundWriter.summary());
+  if (deletedWriter) console.log("   Deleted paths:", deletedWriter.summary());
 }
 
 // ==============================
@@ -256,16 +271,16 @@ async function processSubmissions(db, collectionName, subFolder) {
   const label = collectionName;
   const col = db.collection(collectionName);
 
-  const foundWriter = new BatchWriter(`${subFolder}/found`);
+  const foundWriter = new BatchWriter(subFolder + "/found");
   const deletedWriter = SHOULD_DELETE
-    ? new BatchWriter(`${subFolder}/deleted`)
+    ? new BatchWriter(subFolder + "/deleted")
     : null;
 
   const bulkOps = [];
   let processed = 0;
 
   const cursor = col.find(
-    { programId: { $in: programIds },evidencesRemovedForDatacleanUp: { $exists: false } },
+    { programId: { $in: programIds }, evidencesRemovedForDatacleanUp: { $exists: false } },
     { projection: { answers: 1, evidences: 1, evidencesStatus: 1 } },
   );
 
@@ -275,7 +290,7 @@ async function processSubmissions(db, collectionName, subFolder) {
 
     if (paths.length > 0) {
       foundWriter.add(paths);
-      console.log(`📄 [${label}] ${doc._id} → ${paths.length} files`);
+      console.log("📄 [" + label + "] " + doc._id + " → " + paths.length + " files");
     }
 
     if (SHOULD_DELETE && paths.length > 0) {
@@ -283,14 +298,22 @@ async function processSubmissions(db, collectionName, subFolder) {
 
       if (doc.evidences) {
         for (const ev of Object.values(doc.evidences)) {
-          ev?.submissions?.forEach((sub) => cleanAnswers(sub.answers));
+          if (ev && ev.submissions) {
+            ev.submissions.forEach(function(sub) {
+              if (sub) cleanAnswers(sub.answers);
+            });
+          }
         }
       }
 
       if (doc.evidencesStatus) {
-        doc.evidencesStatus.forEach((ev) =>
-          ev?.submissions?.forEach((sub) => cleanAnswers(sub.answers)),
-        );
+        doc.evidencesStatus.forEach(function(ev) {
+          if (ev && ev.submissions) {
+            ev.submissions.forEach(function(sub) {
+              if (sub) cleanAnswers(sub.answers);
+            });
+          }
+        });
       }
 
       deletedWriter.add(paths);
@@ -316,7 +339,7 @@ async function processSubmissions(db, collectionName, subFolder) {
 
     processed++;
     if (processed % 1000 === 0)
-      console.log(`⏳ [${label}] ${processed} docs processed`);
+      console.log("⏳ [" + label + "] " + processed + " docs processed");
   }
 
   await flushBulkWrites(col, bulkOps, label);
@@ -324,9 +347,9 @@ async function processSubmissions(db, collectionName, subFolder) {
   foundWriter.flush();
   if (deletedWriter) deletedWriter.flush();
 
-  console.log(`✅ [${label}] Done — ${processed} docs`);
-  console.log(`   Found paths:`, foundWriter.summary());
-  if (deletedWriter) console.log(`   Deleted paths:`, deletedWriter.summary());
+  console.log("✅ [" + label + "] Done — " + processed + " docs");
+  console.log("   Found paths:", foundWriter.summary());
+  if (deletedWriter) console.log("   Deleted paths:", deletedWriter.summary());
 }
 
 // ==============================
@@ -334,14 +357,14 @@ async function processSubmissions(db, collectionName, subFolder) {
 // ==============================
 
 async function main() {
-const client = new MongoClient(MONGO_URL, {
-  maxPoolSize: 30,              // more connections
-  minPoolSize: 5,
-  socketTimeoutMS: 0,           // NEVER timeout socket
-  connectTimeoutMS: 30000,
-  serverSelectionTimeoutMS: 30000,
-  retryWrites: true,
-});
+  const client = new MongoClient(MONGO_URL, {
+    maxPoolSize: 30,
+    minPoolSize: 5,
+    socketTimeoutMS: 0,           // NEVER timeout socket
+    connectTimeoutMS: 30000,
+    serverSelectionTimeoutMS: 30000,
+    retryWrites: true,
+  });
 
   try {
     await client.connect();
@@ -360,7 +383,7 @@ const client = new MongoClient(MONGO_URL, {
     ]);
 
     console.log("🎉 DONE");
-    console.log(`📂 All output files are in: ${OUTPUT_DIR}`);
+    console.log("📂 All output files are in: " + OUTPUT_DIR);
   } catch (err) {
     console.error("❌ Error:", err);
   } finally {
