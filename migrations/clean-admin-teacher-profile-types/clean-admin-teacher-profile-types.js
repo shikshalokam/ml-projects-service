@@ -27,6 +27,8 @@
  *     ],
  *     "count": N
  *   }
+ *
+ *  ⚠️  Compatible with Node.js v12 
  */
 
 const { MongoClient } = require("mongodb");
@@ -48,8 +50,8 @@ const COLLECTION3 = "observationSubmissions";
 
 const SHOULD_DELETE = process.argv.includes("--deleteType");
 
-const BULK_BATCH_SIZE = 500;   // ops per bulkWrite call
-const RECORDS_PER_FILE = 25000; // doc records per output JSON file
+const BULK_BATCH_SIZE = 500;    // ops per bulkWrite call
+const RECORDS_PER_FILE = 50000; // doc records per output JSON file
 
 const START_DATE = new Date("2025-05-01T00:00:00.000Z");
 
@@ -67,7 +69,6 @@ class BatchWriter {
     fs.mkdirSync(this.dir, { recursive: true });
   }
 
-  /** @param {Array<{docId: string, matchedTypes: object[]}>} records */
   add(records) {
     if (!records.length) return;
     this.buffer.push(...records);
@@ -86,13 +87,13 @@ class BatchWriter {
   }
 
   _writeChunk(chunk) {
-    const filePath = path.join(this.dir, `batch${this.batchNum}.json`);
+    const filePath = path.join(this.dir, "batch" + this.batchNum + ".json");
     fs.writeFileSync(
       filePath,
       JSON.stringify({ records: chunk, count: chunk.length }, null, 2)
     );
     console.log(
-      `📁 Written: ${filePath}  (${chunk.length} records, total so far: ${this.totalCount})`
+      "📁 Written: " + filePath + "  (" + chunk.length + " records, total so far: " + this.totalCount + ")"
     );
     this.batchNum++;
   }
@@ -110,34 +111,32 @@ class BatchWriter {
 /**
  * Returns the entries from profileUserTypes that should be removed:
  *   subType starts with "teacher" (case-insensitive) AND type === "administrator"
- *
- * @param {object[]} profileUserTypes
- * @returns {object[]} matched entries
  */
-function findAdminTeacherEntries(profileUserTypes = []) {
-  return profileUserTypes.filter(
-    (entry) =>
-      typeof entry?.subType === "string" &&
+function findAdminTeacherEntries(profileUserTypes) {
+  profileUserTypes = profileUserTypes || [];
+  return profileUserTypes.filter(function(entry) {
+    return (
+      entry &&
+      typeof entry.subType === "string" &&
       entry.subType.toLowerCase().startsWith("teacher") &&
-      entry?.type === "administrator"
-  );
+      entry.type === "administrator"
+    );
+  });
 }
 
 /**
  * Returns the profileUserTypes array with the matched entries removed.
- *
- * @param {object[]} profileUserTypes
- * @returns {object[]} cleaned array
  */
-function removeAdminTeacherEntries(profileUserTypes = []) {
-  return profileUserTypes.filter(
-    (entry) =>
-      !(
-        typeof entry?.subType === "string" &&
-        entry.subType.toLowerCase().startsWith("teacher") &&
-        entry?.type === "administrator"
-      )
-  );
+function removeAdminTeacherEntries(profileUserTypes) {
+  profileUserTypes = profileUserTypes || [];
+  return profileUserTypes.filter(function(entry) {
+    return !(
+      entry &&
+      typeof entry.subType === "string" &&
+      entry.subType.toLowerCase().startsWith("teacher") &&
+      entry.type === "administrator"
+    );
+  });
 }
 
 // ─── Bulk flush ───────────────────────────────────────────────────────────────
@@ -145,7 +144,7 @@ function removeAdminTeacherEntries(profileUserTypes = []) {
 async function flushBulkWrites(collection, ops, label) {
   if (!ops.length) return;
   await collection.bulkWrite(ops, { ordered: false });
-  console.log(`💾 [${label}] Flushed ${ops.length} bulk ops`);
+  console.log("💾 [" + label + "] Flushed " + ops.length + " bulk ops");
   ops.length = 0;
 }
 
@@ -155,22 +154,15 @@ async function processCollection(db, collectionName) {
   const label = collectionName;
   const col = db.collection(collectionName);
 
-  const foundWriter = new BatchWriter(`${collectionName}/found`);
+  const foundWriter = new BatchWriter(collectionName + "/found");
   const deletedWriter = SHOULD_DELETE
-    ? new BatchWriter(`${collectionName}/deleted`)
+    ? new BatchWriter(collectionName + "/deleted")
     : null;
 
   const bulkOps = [];
   let processed = 0;
   let matched = 0;
 
-  /**
-   * Query:
-   *   - createdAt >= 2025-05-01
-   *   - profileUserTypesUpdated must NOT exist  (idempotent re-runs)
-   *   - at least one entry in profileUserTypes with subType starting "teacher"
-   *     AND type === "administrator"  (DB-side pre-filter to skip unrelated docs)
-   */
   const query = {
     createdAt: { $gte: START_DATE },
     profileUserTypesUpdated: { $exists: false },
@@ -191,7 +183,10 @@ async function processCollection(db, collectionName) {
   while (await cursor.hasNext()) {
     const doc = await cursor.next();
 
-    const profileUserTypes = doc?.userProfile?.profileUserTypes ?? [];
+    // v12-safe: replace doc?.userProfile?.profileUserTypes ?? []
+    const userProfile = doc && doc.userProfile ? doc.userProfile : {};
+    const profileUserTypes = userProfile.profileUserTypes || [];
+
     const matchedEntries = findAdminTeacherEntries(profileUserTypes);
 
     // Double-check in JS (defensive; DB regex already filtered)
@@ -208,7 +203,7 @@ async function processCollection(db, collectionName) {
 
     foundWriter.add([record]);
     console.log(
-      `📄 [${label}] ${doc._id} → ${matchedEntries.length} admin-teacher entries found`
+      "📄 [" + label + "] " + doc._id + " → " + matchedEntries.length + " admin-teacher entries found"
     );
 
     if (SHOULD_DELETE) {
@@ -235,7 +230,7 @@ async function processCollection(db, collectionName) {
 
     processed++;
     if (processed % 25000 === 0) {
-      console.log(`⏳ [${label}] ${processed} docs processed (${matched} matched)`);
+      console.log("⏳ [" + label + "] " + processed + " docs processed (" + matched + " matched)");
     }
   }
 
@@ -245,12 +240,12 @@ async function processCollection(db, collectionName) {
   foundWriter.flush();
   if (deletedWriter) deletedWriter.flush();
 
-  console.log(`\n✅ [${label}] Done`);
-  console.log(`   Total docs scanned : ${processed}`);
-  console.log(`   Docs with matches  : ${matched}`);
-  console.log(`   Found  output      :`, foundWriter.summary());
+  console.log("\n✅ [" + label + "] Done");
+  console.log("   Total docs scanned : " + processed);
+  console.log("   Docs with matches  : " + matched);
+  console.log("   Found  output      :", foundWriter.summary());
   if (deletedWriter) {
-    console.log(`   Deleted output     :`, deletedWriter.summary());
+    console.log("   Deleted output     :", deletedWriter.summary());
   }
 }
 
@@ -266,9 +261,9 @@ async function main() {
   const client = new MongoClient(MONGO_URL, {
     maxPoolSize: 30,
     minPoolSize: 5,
-    socketTimeoutMS: 0,          // never timeout socket
-    connectTimeoutMS: 30_000,
-    serverSelectionTimeoutMS: 30_000,
+    socketTimeoutMS: 0,           // never timeout socket
+    connectTimeoutMS: 30000,      // v12: no numeric separators (was 30_000)
+    serverSelectionTimeoutMS: 30000,
     retryWrites: true,
   });
 
@@ -288,7 +283,7 @@ async function main() {
     ]);
 
     console.log("\n🎉 ALL DONE");
-    console.log(`📂 Output files are in: ${OUTPUT_DIR}`);
+    console.log("📂 Output files are in: " + OUTPUT_DIR);
   } catch (err) {
     console.error("❌ Fatal error:", err);
     process.exit(1);
